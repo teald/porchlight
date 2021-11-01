@@ -32,10 +32,7 @@ class Door:
         # Get the metadata directly accessible from the inspect module.
         self._inspect_input_object()
 
-        self._log_initial_state()
-
-    def _log_initial_state(self):
-        pass
+        logging.info(f"Door object {self} initialized successfully.")
 
     def _inspect_input_object(self):
         '''Inspects the object passed to the Door initialization and pulls
@@ -96,6 +93,9 @@ class Door:
                         # Empty line?
                         print(f"Empty line found, skipping.")
                         continue
+
+                    case _:
+                        print(f"Catching nothing")
 
 
         else:

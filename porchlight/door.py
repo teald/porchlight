@@ -1,5 +1,6 @@
 import inspect
 import pdb
+import logging
 
 
 class DoorError(Exception):
@@ -30,6 +31,11 @@ class Door:
         # Initialization setup.
         # Get the metadata directly accessible from the inspect module.
         self._inspect_input_object()
+
+        self._log_initial_state()
+
+    def _log_initial_state(self):
+        pass
 
     def _inspect_input_object(self):
         '''Inspects the object passed to the Door initialization and pulls

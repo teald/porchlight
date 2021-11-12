@@ -1,6 +1,8 @@
 import inspect
 import pdb
+import logging
 
+logger = logging.getLogger(__name__)
 
 class DoorError(Exception):
     pass
@@ -31,6 +33,7 @@ class Door:
         # Get the metadata directly accessible from the inspect module.
         self._inspect_input_object()
 
+        logger.info(f"Initialized Door() object successfully at {self}")
         if self.debug:
             print(f"Initialized Door object {self} successfully.")
 
@@ -66,7 +69,6 @@ class Door:
         '''
         source_code = inspect.getsource(self.input_object).split('\n')
 
-
         # Get function return statements
         if self.model_type == 'function':
             for i, l in enumerate(source_code):
@@ -76,39 +78,78 @@ class Door:
 
         # Get class information not gathered by inspect
         elif self.model_type == 'class':
+            possible_attrs = []
+
             for i, l in enumerate(source_code):
-                match l.split():
+                match l.strip().split():
                     case ['def', *definition]:
                         # Check if this is really a method or a local
                         # definition
                         if 'self' not in ''.join(definition):
+                            logging.debug(f"Non-method passed at {i}: "
+                                          f"{''.join(definition)}"
+                                          )
                             continue
 
                         else:
-                            joined_method = ''.join(definition)
-                            args = joined_method[1].split('self.')
-                            args = [arg.replace('):', '').strip() for arg in args]
+                            # This analysis will entirely fail in the rpesense
+                            # of comments or one-line definitions (god forbid).
+                            args = definition[1:]
+                            args = [a.replace(',', '') for a in args]
+                            args = [a.replace('):', '') for a in args]
+
+                            pdb.set_trace()
+                            logging.debug(f"Found a method definition at {i} "
+                                          f" for ."
+                                          )
+
+                    case ['class', *class_info]:
+                        # Already have the class name information.
+                        logger.debug(f"Passed class name at {i}.")
+                        continue
+
+                    case [assignment, '=', value]:
+                        # Check if this is a possible attribute assignment
+                        if 'self.' == assignment[:5]:
+                            attr_name = ''.join(assignment.split('.')[1:])
+                            possible_attrs.append(attr_name)
+
+                            logger.debug(f"Suspected possible attr found: "
+                                         f"{attr_name}.")
+
+                        else:
+                            logger.debug(f"Possible attribute passed at {i}: "
+                                         f"{l}"
+                                         )
 
                     case []:
-                        # Empty line?
-                        if self.debug:
-                            print(f"Empty line found, skipping.")
+                        # Empty line
+                        logger.debug(f"Empty line at {i}.")
                         continue
 
                     case _:
-                        if self.debug:
-                            print(f"Catching nothing")
+                        # Something else
+                        logger.warning(f"Line {i} was not handled as a "
+                                       f"class property when split: "
+                                       f"{l.split()}"
+                                       )
+
+                self.possible_attrs = possible_attrs
 
         else:
-            if self.debug:
-                print(f"Type recognition problem, raising error...")
-
+            logger.error(f"{self} ran into an error attempting to resolve "
+                         f"the source code with {self.model_type = }."
+                         )
             raise DoorError(f"Type not recognized (type is "
                             f"{type(self.model_type)})."
                             )
 
+        logger.info(f"Source code parsed for {self.input_object.__name__}.")
+
 def __unit_test():
     '''Tests the definitions/classes/methods in this file.'''
+    logger.info(f"Beginning unit test for {__name__}")
+
     class TestClass:
         '''Just an example class for the unit test.'''
         def __init__(self, x, y, z = 'r'):
@@ -132,6 +173,9 @@ def __unit_test():
     pass
 
     # Test for a function
+    pass
+
+    logger.info(f"Concluding unit test for {__name__}.")
 
 
 if __name__ == "__main__":

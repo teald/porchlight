@@ -31,6 +31,9 @@ class Door:
         # Get the metadata directly accessible from the inspect module.
         self._inspect_input_object()
 
+        if self.debug:
+            print(f"Initialized Door object {self} successfully.")
+
     def _inspect_input_object(self):
         '''Inspects the object passed to the Door initialization and pulls
         information about the arguments, return values, and other things.
@@ -88,19 +91,23 @@ class Door:
 
                     case []:
                         # Empty line?
-                        print(f"Empty line found, skipping.")
+                        if self.debug:
+                            print(f"Empty line found, skipping.")
                         continue
 
                     case _:
-                        print(f"Catching nothing")
-
+                        if self.debug:
+                            print(f"Catching nothing")
 
         else:
+            if self.debug:
+                print(f"Type recognition problem, raising error...")
+
             raise DoorError(f"Type not recognized (type is "
                             f"{type(self.model_type)})."
                             )
 
-def unit_test():
+def __unit_test():
     '''Tests the definitions/classes/methods in this file.'''
     class TestClass:
         '''Just an example class for the unit test.'''
@@ -119,12 +126,13 @@ def unit_test():
             return output_1, output_2
 
     # Test Door initialization
-    print(f"Testing door initialization... ")
+    test_door = Door(TestClass, debug=True)
 
-    test_door = Door(TestClass, debug=False)
+    # Test for a method alone
+    pass
 
-    print(f"finished.")
+    # Test for a function
 
 
 if __name__ == "__main__":
-    unit_test()
+    __unit_test()

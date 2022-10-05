@@ -1,182 +1,117 @@
 import inspect
-import pdb
 import logging
+import string
+
+from typing import Any, Callable, Dict, List, Type
+
 
 logger = logging.getLogger(__name__)
 
-class DoorError(Exception):
-    pass
 
-
-class Door:
-    '''The Door class is the primary 'model' or 'module' class of porchlight.
-    It accesses functions and classes passed to it and parses it for metadata
-    to use for coupling.
+class BaseDoor:
+    '''Contains the basic information of a Door object, as well as base
+    functions.
     '''
+    _base_function: Callable
+    arguments: Dict[str, Type]
+    keyword_args: Dict[str, Any]
+    max_n_return: int
+    min_n_return: int
+    n_args: int
+    name: str
+    return_vals: List[List[str]]
 
-    def __init__(self, input_object, debug=True):
-        '''Initializes the Door class.
-
-        Arguments:
-            + input_object (function or object): an object or function
-                definition to be assessed and stored by the Door instance.
-            + debug (bool, default True): turns debugging on if True, off if
-                False
+    def __init__(self, function: Callable):
+        '''Initializes the BaseDoor class. It takes any callable (function,
+        lambda, method...) and inspects it to get at its arguments and
+        structure.
         '''
-        # Assert input types
-        assert isinstance(debug, bool), "debug must be a boolean value."
+        self._base_function = function
+        self._inspect_base_callable()
 
-        self.input_object = input_object
-        self.debug = debug
+    def _inspect_base_callable(self):
+        '''Inspect the BaseDoor's baseline callable for primary attributes.'''
+        function = self._base_function
 
-        # Initialization setup.
-        # Get the metadata directly accessible from the inspect module.
-        self._inspect_input_object()
+        self.name = function.__name__
+        self.arguments = {}
 
-        logger.info(f"Initialized Door() object successfully at {self}")
-        if self.debug:
-            print(f"Initialized Door object {self} successfully.")
+        for name, param in inspect.signature(function).parameters.items():
+            self.arguments[name] = param.annotation
 
-    def _inspect_input_object(self):
-        '''Inspects the object passed to the Door initialization and pulls
-        information about the arguments, return values, and other things.
+        # Replace the inspect._empty values with typings.Any, which is a bit
+        # more universal/descriptive, especially for some functions where it
+        # does its own type handling.
+        for name, _type in self.arguments.items():
+            if _type == inspect._empty:
+                self.arguments[name] = Any
+
+        self.n_args = len(self.arguments)
+
+        # The return values require some more effort.
+        self.return_vals = self._get_return_vals(function)
+
+        logging.debug(
+                f"Found {self.n_args} arguments in {self.name}."
+                )
+
+    @staticmethod
+    def _get_return_vals(function: Callable) -> List[str]:
+        '''Gets the names of the return value variables for a given
+        function.
         '''
-        # Determine if the object is a function or a class.
-        if inspect.isclass(self.input_object):
-            self.model_type = 'class'
+        lines, start_line = inspect.getsourcelines(function)
 
-        elif inspect.isfunction(self.input_object):
-            self.model_type = 'function'
+        # These characters signal that the return statement does not contain
+        # any operations on the return values, which is undefined for the
+        # purposes of the BaseDoor
+        allowed_chars = (
+                string.ascii_letters
+                + string.digits
+                + '_'
+                )
 
-        elif inspect.ismethod(self.input_object):
-            self.model_type = 'method'
+        return_vals = []
 
-        else:
-            raise DoorError(f"Object {self.input_object} not recognized as a "
-                            f"function or class (type "
-                            f"{type(self.input_object)})"
-                            )
+        for i, line in enumerate(lines):
+            if 'return' in line:
+                # This is a set of possible return values.
+                line = line.strip()[len('return') + 1:]
+                vals = line.split(',')
 
-        # Get information using inspect.
-        self.info = inspect.getmembers(self.input_object)
+                return_vals.append([v.strip() for v in vals])
 
-        # If a class, get all possible attributes using string matching.
-        self._inspect_source_code()
+                for val in return_vals:
+                    if any(c not in allowed_chars for c in val):
+                        # This is undefined, not an error. So assign return
+                        # value 'undefined' for this return statement and issue
+                        # a warning.
+                        logging.warning(
+                                f"Could not define any set of return variable "
+                                f"names for the following return line: \n"
+                                f"{start_line+i}) {line.strip()}\n"
+                                f"While not crucial to this function, be "
+                                f"aware that this means no return value will "
+                                f"be modified by this callable."
+                                )
 
-    def _inspect_source_code(self):
-        '''Inspects the source code of teh class or function definition using
-        inspect.getsource().
-        '''
-        source_code = inspect.getsource(self.input_object).split('\n')
+                        return_vals.append(None)
 
-        # Get function return statements
-        if self.model_type == 'function':
-            for i, l in enumerate(source_code):
-                # Check for return statement
-                if 'return' == l.strip().split(' ')[0]:
-                    self.returns = [x.strip() for x in l.split('.')[1:]]
+        return return_vals
 
-        # Get class information not gathered by inspect
-        elif self.model_type == 'class':
-            possible_attrs = []
 
-            for i, l in enumerate(source_code):
-                match l.strip().split():
-                    case ['def', *definition]:
-                        # Check if this is really a method or a local
-                        # definition
-                        if 'self' not in ''.join(definition):
-                            logging.debug(f"Non-method passed at {i}: "
-                                          f"{''.join(definition)}"
-                                          )
-                            continue
-
-                        else:
-                            # This analysis will entirely fail in the rpesense
-                            # of comments or one-line definitions (god forbid).
-                            args = definition[1:]
-                            args = [a.replace(',', '') for a in args]
-                            args = [a.replace('):', '') for a in args]
-
-                            pdb.set_trace()
-                            logging.debug(f"Found a method definition at {i} "
-                                          f" for ."
-                                          )
-
-                    case ['class', *class_info]:
-                        # Already have the class name information.
-                        logger.debug(f"Passed class name at {i}.")
-                        continue
-
-                    case [assignment, '=', value]:
-                        # Check if this is a possible attribute assignment
-                        if 'self.' == assignment[:5]:
-                            attr_name = ''.join(assignment.split('.')[1:])
-                            possible_attrs.append(attr_name)
-
-                            logger.debug(f"Suspected possible attr found: "
-                                         f"{attr_name}.")
-
-                        else:
-                            logger.debug(f"Possible attribute passed at {i}: "
-                                         f"{l}"
-                                         )
-
-                    case []:
-                        # Empty line
-                        logger.debug(f"Empty line at {i}.")
-                        continue
-
-                    case _:
-                        # Something else
-                        logger.warning(f"Line {i} was not handled as a "
-                                       f"class property when split: "
-                                       f"{l.split()}"
-                                       )
-
-                self.possible_attrs = possible_attrs
-
-        else:
-            logger.error(f"{self} ran into an error attempting to resolve "
-                         f"the source code with {self.model_type = }."
-                         )
-            raise DoorError(f"Type not recognized (type is "
-                            f"{type(self.model_type)})."
-                            )
-
-        logger.info(f"Source code parsed for {self.input_object.__name__}.")
-
-def __unit_test():
-    '''Tests the definitions/classes/methods in this file.'''
-    logger.info(f"Beginning unit test for {__name__}")
-
-    class TestClass:
-        '''Just an example class for the unit test.'''
-        def __init__(self, x, y, z = 'r'):
-            self.x = x
-            self.y = y
-            self.z = z
-
-            self.generated = True
-
-        def a_method(self, a, b):
-            output_1 = a + self.x
-            output_2 = b + self.z
-
-            combined_output = output_1 + output_2
-            return output_1, output_2
-
-    # Test Door initialization
-    test_door = Door(TestClass, debug=True)
-
-    # Test for a method alone
-    pass
-
-    # Test for a function
-    pass
-
-    logger.info(f"Concluding unit test for {__name__}.")
+class Door(BaseDoor):
+    def __init__(self):
+        logger.error("Door class has not been implemented.")
+        raise NotImplementedError("Door class has not been implemented.")
 
 
 if __name__ == "__main__":
-    __unit_test()
+    # Testing
+    def test(x: int, y, z: int = 8) -> int:
+        x = x * y * z
+        return x
+
+    door = BaseDoor(test)
+
+    import pdb; pdb.set_trace()

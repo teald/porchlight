@@ -1,6 +1,7 @@
-'''Primary file for using porchlight. This handles imports, unit testing, etc.'''
+'''Primary file for using porchlight. This handles imports, unit testing,
+etc.
+'''
 # General imports
-import pdb
 import logging
 import datetime
 import os
@@ -26,9 +27,7 @@ else:
 logger.info(f"Began logger at {datetime.datetime.now()}")
 
 if __name__ == "__main__":
-    # Unit testing
-
-    # door module
-    door.__unit_test()
+    # Initial unit testing
+    pass
 
 logger.info(f"Concluded logger at {datetime.datetime.now()}.")

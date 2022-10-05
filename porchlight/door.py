@@ -4,6 +4,8 @@ import string
 
 from typing import Any, Callable, Dict, List, Type
 
+import param
+
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +37,18 @@ class BaseDoor:
 
         self.name = function.__name__
         self.arguments = {}
+        self.keyword_args = {}
 
         for name, param in inspect.signature(function).parameters.items():
             self.arguments[name] = param.annotation
+
+            if param.default:
+                self.keyword_args[name] = param.default
+
+            elif param.kind == inspect.Parameter.KEYWORD_ONLY:
+                # This catches keyword-only arguments with no default value.
+                self.keyword_args[name] = param.default
+                self.keyword_only_args[name] = param.default
 
         # Replace the inspect._empty values with typings.Any, which is a bit
         # more universal/descriptive, especially for some functions where it
@@ -76,7 +87,7 @@ class BaseDoor:
         # These characters signal that the return statement does not contain
         # any operations on the return values, which is undefined for the
         # purposes of the BaseDoor
-        allowed_chars = (
+        allowed_chars = list(
                 string.ascii_letters
                 + string.digits
                 + '_'
@@ -85,12 +96,18 @@ class BaseDoor:
         return_vals = []
 
         for i, line in enumerate(lines):
+            orig_line = line
+
+            # Strip comments.
+            if '#' in line:
+                line = line[:line.index('#')]
+
             if 'return' in line:
                 # This is a set of possible return values.
                 line = line.strip()[len('return') + 1:]
                 vals = line.split(',')
 
-                return_vals.append([v.strip() for v in vals])
+                return_vals += [v.strip() for v in vals]
 
                 for val in return_vals:
                     if any(c not in allowed_chars for c in val):
@@ -100,21 +117,44 @@ class BaseDoor:
                         logging.warning(
                                 f"Could not define any set of return variable "
                                 f"names for the following return line: \n"
-                                f"{start_line+i}) {line.strip()}\n"
+                                f"{start_line+i}) {orig_line.strip()}\n"
                                 f"While not crucial to this function, be "
                                 f"aware that this means no return value will "
                                 f"be modified by this callable."
                                 )
 
                         return_vals.append(None)
+                        break
 
         return return_vals
 
 
 class Door(BaseDoor):
-    def __init__(self):
-        logger.error("Door class has not been implemented.")
-        raise NotImplementedError("Door class has not been implemented.")
+    '''Extension of BaseDoor Class that interacts with Porchlight objects.'''
+    def __init__(self, function: Callable):
+        super().__init__(function)
+
+    @property
+    def variables(self) -> List[str]:
+        '''Returns a list of all known return values and input arguments.'''
+        all_vars = [set(x for x in s) for s in self.return_vals]
+        all_vars += self.arguments
+
+        return all_vars
+
+    @property
+    def required_arguments(self) -> List[str]:
+        '''Returns a list of arguments with no default values.'''
+        required = []
+
+        for x in self.arguments:
+            if x not in self.keyword_arguments:
+                required.append(x)
+
+            elif x in self.keyword_only_arguments:
+                required.append(x)
+
+        return required
 
 
 if __name__ == "__main__":
@@ -123,7 +163,7 @@ if __name__ == "__main__":
         x = x * y * z
         return x
 
-    door = BaseDoor(test)
+    door = Door(test)
 
     print(f"{door(1, 2, z = 3) = }")
 

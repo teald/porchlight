@@ -55,6 +55,17 @@ class BaseDoor:
                 f"Found {self.n_args} arguments in {self.name}."
                 )
 
+    def __call__(self, *args, **kwargs):
+        '''Calls the BaseDoor's function as normal.
+
+        The keys of kwargs must be passed with the same name as variables
+        within the BaseDoor. As of right now, if *extra* values are included,
+        they are ignored.
+        '''
+        input_kwargs = {k: v for k, v in kwargs.items() if k in self.arguments}
+
+        return self._base_function(*args, **input_kwargs)
+
     @staticmethod
     def _get_return_vals(function: Callable) -> List[str]:
         '''Gets the names of the return value variables for a given
@@ -113,5 +124,7 @@ if __name__ == "__main__":
         return x
 
     door = BaseDoor(test)
+
+    print(f"{door(1, 2, z = 3) = }")
 
     import pdb; pdb.set_trace()

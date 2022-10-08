@@ -17,7 +17,7 @@ class Neighborhood:
 
     def add_function(self,
                      function: Callable,
-                     override_defaults: bool = False
+                     overwrite_defaults: bool = False
                      ):
         '''Adds a new function to the Neighborhood object.'''
         new_door = door.Door(function)
@@ -131,7 +131,12 @@ class Neighborhood:
             if door.return_vals is None:
                 continue
 
-            update_params = {v: x for v, x in zip(door.return_vals, output)}
+            if isinstance(output, tuple):
+                update_params = {v: x for v, x in zip(door.return_vals, output)}
+
+            else:
+                assert len(door.return_vals) == 1, "Mismatched output and return."
+                update_params = {door.return_vals[0]: output}
 
             for pname, new_value in update_params.items():
                 # If the parameter is supposed to be constant, raise an error.
@@ -151,6 +156,25 @@ class Neighborhood:
                 else:
                     # Adding the parameter, is this reasonable?
                     self._params[pname] = param.Param(pname, new_value)
+
+    def __str__(self):
+        outstr = "Neighborhood object:\n"
+
+        # Parameters
+        outstr += "  Parameters:\n"
+        for pname, pob in self._params.items():
+            value = pob.value
+            outstr += f"    {pname}: {value}\n"
+
+        # Included functions.
+        outstr += "\n  Functions:\n"
+
+        for door in self.doors.values():
+            name = door.name
+            outstr += f"    {name}()\n"
+
+        return outstr
+
 
     @property
     def doors(self):
@@ -179,9 +203,10 @@ if __name__ == "__main__":
     neighborhood = Neighborhood()
 
     def test_fxn(x, y, z = 3) -> str:
-        output = f"{x * y * z = }"
+        output = x * y * z
         return output
 
+    print("Adding test_fxn")
     neighborhood.add_function(test_fxn)
 
     print(f"{neighborhood.required_args_present() = }")
@@ -201,5 +226,29 @@ if __name__ == "__main__":
     print(f"{neighborhood.required_args_present() = }")
 
     neighborhood.run_step()
+    print(f"{neighborhood.params['x'].value = }")
+    print(f"{neighborhood.params['y'].value = }")
+    print(f"{neighborhood.params['z'].value = }")
+    print(f"{neighborhood.params['output'].value = }")
+
+    # Define another function to add.
+    def update_x(output) -> int:
+        '''Test function that will attempt to take one parameter and update
+        another.
+        '''
+        x = output**2
+        return x
+
+    print("Adding update_x")
+    neighborhood.add_function(update_x)
+    print(f"{neighborhood.required_args_present() = }")
+    print(f"{neighborhood.params['x'].value = }")
+    print(f"{neighborhood.params['y'].value = }")
+    print(f"{neighborhood.params['z'].value = }")
+    print(f"{neighborhood.params['output'].value = }")
+
+    neighborhood.run_step()
+
+    print(neighborhood)
 
     import pdb; pdb.set_trace()

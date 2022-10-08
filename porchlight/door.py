@@ -2,9 +2,9 @@ import inspect
 import logging
 import string
 
-from typing import Any, Callable, Dict, List, Type
+from param import Empty
 
-import param
+from typing import Any, Callable, Dict, List, Type
 
 
 logger = logging.getLogger(__name__)
@@ -42,20 +42,30 @@ class BaseDoor:
         for name, param in inspect.signature(function).parameters.items():
             self.arguments[name] = param.annotation
 
-            if param.default:
+            if param.default != inspect._empty:
                 self.keyword_args[name] = param.default
 
             elif param.kind == inspect.Parameter.KEYWORD_ONLY:
                 # This catches keyword-only arguments with no default value.
-                self.keyword_args[name] = param.default
-                self.keyword_only_args[name] = param.default
+                # ^ TKREFACTORING is that a thing we need to worry about?
+                self.keyword_args[name] = Empty()
+                self.keyword_only_args[name] = Empty()
 
-        # Replace the inspect._empty values with typings.Any, which is a bit
-        # more universal/descriptive, especially for some functions where it
-        # does its own type handling.
+            else:
+                self.keyword_args[name] = Empty()
+
+            # Turn it into a param.Param object to be used with other parts of
+            # porchlight.
+            # ^ TK REFACTORING
+            if param.default == inspect.Parameter.empty:
+                default = None
+
+            else:
+                default = param.default
+
         for name, _type in self.arguments.items():
             if _type == inspect._empty:
-                self.arguments[name] = Any
+                self.arguments[name] = Empty
 
         self.n_args = len(self.arguments)
 
@@ -73,6 +83,10 @@ class BaseDoor:
         within the BaseDoor. As of right now, if *extra* values are included,
         they are ignored.
         '''
+        # This is currently filtering out all the arguments the function
+        # actually needs. But this way of doing it should probably be handled
+        # by the Neighborhood object..
+        # ^ TK REFACTORING
         input_kwargs = {k: v for k, v in kwargs.items() if k in self.arguments}
 
         return self._base_function(*args, **input_kwargs)
@@ -148,10 +162,7 @@ class Door(BaseDoor):
         required = []
 
         for x in self.arguments:
-            if x not in self.keyword_arguments:
-                required.append(x)
-
-            elif x in self.keyword_only_arguments:
+            if x not in self.keyword_args:
                 required.append(x)
 
         return required

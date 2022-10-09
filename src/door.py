@@ -47,14 +47,19 @@ class BaseDoor:
         function = self._base_function
 
         self.name = function.__name__
+        self.__name__ = function.__name__
         self.arguments = {}
         self.keyword_args = {}
+        self.keyword_only_args = {}
 
         for name, param in inspect.signature(function).parameters.items():
             self.arguments[name] = param.annotation
 
             if param.default != inspect._empty:
                 self.keyword_args[name] = param.default
+
+                if param.kind == inspect.Parameter.KEYWORD_ONLY:
+                    self.keyword_only_args[name] = param.default
 
             elif param.kind == inspect.Parameter.KEYWORD_ONLY:
                 # This catches keyword-only arguments with no default value.
@@ -190,6 +195,9 @@ class Door(BaseDoor):
 
         for x in self.arguments:
             if x not in self.keyword_args:
+                required.append(x)
+
+            elif isinstance(self.keyword_args[x], Empty):
                 required.append(x)
 
         return required

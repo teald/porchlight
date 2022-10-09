@@ -44,7 +44,6 @@ class BaseDoor:
 
     def __eq__(self, other) -> bool:
         '''Equality is defined as referencing the same base function.'''
-        print(other)
         if self.name is other.name:
             return True
 

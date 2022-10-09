@@ -48,6 +48,35 @@ class Neighborhood:
 
                 self.add_param(parameter_name, value)
 
+        for pname in [p[0] for p in new_door.return_vals]:
+            if pname not in self._params:
+                self._params[pname] = param.Empty()
+
+    def add_door(self,
+                 new_door: door.Door,
+                 overwrite_defaults: bool = False
+                 ):
+        '''Adds an already-initialized Door to the neighborhood.'''
+        self._doors[new_door.name] = new_door
+
+        # Update the parameters as necesssary.
+        # This will prefer default values passed by earlier
+        for pname, ptype in new_door.arguments.items():
+            if pname not in self._params or overwrite_defaults:
+                # This is a new parameter.
+                parameter_name = pname
+                value = param.Empty()
+
+                if pname in new_door.keyword_args:
+                    value = new_door.keyword_args[pname]
+
+                self.add_param(parameter_name, value)
+
+        for pname in [p[0] for p in new_door.return_vals]:
+            if pname not in self._params:
+                self._params[pname] = param.Empty
+
+
     def remove_door(self, name: str):
         '''Removes a door from the Neighborhood.'''
         if name not in self._doors:

@@ -42,6 +42,14 @@ class BaseDoor:
         self.typecheck = typecheck
         self._inspect_base_callable()
 
+    def __eq__(self, other) -> bool:
+        '''Equality is defined as referencing the same base function.'''
+        print(other)
+        if self.name is other.name:
+            return True
+
+        return False
+
     def _inspect_base_callable(self):
         '''Inspect the BaseDoor's baseline callable for primary attributes.'''
         function = self._base_function

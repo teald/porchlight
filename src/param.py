@@ -1,5 +1,16 @@
 from typing import Any, Dict, Type
 
+import logging
+
+
+# logger = logging.getLogger(__name__)
+if not logging.getLogger().hasHandlers():
+    logging.basicConfig(filename=f"param.log")
+    logger = logging.getLogger(__name__)
+
+else:
+    logger = logging.getLogger()
+
 
 class ParameterError(Exception):
     '''Errors due to Param-specific issues.'''

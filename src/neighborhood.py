@@ -3,6 +3,17 @@ import param
 
 from typing import Any, Callable, Dict, List
 
+import logging
+
+
+# logger = logging.getLogger(__name__)
+if not logging.getLogger().hasHandlers():
+    logging.basicConfig(filename=f"neighborhood.log")
+    logger = logging.getLogger(__name__)
+
+else:
+    logger = logging.getLogger()
+
 
 class Neighborhood:
     '''A neighborhood manages the interactions between Doors.'''

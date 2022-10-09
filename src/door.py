@@ -7,7 +7,13 @@ from param import Empty, ParameterError
 from typing import Any, Callable, Dict, List, Type
 
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
+if not logging.getLogger().hasHandlers():
+    logging.basicConfig(filename=f"door.log")
+    logger = logging.getLogger(__name__)
+
+else:
+    logger = logging.getLogger()
 
 
 class BaseDoor:
@@ -137,9 +143,9 @@ class BaseDoor:
             if '#' in line:
                 line = line[:line.index('#')]
 
-            if 'return' in line:
+            if 'return ' == line.strip()[:len('return ')]:
                 # This is a set of possible return values.
-                line = line.strip()[len('return'):]
+                line = line.strip()[len('return '):]
                 vals = line.split(',')
 
                 return_vals.append([v.strip() for v in vals])

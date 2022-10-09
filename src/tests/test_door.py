@@ -98,5 +98,41 @@ class TestDoor(TestCase):
         for fxn, exp in test_cases:
             self.assertEqual(fxn.required_arguments, exp)
 
+    def test_variables(self):
+        @Door
+        def test1(x, y=1):
+            x += y
+            return x
+        @Door
+        def test2(a, b, *, x):
+            b += a * x
+            x += a
+            return b, a
+
+        @Door
+        def test3(key1='beta', key2='beeeeta'):
+            return
+
+        @Door
+        def test4():
+            pass
+
+        @Door
+        def test5():
+            x = 5
+            return x
+
+        test_cases = (
+                (test1, ['x', 'y']),
+                (test2, ['a', 'b', 'x']),
+                (test3, ['key1', 'key2']),
+                (test4, []),
+                (test5, ['x'])
+                )
+
+        for fxn, exp in test_cases:
+            self.assertEqual(fxn.variables, exp)
+
+
 if __name__ == "__main__":
     unittest.main()

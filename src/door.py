@@ -183,8 +183,16 @@ class Door(BaseDoor):
     @property
     def variables(self) -> List[str]:
         '''Returns a list of all known return values and input arguments.'''
-        all_vars = [set(x for x in s) for s in self.return_vals]
-        all_vars += self.arguments
+        all_vars = []
+
+        for arg in self.arguments:
+            if arg not in all_vars:
+                all_vars.append(arg)
+
+        for ret in self.return_vals:
+            for r in ret:
+                if r not in all_vars:
+                    all_vars.append(r)
 
         return all_vars
 

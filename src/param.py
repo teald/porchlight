@@ -1,7 +1,7 @@
 from typing import Any, Dict, Type
 
 
-class ParamError(Exception):
+class ParameterError(Exception):
     '''Errors due to Param-specific issues.'''
     pass
 

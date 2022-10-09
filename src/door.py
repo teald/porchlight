@@ -2,7 +2,7 @@ import inspect
 import logging
 import string
 
-from param import Empty
+from param import Empty, ParameterError
 
 from typing import Any, Callable, Dict, List, Type
 
@@ -22,13 +22,18 @@ class BaseDoor:
     n_args: int
     name: str
     return_vals: List[List[str]]
+    typecheck: bool
 
-    def __init__(self, function: Callable):
+    def __init__(self, function: Callable, typecheck: bool = True):
         '''Initializes the BaseDoor class. It takes any callable (function,
         lambda, method...) and inspects it to get at its arguments and
         structure.
+
+        if typecheck is True (default True), the type of inputs passed to
+        BaseDoor.__call__ will be checked for matches to known input Types.
         '''
         self._base_function = function
+        self.typecheck = typecheck
         self._inspect_base_callable()
 
     def _inspect_base_callable(self):
@@ -85,9 +90,25 @@ class BaseDoor:
         '''
         # This is currently filtering out all the arguments the function
         # actually needs. But this way of doing it should probably be handled
-        # by the Neighborhood object..
+        # by the Neighborhood object in the future.
         # ^ TK REFACTORING
         input_kwargs = {k: v for k, v in kwargs.items() if k in self.arguments}
+
+        # Type checking.
+        if self.typecheck:
+            for k, v in input_kwargs.items():
+                if isinstance(self.arguments[k], Empty):
+                    continue
+
+                if not isinstance(v, self.arguments[k]):
+                    msg = (
+                        f"Type checking is on, and the type for input "
+                        f"parameter {k}, {type(v)} to {self.name} does not "
+                        f"match the detected type(s), {self.arguments}"
+                        )
+
+                    logging.error(msg)
+                    raise ParameterError(msg)
 
         return self._base_function(*args, **input_kwargs)
 
@@ -118,10 +139,10 @@ class BaseDoor:
 
             if 'return' in line:
                 # This is a set of possible return values.
-                line = line.strip()[len('return') + 1:]
+                line = line.strip()[len('return'):]
                 vals = line.split(',')
 
-                return_vals += [v.strip() for v in vals]
+                return_vals.append([v.strip() for v in vals])
 
                 for val in return_vals:
                     if any(c not in allowed_chars for c in val):

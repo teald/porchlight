@@ -150,7 +150,7 @@ class BaseDoor:
 
                 return_vals.append([v.strip() for v in vals])
 
-                for val in return_vals:
+                for val in return_vals[-1]:
                     if any(c not in allowed_chars for c in val):
                         # This is undefined, not an error. So assign return
                         # value 'undefined' for this return statement and issue

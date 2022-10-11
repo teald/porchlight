@@ -41,7 +41,7 @@ class Neighborhood:
             if pname not in self._params or overwrite_defaults:
                 # This is a new parameter.
                 parameter_name = pname
-                value = param.empty
+                value = param.Empty()
 
                 if pname in new_door.keyword_args:
                     value = new_door.keyword_args[pname]
@@ -53,10 +53,19 @@ class Neighborhood:
                 self._params[pname] = param.Empty()
 
     def add_door(self,
-                 new_door: door.Door,
+                 new_door: door.Door | List[door.Door],
                  overwrite_defaults: bool = False
                  ):
         '''Adds an already-initialized Door to the neighborhood.'''
+        if isinstance(new_door, List):
+            for nd in new_door:
+                self.add_door(
+                        nd,
+                        overwrite_defaults=overwrite_defaults
+                        )
+
+            return
+
         self._doors[new_door.name] = new_door
 
         # Update the parameters as necesssary.
@@ -74,7 +83,7 @@ class Neighborhood:
 
         for pname in [p[0] for p in new_door.return_vals]:
             if pname not in self._params:
-                self._params[pname] = param.Empty
+                self._params[pname] = param.Empty()
 
 
     def remove_door(self, name: str):
@@ -109,8 +118,8 @@ class Neighborhood:
             logging.error(msg)
             raise ParameterMissingError(msg)
 
-        for cur_door in self._doors:
-            req_kwargs = list(door.keyword_arguments.keys())
+        for cur_door in self._doors.values():
+            req_kwargs = list(cur_door.keyword_args.keys())
             req_args = [x for x in cur_door.arguments if x not in req_kwargs]
 
             # Positional arguments currently do nothing. Positional-only
@@ -120,7 +129,7 @@ class Neighborhood:
                 pos_args.append(self._params[arg].value)
 
             kw_args = {}
-            for arg in req_args:
+            for arg in req_kwargs:
                 kw_args[arg] = self._params[arg].value
 
             # Call the door object with all known args
@@ -168,17 +177,33 @@ class Neighborhood:
             output = door(**params)
 
             # Check if the door has a known return value.
-            if door.return_vals is None:
+            if not door.return_vals:
                 continue
 
             if isinstance(output, tuple):
-                update_params = {v: x for v, x in zip(door.return_vals, output)}
+                # TK REFACTORING this only works for functions with one
+                # possible output. This, frankly, should probably be the case
+                # nearly all of the time. Still need to make a call on if
+                # there's support in a subset of cases.
+                update_params = {
+                        v: x for v, x in zip(door.return_vals[0], output)
+                        }
 
             else:
-                assert len(door.return_vals) == 1, "Mismatched output and return."
-                update_params = {door.return_vals[0]: output}
+                assert len(door.return_vals) == 1, "Mismatched output/return."
+                update_params = {door.return_vals[0][0]: output}
 
             for pname, new_value in update_params.items():
+                # If ther parameter is currently empty, just reassign and
+                # continue.
+                # TK REFACTORING this needs to be uniformly a *declared* empyt
+                # value or always an empty type object.
+                if (isinstance(self.params[pname], param.Empty)
+                        or self.params[pname] == param.Empty
+                        ):
+                    self._params[pname]._value = new_value
+                    continue
+
                 # If the parameter is supposed to be constant, raise an error.
                 if pname in self._params and self._params[pname].constant:
                     msg = (f"Door {door.name} is attempting to change a "

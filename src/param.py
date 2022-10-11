@@ -23,7 +23,20 @@ class Empty:
     def __init__(self):
         pass
 
-empty = Empty()
+    def __eq__(self, other):
+        '''Force Equality of this special value regardless of whether it is
+        initialized or not
+        '''
+        if isinstance(other, Type):
+            if other == type(self):
+                return True
+
+        elif isinstance(other, type(self)):
+            return True
+
+        else:
+            return False
+
 
 class Param:
     '''Parameter class. while not frozen, for most purposes it should not be
@@ -40,7 +53,7 @@ class Param:
             "__empty"
             ]
 
-    def __init__(self, name: str, value: Any = empty, constant: bool = False):
+    def __init__(self, name: str, value: Any = Empty(), constant: bool = False):
         '''Initializes the Param object.'''
         self._name = name
         self._value = value

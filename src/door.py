@@ -88,7 +88,7 @@ class BaseDoor:
 
         for name, _type in self.arguments.items():
             if _type == inspect._empty:
-                self.arguments[name] = Empty
+                self.arguments[name] = Empty()
 
         self.n_args = len(self.arguments)
 
@@ -127,6 +127,7 @@ class BaseDoor:
 
                     logging.error(msg)
                     raise ParameterError(msg)
+
 
         return self._base_function(*args, **input_kwargs)
 

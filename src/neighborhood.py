@@ -102,42 +102,6 @@ class Neighborhood:
         new_param = param.Param(parameter_name, value, constant)
         self._params[parameter_name] = new_param
 
-    def call_all_doors(self):
-        '''Attempts to call all doors currently in the neighborhood.'''
-        # Check that all required parameters are represented.
-        if not self.required_args_present():
-            # TK REFACTORING temporary error type here.
-            class ParameterMissingError(KeyError):
-                pass
-
-            msg = (f"Neighborhood object {self.__name__} cannot call all "
-                   f"doors it contains. There is at least one missing "
-                   f"parameter."
-                   )
-
-            logging.error(msg)
-            raise ParameterMissingError(msg)
-
-        for cur_door in self._doors.values():
-            req_kwargs = list(cur_door.keyword_args.keys())
-            req_args = [x for x in cur_door.arguments if x not in req_kwargs]
-
-            # Positional arguments currently do nothing. Positional-only
-            # arguments are not resolvable in porchlight yet, (see run_step)
-            pos_args = []
-            for arg in req_args:
-                pos_args.append(self._params[arg].value)
-
-            kw_args = {}
-            for arg in req_kwargs:
-                kw_args[arg] = self._params[arg].value
-
-            # Call the door object with all known args
-            outputs = cur_door(*pos_args, **kw_args)
-
-            if outputs is None:
-                continue
-
     def required_args_present(self) -> bool:
         '''Returns True if all the necessary arguments to run all Doors in the
         Neighborhood object are included in the Neighborhood object.
@@ -196,8 +160,8 @@ class Neighborhood:
             for pname, new_value in update_params.items():
                 # If ther parameter is currently empty, just reassign and
                 # continue.
-                # TK REFACTORING this needs to be uniformly a *declared* empyt
-                # value or always an empty type object.
+                # TK REFACTORING this needs to be uniformly an *initialized*
+                # Empty value or always an empty type object.
                 if (isinstance(self.params[pname], param.Empty)
                         or self.params[pname] == param.Empty
                         ):

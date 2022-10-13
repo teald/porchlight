@@ -3,7 +3,7 @@ from typing import Any, Dict, Type
 import logging
 
 
-# logger = logging.getLogger(__name__)
+# Set up logger if not already instantiated.
 if not logging.getLogger().hasHandlers():
     logging.basicConfig(filename=f"param.log")
     logger = logging.getLogger(__name__)
@@ -49,8 +49,7 @@ class Param:
             "_name",
             "_value",
             "constant",
-            "_type",
-            "__empty"
+            "_type"
             ]
 
     def __init__(self, name: str, value: Any = Empty(), constant: bool = False):
@@ -59,6 +58,21 @@ class Param:
         self._value = value
         self.constant = constant
         self._type = type(self._value)
+
+    def __str__(self):
+        outstr = f"{self._name} ({self._type}): {self._value}"
+        outstr += "" if not self.constant else " (constant)"
+        return outstr
+
+    def __eq__(self, other):
+        if not isinstance(other, Param):
+            return False
+
+        for attr in self.__slots__:
+            if (getattr(self, attr) != getattr(other, attr)):
+                return False
+
+        return True
 
     @property
     def name(self):

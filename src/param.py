@@ -2,14 +2,7 @@ from typing import Any, Dict, Type
 
 import logging
 
-
-# Set up logger if not already instantiated.
-if not logging.getLogger().hasHandlers():
-    logging.basicConfig(filename=f"param.log")
-    logger = logging.getLogger(__name__)
-
-else:
-    logger = logging.getLogger()
+logger = logging.getLogger()
 
 
 class ParameterError(Exception):
@@ -27,11 +20,7 @@ class Empty:
         '''Force Equality of this special value regardless of whether it is
         initialized or not
         '''
-        if isinstance(other, Type):
-            if other == type(self):
-                return True
-
-        elif isinstance(other, type(self)):
+        if isinstance(other, Empty) or other == Empty:
             return True
 
         else:
@@ -85,9 +74,15 @@ class Param:
     @value.setter
     def value(self, new_value: Any):
         if self.constant:
-            raise ValueError(f"Param object {self.__name__} is not mutable.")
+            msg = f"Parameter {self.name} is not mutable."
+            logger.error(msg)
+            raise ParameterError(msg)
 
         self._value = new_value
+
+        # TK REFACTORING this should be typecheck upon request/by default in a
+        # future update.
+        self._type = type(self._value)
 
     @property
     def type(self) -> Type:

@@ -6,6 +6,9 @@ from unittest import TestCase
 from door import Door
 from param import Empty, ParameterError
 
+import logging
+import os
+logging.basicConfig(filename=f"{os.getcwd()}/porchlight_unittest.log")
 
 class TestDoor(TestCase):
     def test___init__(self):

@@ -3,9 +3,13 @@ relevant helper functions or objects.
 '''
 from unittest import TestCase
 
+import door
 from door import BaseDoor
-from param import Empty, ParameterError
+from param import Empty, ParameterError, Param
 
+import logging
+import os
+logging.basicConfig(filename=f"{os.getcwd()}/porchlight_unittest.log")
 
 class TestBaseDoor(TestCase):
     def test___init__(self):
@@ -47,7 +51,9 @@ class TestBaseDoor(TestCase):
                          "fxn_use_decorator"
                          )
 
-        self.assertEqual(fxn_use_decorator.arguments, {'x': Empty})
+        self.assertEqual(fxn_use_decorator.arguments,
+                         {'x': Empty}
+                         )
 
     def test___call__(self):
         def test_fxn(x: int) -> int:
@@ -93,6 +99,55 @@ class TestBaseDoor(TestCase):
         result = BaseDoor._get_return_vals(fxn_return_types)
 
         self.assertEqual([['outstr']], result)
+
+    def test___eq__(self):
+        @BaseDoor
+        def fxn1(x, y):
+            x += y
+
+            return x
+
+        @BaseDoor
+        def fxn2(x, y):
+            return y
+
+        other_fxn1 = door.BaseDoor(fxn1._base_function)
+
+        self.assertTrue(fxn1 == fxn1)
+        self.assertFalse(fxn1 == fxn2)
+        self.assertTrue(fxn1 == other_fxn1)
+
+    def test__inspect_base_callable(self):
+        def bigfxn(x, y, *, z = 5):
+            output = sum((x, y, z))
+            return output
+
+        new_door = BaseDoor(bigfxn)
+
+        self.assertEqual(new_door.keyword_only_args, {'z': Param('z', 5)})
+
+        # For now, there should *not* be any functionality for required
+        # positional arguments. That will come later, and this test will need
+        # to be updated.
+        def bad_fxn(x1, y1, /, x3, *, z7):
+            return c
+
+        with self.assertRaises(NotImplementedError):
+            f = BaseDoor(bad_fxn)
+
+    def test__get_return_vals(self):
+        def testfxn(x = 4, y = 6, z = "beep"):
+            # This is a test comment
+            if x == 1:
+                return str(x)
+
+            z += " " + str(x + y)
+
+            return z  # This is a test comment
+
+        retvals = BaseDoor._get_return_vals(testfxn)
+
+        self.assertEqual(retvals, [[None], ['z']])
 
 if __name__ == "__main__":
     unittest.main()

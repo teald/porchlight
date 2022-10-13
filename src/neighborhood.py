@@ -105,7 +105,7 @@ class Neighborhood:
         if not ignore_constant and _old_param.constant:
             msg = f"Parameter {_old_param.name} is set to constant."
 
-            logging.error(msg)
+            logger.error(msg)
 
             raise param.ParameterError(msg)
 
@@ -191,7 +191,7 @@ class Neighborhood:
                            f"constant parameter: {pname}."
                            )
 
-                    logging.error(msg)
+                    logger.error(msg)
                     raise param.ParameterError(msg)
 
                 # Editing the _value directly here... but I'm not sure if
@@ -213,7 +213,7 @@ class Neighborhood:
         if any(e in req_args for e in empty_params):
             missing = [e for e in empty_params if e in req_args]
             msg = f"Missing parameters required for input: {missing}."
-            logging.error(msg)
+            logger.error(msg)
             raise param.ParameterError(msg)
 
         self.call_all_doors()

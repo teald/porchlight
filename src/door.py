@@ -64,7 +64,7 @@ class BaseDoor:
                         f"arguments, which were found in {self.name}."
                         )
 
-                logging.error(msg)
+                logger.error(msg)
                 raise NotImplementedError(msg)
 
             elif param.default != inspect._empty:
@@ -100,7 +100,7 @@ class BaseDoor:
         # The return values require some more effort.
         self.return_vals = self._get_return_vals(function)
 
-        logging.debug(
+        logger.debug(
                 f"Found {self.n_args} arguments in {self.name}."
                 )
 
@@ -130,7 +130,7 @@ class BaseDoor:
                         f"match the detected type(s), {self.arguments}"
                         )
 
-                    logging.error(msg)
+                    logger.error(msg)
                     raise ParameterError(msg)
 
 
@@ -172,7 +172,7 @@ class BaseDoor:
                         # This is undefined, not an error. So assign return
                         # value 'undefined' for this return statement and issue
                         # a warning.
-                        logging.warning(
+                        logger.warning(
                                 f"Could not define any set of return variable "
                                 f"names for the following return line: \n"
                                 f"{start_line+i}) {orig_line.strip()}\n"

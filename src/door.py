@@ -216,23 +216,7 @@ class Door(BaseDoor):
         required = []
 
         for x in self.arguments:
-            if x not in self.keyword_args:
-                required.append(x)
-
-            elif isinstance(self.keyword_args[x].value, Empty):
+            if isinstance(self.keyword_args[x].value, Empty):
                 required.append(x)
 
         return required
-
-
-if __name__ == "__main__":
-    # Testing
-    def test(x: int, y, z: int = 8) -> int:
-        x = x * y * z
-        return x
-
-    door = Door(test)
-
-    print(f"{door(1, 2, z = 3) = }")
-
-    import pdb; pdb.set_trace()

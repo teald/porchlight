@@ -2,7 +2,7 @@ import inspect
 import logging
 import string
 
-from param import Empty, ParameterError
+from param import Empty, ParameterError, Param
 
 from typing import Any, Callable, Dict, List, Type
 
@@ -74,19 +74,19 @@ class BaseDoor:
                 raise NotImplementedError(msg)
 
             elif param.default != inspect._empty:
-                self.keyword_args[name] = param.default
+                self.keyword_args[name] = Param(name, param.default)
 
                 if param.kind == inspect.Parameter.KEYWORD_ONLY:
-                    self.keyword_only_args[name] = param.default
+                    self.keyword_only_args[name] = Param(name, param.default)
 
             elif param.kind == inspect.Parameter.KEYWORD_ONLY:
                 # This catches keyword-only arguments with no default value.
                 # ^ TKREFACTORING is that a thing we need to worry about?
-                self.keyword_args[name] = Empty()
-                self.keyword_only_args[name] = Empty()
+                self.keyword_args[name] = Param(name, Empty())
+                self.keyword_only_args[name] = Param(name, Empty())
 
             else:
-                self.keyword_args[name] = Empty()
+                self.keyword_args[name] = Param(name, Empty())
 
             # Turn it into a param.Param object to be used with other parts of
             # porchlight.
@@ -99,7 +99,7 @@ class BaseDoor:
 
         for name, _type in self.arguments.items():
             if _type == inspect._empty:
-                self.arguments[name] = param.Param(name, Empty())
+                self.arguments[name] = Empty
 
         self.n_args = len(self.arguments)
 
@@ -126,7 +126,7 @@ class BaseDoor:
         # Type checking.
         if self.typecheck:
             for k, v in input_kwargs.items():
-                if isinstance(self.arguments[k], Empty):
+                if self.arguments[k] ==  Empty:
                     continue
 
                 if not isinstance(v, self.arguments[k]):
@@ -224,7 +224,7 @@ class Door(BaseDoor):
             if x not in self.keyword_args:
                 required.append(x)
 
-            elif isinstance(self.keyword_args[x], Empty):
+            elif isinstance(self.keyword_args[x].value, Empty):
                 required.append(x)
 
         return required

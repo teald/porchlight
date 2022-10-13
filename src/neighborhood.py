@@ -6,7 +6,6 @@ from typing import Any, Callable, Dict, List
 import logging
 
 
-# logger = logging.getLogger(__name__)
 if not logging.getLogger().hasHandlers():
     logging.basicConfig(filename=f"neighborhood.log")
     logger = logging.getLogger(__name__)
@@ -98,7 +97,12 @@ class Neighborhood:
                   constant: bool = False
                   ):
         '''Adds a new parameter to the Neighborhood'''
-        new_param = param.Param(parameter_name, value, constant)
+        if not isinstance(value, param.Param):
+            new_param = param.Param(parameter_name, value, constant)
+
+        else:
+            new_param = value
+
         self._params[parameter_name] = new_param
 
     def required_args_present(self) -> bool:
@@ -132,6 +136,9 @@ class Neighborhood:
             for pname in req_params:
                 input_params[pname] = self._params[pname].value
 
+            if any(isinstance(x, param.Param) for x in input_params.values()):
+                import pdb; pdb.set_trace()
+
             # Run the door object and catch its output.
             output = door(**input_params)
 
@@ -139,7 +146,7 @@ class Neighborhood:
             if not door.return_vals:
                 continue
 
-            if isinstance(output, tuple):
+            elif len(door.return_vals) > 1:
                 # TK REFACTORING this only works for functions with one
                 # possible output. This, frankly, should probably be the case
                 # nearly all of the time. Still need to make a call on if

@@ -7,13 +7,7 @@ from param import Empty, ParameterError, Param
 from typing import Any, Callable, Dict, List, Type
 
 
-# Set up logger if not already instantiated.
-if not logging.getLogger().hasHandlers():
-    logging.basicConfig(filename=f"door.log")
-    logger = logging.getLogger(__name__)
-
-else:
-    logger = logging.getLogger()
+logger = logging.getLogger()
 
 
 class BaseDoor:
@@ -170,11 +164,10 @@ class BaseDoor:
             if 'return ' == line.strip()[:len('return ')]:
                 # This is a set of possible return values.
                 line = line.strip()[len('return '):]
-                vals = line.split(',')
+                vals = line.split(',') if ',' in line else [line]
+                vals = [v.strip() for v in vals]
 
-                return_vals.append([v.strip() for v in vals])
-
-                for val in return_vals[-1]:
+                for val in vals:
                     if any(c not in allowed_chars for c in val):
                         # This is undefined, not an error. So assign return
                         # value 'undefined' for this return statement and issue
@@ -188,8 +181,10 @@ class BaseDoor:
                                 f"be modified by this callable."
                                 )
 
-                        return_vals.append(None)
+                        vals = [None]
                         break
+
+                return_vals.append(vals)
 
         return return_vals
 

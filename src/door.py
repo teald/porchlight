@@ -7,7 +7,7 @@ from param import Empty, ParameterError
 from typing import Any, Callable, Dict, List, Type
 
 
-# logger = logging.getLogger(__name__)
+# Set up logger if not already instantiated.
 if not logging.getLogger().hasHandlers():
     logging.basicConfig(filename=f"door.log")
     logger = logging.getLogger(__name__)

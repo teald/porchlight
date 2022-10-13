@@ -17,8 +17,7 @@ else:
 
 class Neighborhood:
     '''A neighborhood manages the interactions between Doors.'''
-
-    _doors:  Dict[str, door.Door]
+    _doors: Dict[str, param.Param]
     _params: Dict[str, param.Param]
 
     def __init__(self):
@@ -83,7 +82,7 @@ class Neighborhood:
 
         for pname in [p[0] for p in new_door.return_vals]:
             if pname not in self._params:
-                self._params[pname] = param.Empty()
+                self._params[pname] = param.Param(pname, param.Empty)
 
 
     def remove_door(self, name: str):
@@ -121,24 +120,20 @@ class Neighborhood:
 
         return True
 
-    def run_step(self):
-        '''Runs a single step forward for all functions, in specified order,
-        based on the current parameter state of the Neighborhood object.
-
-        The way this is currently set up, it will not handle positional
-        arguments. That is, if an input cannot be passed using its variable
-        name, this will break.
+    def call_all_doors(self):
+        '''Calls every door currently present in the neighborhood object in
+        current list order.
         '''
         # Need to call the doors directly.
         for door in self._doors.values():
             req_params = door.arguments
-            params = {}
+            input_params = {}
 
             for pname in req_params:
-                params[pname] = self._params[pname].value
+                input_params[pname] = self._params[pname].value
 
             # Run the door object and catch its output.
-            output = door(**params)
+            output = door(**input_params)
 
             # Check if the door has a known return value.
             if not door.return_vals:
@@ -160,11 +155,7 @@ class Neighborhood:
             for pname, new_value in update_params.items():
                 # If ther parameter is currently empty, just reassign and
                 # continue.
-                # TK REFACTORING this needs to be uniformly an *initialized*
-                # Empty value or always an empty type object.
-                if (isinstance(self.params[pname], param.Empty)
-                        or self.params[pname] == param.Empty
-                        ):
+                if isinstance(self._params[pname], param.Empty):
                     self._params[pname]._value = new_value
                     continue
 
@@ -186,98 +177,60 @@ class Neighborhood:
                     # Adding the parameter, is this reasonable?
                     self._params[pname] = param.Param(pname, new_value)
 
-    def __str__(self):
-        outstr = "Neighborhood object:\n"
+    def run_step(self):
+        '''Runs a single step forward for all functions, in specified order,
+        based on the current parameter state of the Neighborhood object.
 
-        # Parameters
-        outstr += "  Parameters:\n"
-        for pname, pob in self._params.items():
-            value = pob.value
-            outstr += f"    {pname}: {value}\n"
+        The way this is currently set up, it will not handle positional
+        arguments. That is, if an input cannot be passed using its variable
+        name, this will break.
+        '''
+        # Ensure that all required parameters are defined.
+        empty_params = self.empty_parameters
+        req_args = self.required_parameters
 
-        # Included functions.
-        outstr += "\n  Functions:\n"
+        if any(e in req_args for e in empty_params):
+            missing = [e for e in empty_params if e in req_args]
+            msg = f"Missing parameters required for input: {missing}."
+            logging.error(msg)
+            raise param.ParameterError(msg)
 
-        for door in self.doors.values():
-            name = door.name
-            outstr += f"    {name}()\n"
+        self.call_all_doors()
 
-        return outstr
+    @property
+    def empty_parameters(self):
+        empty_params = {}
 
+        for pname, p in self._params.items():
+            if isinstance(p.value, param.Empty):
+                empty_params[pname] = p
+
+        return empty_params
 
     @property
     def doors(self):
         return self._doors
 
     @property
-    def door_names(self):
-        return [name for name in self._doors]
+    def parameters(self):
+        return self._params
 
     @property
     def params(self):
         return self._params
 
     @property
-    def required_params(self) -> List[str]:
-        all_required = set()
+    def required_parameters(self):
+        '''Defines parameters that must not be empty at the start of a run.
 
-        for door in self.doors.values():
-            for pname, val in door.keyword_args.items():
-                if isinstance(val, param.Empty):
-                    all_required.add(pname)
-
-        return list(all_required)
-
-if __name__ == "__main__":
-    neighborhood = Neighborhood()
-
-    def test_fxn(x, y, z = 3) -> str:
-        output = x * y * z
-        return output
-
-    print("Adding test_fxn")
-    neighborhood.add_function(test_fxn)
-
-    print(f"{neighborhood.required_args_present() = }")
-
-    x = {
-            'parameter_name': 'x',
-            'value': 1
-            }
-    y = {
-            'parameter_name': 'y',
-            'value': 5
-            }
-
-    neighborhood.add_param(**x)
-    neighborhood.add_param(**y)
-
-    print(f"{neighborhood.required_args_present() = }")
-
-    neighborhood.run_step()
-    print(f"{neighborhood.params['x'].value = }")
-    print(f"{neighborhood.params['y'].value = }")
-    print(f"{neighborhood.params['z'].value = }")
-    print(f"{neighborhood.params['output'].value = }")
-
-    # Define another function to add.
-    def update_x(output) -> int:
-        '''Test function that will attempt to take one parameter and update
-        another.
+        TK TODO: Need to anticipate what parameters are returned during
+        run_step.
         '''
-        x = output**2
-        return x
+        req_args = []
 
-    print("Adding update_x")
-    neighborhood.add_function(update_x)
-    print(f"{neighborhood.required_args_present() = }")
-    print(f"{neighborhood.params['x'].value = }")
-    print(f"{neighborhood.params['y'].value = }")
-    print(f"{neighborhood.params['z'].value = }")
-    print(f"{neighborhood.params['output'].value = }")
+        for d in self._doors.values():
+            for pname in d.required_arguments:
+                if pname not in req_args:
+                    req_args.append(pname)
 
-    neighborhood.run_step()
-
-    print(neighborhood)
-
-    import pdb; pdb.set_trace()
+        return req_args

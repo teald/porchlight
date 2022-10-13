@@ -99,7 +99,7 @@ class BaseDoor:
 
         for name, _type in self.arguments.items():
             if _type == inspect._empty:
-                self.arguments[name] = Empty()
+                self.arguments[name] = param.Param(name, Empty())
 
         self.n_args = len(self.arguments)
 

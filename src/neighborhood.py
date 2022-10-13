@@ -6,12 +6,7 @@ from typing import Any, Callable, Dict, List
 import logging
 
 
-if not logging.getLogger().hasHandlers():
-    logging.basicConfig(filename=f"neighborhood.log")
-    logger = logging.getLogger(__name__)
-
-else:
-    logger = logging.getLogger()
+logger = logging.getLogger()
 
 
 class Neighborhood:
@@ -48,7 +43,8 @@ class Neighborhood:
 
         for pname in [p[0] for p in new_door.return_vals]:
             if pname not in self._params:
-                self._params[pname] = param.Empty()
+                value = param.Empty()
+                self.add_param(pname, value)
 
     def add_door(self,
                  new_door: door.Door | List[door.Door],
@@ -79,10 +75,13 @@ class Neighborhood:
 
                 self.add_param(parameter_name, value)
 
-        for pname in [p[0] for p in new_door.return_vals]:
-            if pname not in self._params:
-                self._params[pname] = param.Param(pname, param.Empty)
+        # If not well-defined, we cannot modify outputs to this function.
+        if not new_door.return_vals:
+            return
 
+        for pname in [p for rvs in new_door.return_vals for p in rvs]:
+            if pname not in self._params:
+                self._params[pname] = param.Param(pname, param.Empty())
 
     def remove_door(self, name: str):
         '''Removes a door from the Neighborhood.'''
@@ -90,6 +89,30 @@ class Neighborhood:
             raise KeyError(f"Could not find a door named {name}.")
 
         del self._doors[name]
+
+    def set_param(self,
+                  parameter_name: str,
+                  new_value: Any,
+                  constant: bool = False,
+                  *,
+                  ignore_constant: bool = False
+                  ) -> param.Param:
+        '''Set the value of a parameter to a new value. Since parameters are
+        not meant to be modified like this, generate a new parameter.
+        '''
+        _old_param = self._params[parameter_name]
+
+        if not ignore_constant and _old_param.constant:
+            msg = f"Parameter {_old_param.name} is set to constant."
+
+            logging.error(msg)
+
+            raise param.ParameterError(msg)
+
+        self._params[parameter_name] = param.Param(parameter_name,
+                                                   new_value,
+                                                   constant
+                                                   )
 
     def add_param(self,
                   parameter_name: str,
@@ -136,9 +159,6 @@ class Neighborhood:
             for pname in req_params:
                 input_params[pname] = self._params[pname].value
 
-            if any(isinstance(x, param.Param) for x in input_params.values()):
-                import pdb; pdb.set_trace()
-
             # Run the door object and catch its output.
             output = door(**input_params)
 
@@ -146,7 +166,7 @@ class Neighborhood:
             if not door.return_vals:
                 continue
 
-            elif len(door.return_vals) > 1:
+            elif len(door.return_vals[0]) > 1:
                 # TK REFACTORING this only works for functions with one
                 # possible output. This, frankly, should probably be the case
                 # nearly all of the time. Still need to make a call on if
@@ -161,10 +181,9 @@ class Neighborhood:
 
             for pname, new_value in update_params.items():
                 # If ther parameter is currently empty, just reassign and
-                # continue.
-                if isinstance(self._params[pname], param.Empty):
-                    self._params[pname]._value = new_value
-                    continue
+                # continue. This refreshes the type value of the parameter
+                if isinstance(self._params[pname].value, param.Empty):
+                    self._params[pname] = param.Param(pname, new_value)
 
                 # If the parameter is supposed to be constant, raise an error.
                 if pname in self._params and self._params[pname].constant:
@@ -172,17 +191,12 @@ class Neighborhood:
                            f"constant parameter: {pname}."
                            )
 
-                    log.error(msg)
-                    raise param.ParamError(msg)
+                    logging.error(msg)
+                    raise param.ParameterError(msg)
 
                 # Editing the _value directly here... but I'm not sure if
                 # that's the best idea.
-                if pname in self._params:
-                    self._params[pname]._value = new_value
-
-                else:
-                    # Adding the parameter, is this reasonable?
-                    self._params[pname] = param.Param(pname, new_value)
+                self._params[pname]._value = new_value
 
     def run_step(self):
         '''Runs a single step forward for all functions, in specified order,
@@ -224,7 +238,7 @@ class Neighborhood:
 
     @property
     def params(self):
-        return self._params
+        return self.parameters
 
     @property
     def required_parameters(self):

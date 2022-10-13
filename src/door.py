@@ -62,7 +62,18 @@ class BaseDoor:
         for name, param in inspect.signature(function).parameters.items():
             self.arguments[name] = param.annotation
 
-            if param.default != inspect._empty:
+            # Check for positional-only arguments first, then proceed to other
+            # argument types.
+            if param.kind == inspect.Parameter.POSITIONAL_ONLY:
+                msg = (
+                        f"porchlight does not support positional-only "
+                        f"arguments, which were found in {self.name}."
+                        )
+
+                logging.error(msg)
+                raise NotImplementedError(msg)
+
+            elif param.default != inspect._empty:
                 self.keyword_args[name] = param.default
 
                 if param.kind == inspect.Parameter.KEYWORD_ONLY:

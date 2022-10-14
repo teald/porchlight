@@ -160,17 +160,17 @@ class Neighborhood:
         '''
         # Need to call the doors directly.
         for cur_door in self._doors.values():
-            req_params = door.arguments
+            req_params = cur_door.arguments
             input_params = {}
 
             for pname in req_params:
                 input_params[pname] = self._params[pname].value
 
-            # Run the door object and catch its output.
-            output = door(**input_params)
+            # Run the cur_door object and catch its output.
+            output = cur_door(**input_params)
 
-            # Check if the door has a known return value.
-            if not door.return_vals:
+            # Check if the cur_door has a known return value.
+            if not cur_door.return_vals:
                 continue
 
             elif len(cur_door.return_vals[0]) > 1:

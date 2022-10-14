@@ -33,7 +33,7 @@ import porchlight
 # yet.
 neighborhood = porchlight.Neighborhood()
 
-# To add a function, we dimply define it and pass it to porchlight.
+# To add a function, we simply define it and pass it to porchlight.
 def increment_x(x: int, y: int) -> int:
     x = x * y
     return x
@@ -47,9 +47,9 @@ print(neighborhood)  # porchlight.Neighborhood has a pretty-print string.
 ```
 
 Although this is the current extent of documentation, there should be some more
-complete doncumentation within the next couple weeks/months.
+complete documentation within the next couple weeks/months.
 
-Documention
+Documentation
 -----------
 
 In prep.

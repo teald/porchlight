@@ -1,13 +1,12 @@
 import inspect
-import logging
 import string
 
 from param import Empty, ParameterError, Param
 
 from typing import Any, Callable, Dict, List, Type
 
-
-logger = logging.getLogger()
+import logging
+logger = logging.getLogger(__name__)
 
 
 class BaseDoor:
@@ -172,13 +171,15 @@ class BaseDoor:
                         # This is undefined, not an error. So assign return
                         # value 'undefined' for this return statement and issue
                         # a warning.
+                        source_file = inspect.getfile(function)
                         logger.warning(
                                 f"Could not define any set of return variable "
                                 f"names for the following return line: \n"
-                                f"{start_line+i}) {orig_line.strip()}\n"
-                                f"While not crucial to this function, be "
-                                f"aware that this means no return value will "
-                                f"be modified by this callable."
+                                f"{source_file}: {start_line+i}) "
+                                f"{orig_line.strip()}\n While not crucial to "
+                                f"this function, be aware that this means no "
+                                f"return value will be modified by this "
+                                f"callable."
                                 )
 
                         vals = [None]

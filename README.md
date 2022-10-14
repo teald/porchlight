@@ -16,10 +16,7 @@ Installation
 
 You can install `porchlight` by cloning this repository to a local directory,
 opening a command line, and running:
-```console
-cd porchlight
-python -m pip install .
-```
+```pip install porchlight```
 
 Usage
 -----

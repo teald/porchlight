@@ -4,9 +4,7 @@ import param
 from typing import Any, Callable, Dict, List
 
 import logging
-
-
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class Neighborhood:
@@ -140,9 +138,18 @@ class Neighborhood:
 
                 done.append(pname)
 
-                if (pname not in self._params
-                    or isinstance(self._params[pname].value, param.Empty)
-                    ):
+                pname_missing = pname not in self._params
+
+                if not pname_missing:
+                    is_empty_param = isinstance(self._params[pname].value,
+                                                param.Empty
+                                                )
+
+                else:
+                    # Parameter cannot be Empty if it is missing.
+                    is_empty_param = False
+
+                if pname_missing or is_empty_param:
                     return False
 
         return True
@@ -152,7 +159,7 @@ class Neighborhood:
         current list order.
         '''
         # Need to call the doors directly.
-        for door in self._doors.values():
+        for cur_door in self._doors.values():
             req_params = door.arguments
             input_params = {}
 
@@ -166,18 +173,19 @@ class Neighborhood:
             if not door.return_vals:
                 continue
 
-            elif len(door.return_vals[0]) > 1:
+            elif len(cur_door.return_vals[0]) > 1:
                 # TK REFACTORING this only works for functions with one
                 # possible output. This, frankly, should probably be the case
                 # nearly all of the time. Still need to make a call on if
                 # there's support in a subset of cases.
                 update_params = {
-                        v: x for v, x in zip(door.return_vals[0], output)
+                        v: x for v, x in zip(cur_door.return_vals[0], output)
                         }
 
             else:
-                assert len(door.return_vals) == 1, "Mismatched output/return."
-                update_params = {door.return_vals[0][0]: output}
+                assertmsg = "Mismatched output/return."
+                assert len(cur_door.return_vals) == 1, assertmsg
+                update_params = {cur_door.return_vals[0][0]: output}
 
             for pname, new_value in update_params.items():
                 # If ther parameter is currently empty, just reassign and
@@ -187,7 +195,7 @@ class Neighborhood:
 
                 # If the parameter is supposed to be constant, raise an error.
                 if pname in self._params and self._params[pname].constant:
-                    msg = (f"Door {door.name} is attempting to change a "
+                    msg = (f"Door {cur_door.name} is attempting to change a "
                            f"constant parameter: {pname}."
                            )
 

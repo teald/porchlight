@@ -1,13 +1,13 @@
-from typing import Any, Dict, Type
+from typing import Any, Type
 
 import logging
-
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class ParameterError(Exception):
     '''Errors due to Param-specific issues.'''
     pass
+
 
 class Empty:
     '''An empty class representing missing parameters values. Repurposed here
@@ -41,7 +41,10 @@ class Param:
             "_type"
             ]
 
-    def __init__(self, name: str, value: Any = Empty(), constant: bool = False):
+    def __init__(self, name: str,
+                 value: Any = Empty(),
+                 constant: bool = False
+                 ):
         '''Initializes the Param object.'''
         self._name = name
         self._value = value

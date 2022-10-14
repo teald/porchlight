@@ -81,15 +81,6 @@ class BaseDoor:
             else:
                 self.keyword_args[name] = Param(name, Empty())
 
-            # Turn it into a param.Param object to be used with other parts of
-            # porchlight.
-            # ^ TK REFACTORING
-            if param.default == inspect.Parameter.empty:
-                default = None
-
-            else:
-                default = param.default
-
         for name, _type in self.arguments.items():
             if _type == inspect._empty:
                 self.arguments[name] = Empty
@@ -119,7 +110,7 @@ class BaseDoor:
         # Type checking.
         if self.typecheck:
             for k, v in input_kwargs.items():
-                if self.arguments[k] ==  Empty:
+                if self.arguments[k] == Empty:
                     continue
 
                 if not isinstance(v, self.arguments[k]):
@@ -131,7 +122,6 @@ class BaseDoor:
 
                     logger.error(msg)
                     raise ParameterError(msg)
-
 
         return self._base_function(*args, **input_kwargs)
 

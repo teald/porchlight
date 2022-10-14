@@ -1,7 +1,7 @@
 import door
 import param
 
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Union
 
 import logging
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ class Neighborhood:
                 self.add_param(pname, value)
 
     def add_door(self,
-                 new_door: door.Door | List[door.Door],
+                 new_door: Union[door.Door, List[door.Door]],
                  overwrite_defaults: bool = False
                  ):
         '''Adds an already-initialized Door to the neighborhood.'''
@@ -139,15 +139,12 @@ class Neighborhood:
                 done.append(pname)
 
                 pname_missing = pname not in self._params
+                is_empty_param = False
 
                 if not pname_missing:
                     is_empty_param = isinstance(self._params[pname].value,
                                                 param.Empty
                                                 )
-
-                else:
-                    # Parameter cannot be Empty if it is missing.
-                    is_empty_param = False
 
                 if pname_missing or is_empty_param:
                     return False

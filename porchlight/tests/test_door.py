@@ -10,6 +10,7 @@ import logging
 import os
 logging.basicConfig(filename=f"{os.getcwd()}/porchlight_unittest.log")
 
+
 class TestDoor(TestCase):
     def test___init__(self):
         def test_fxn(x: int) -> int:
@@ -61,7 +62,7 @@ class TestDoor(TestCase):
 
         # Call the Door with erroneous types based on annotations.
         with self.assertRaises(ParameterError):
-            result = door(x='6')
+            door(x='6')
 
     def test_required_arguments(self):
         # This property is critical for the functioning of the Neighborhood
@@ -71,6 +72,7 @@ class TestDoor(TestCase):
         def test1(x, y=1):
             x += y
             return x
+
         @Door
         def test2(a, b, *, x):
             b += a * x
@@ -106,6 +108,7 @@ class TestDoor(TestCase):
         def test1(x, y=1):
             x += y
             return x
+
         @Door
         def test2(a, b, *, x):
             b += a * x
@@ -138,4 +141,5 @@ class TestDoor(TestCase):
 
 
 if __name__ == "__main__":
+    import unittest
     unittest.main()

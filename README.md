@@ -1,4 +1,4 @@
-porchlight
+[porchlight](https://porchlight.readthedocs.io/en/latest/)
 ==========
 
 `porchlight` is a function management suite that manages common inputs and
@@ -52,4 +52,4 @@ complete documentation within the next couple weeks/months.
 Documentation
 -----------
 
-In prep.
+Documentation for `porchlight` can be found on Read the Docs here: https://porchlight.readthedocs.io/en/latest/

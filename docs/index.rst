@@ -5,9 +5,9 @@ Welcome to porchlight's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   neighborhood
-   door
-   param
+   source/neighborhood
+   source/door
+   source/param
 
 Indices and tables
 ==================

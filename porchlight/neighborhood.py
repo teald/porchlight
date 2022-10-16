@@ -1,5 +1,6 @@
-import door
-import param
+'''Defines the `Neighbor` class.'''
+from . import door
+from . import param
 
 from typing import Any, Callable, Dict, List, Union
 
@@ -8,7 +9,21 @@ logger = logging.getLogger(__name__)
 
 
 class Neighborhood:
-    '''A neighborhood manages the interactions between Doors.'''
+    '''A neighborhood manages the interactions between Doors. It consists of a
+    modifiable collection of :class:`~porchlight.door.Door` (or
+    :class:`~porchlight.door.BaseDoor`) objects.
+
+    Attributes
+    ----------
+    _doors : :py:obj:`dict`, :py:obj:`str`: :class:`~porchlight.door.Door`
+        Contains all data for :class:`~porchlight.door.Door` objects. The keys
+        are, by default, the :meth:`~porchlight.door.Door.name`
+        property for the corresponding :class:`~porchlight.door.Door` values.
+
+    _params : :py:obj:`dict`, :py:obj:`str`: :class:`~porchlight.param.Param`
+        Contains all the parameters currently known to and managed by the
+        :class:`~porchlight.neighborhood.Neighborhood` object.
+    '''
     _doors: Dict[str, param.Param]
     _params: Dict[str, param.Param]
 
@@ -21,7 +36,20 @@ class Neighborhood:
                      function: Callable,
                      overwrite_defaults: bool = False
                      ):
-        '''Adds a new function to the Neighborhood object.'''
+        '''Adds a new function to the Neighborhood object.
+
+        Parameters
+        ----------
+        function : Callable
+            The function to be added. This is converted to a
+            :class:`~porchlight.door.Door` object by this method.
+
+        overwrite_defaults : bool, optional
+            If `True`, will overwrite any parameters shared between the
+            `function` and `Neighborhood._params` to be equal to the defaults
+            set by `function`. If `False` (default), no parameters that exist
+            in the `Neighborhood` object already will be changed.
+        '''
         new_door = door.Door(function)
 
         self._doors[new_door.name] = new_door
@@ -48,7 +76,21 @@ class Neighborhood:
                  new_door: Union[door.Door, List[door.Door]],
                  overwrite_defaults: bool = False
                  ):
-        '''Adds an already-initialized Door to the neighborhood.'''
+        '''Adds an already-initialized Door to the neighborhood.
+
+        Parameters
+        ----------
+        new_door : :class:`~porchlight.door.Door` or :py:obj:`list` of
+            :class:`~porchlight.door.Door` objects. Either a single initialized
+            `door.Door` object or a list of them.  If a list is provided, this
+            function is called for each item in the list.
+
+        overwrite_defaults : bool, optional
+            If `True`, will overwrite any parameters shared between the
+            `new_door` and `Neighborhood._params` to be equal to the defaults
+            set by `new_door`. If `False` (default), no parameters that exist
+            in the `Neighborhood` object already will be changed.
+        '''
         if isinstance(new_door, List):
             for nd in new_door:
                 self.add_door(
@@ -82,7 +124,19 @@ class Neighborhood:
                 self._params[pname] = param.Param(pname, param.Empty())
 
     def remove_door(self, name: str):
-        '''Removes a door from the Neighborhood.'''
+        '''Removes a :class:`~porchlight.door.Door` from :attr:`_doors`.
+
+        Parameters
+        ----------
+        name : :py:obj:`str`
+            The name of the :class:`~porchlight.door.Door` to be removed. It
+            must correspond to a key in `Neighborhood._doors` attribute.
+
+        Raises
+        ------
+        KeyError
+            If `name` is not present in `_doors` attribute.
+        '''
         if name not in self._doors:
             raise KeyError(f"Could not find a door named {name}.")
 
@@ -96,7 +150,30 @@ class Neighborhood:
                   ignore_constant: bool = False
                   ) -> param.Param:
         '''Set the value of a parameter to a new value. Since parameters are
-        not meant to be modified like this, generate a new parameter.
+        not meant to be modified like this right now, generate a new parameter.
+
+        Parameters
+        ----------
+        parameter_name : :py:obj:`str`
+            The name of the parameter to modify.
+
+        new_value : `Any`
+            The value to be assigned to this parameter.
+
+        constant : :py:obj:`bool`
+            Will be passed to :class:`~porchlight.param.Param` as the
+            `constant` keyword argument.
+
+        ignore_constant : :py:obj:`bool`, optional, keyword-only
+            When assigning this parameter, it will ignore the `constant`
+            attribute of the current parameter.
+
+        Raises
+        ------
+        :class:`~porchlight.param.ParameterError`
+            Is raised if the parameter attempting to be changed has `True` for
+            its `constant` attribute. Will not be raised by this method if
+            `ignore_constant` is `True`.
         '''
         _old_param = self._params[parameter_name]
 
@@ -117,7 +194,22 @@ class Neighborhood:
                   value: Any,
                   constant: bool = False
                   ):
-        '''Adds a new parameter to the Neighborhood'''
+        '''Adds a new parameter to the `Neighborhood` object.
+
+        The parameters all correspond to arguments passed directly to the
+        :class:`~porchlight.param.Param` initializer.
+
+        Parameters
+        ----------
+        parameter_name : :py:obj:`str`
+            Name of the parameter being created.
+
+        value : `Any`
+            Parameter value
+
+        constant : :py:obj:`bool`, optional
+            If `True`, the parameter is set to constant.
+        '''
         if not isinstance(value, param.Param):
             new_param = param.Param(parameter_name, value, constant)
 
@@ -152,8 +244,14 @@ class Neighborhood:
         return True
 
     def call_all_doors(self):
-        '''Calls every door currently present in the neighborhood object in
-        current list order.
+        '''Calls every door currently present in the neighborhood object.
+
+        This order is currently dictated by the order in which
+        :class:`~parameter.door.Door`s are added to the `Neighborhood`.
+
+        The way this is currently set up, it will not handle positional
+        arguments. That is, if an input cannot be passed using its variable
+        name, this will break.
         '''
         # Need to call the doors directly.
         for cur_door in self._doors.values():
@@ -164,6 +262,7 @@ class Neighborhood:
                 input_params[pname] = self._params[pname].value
 
             # Run the cur_door object and catch its output.
+            # TK TODO: include support for positional-only arguments.
             output = cur_door(**input_params)
 
             # Check if the cur_door has a known return value.
@@ -224,6 +323,10 @@ class Neighborhood:
         self.call_all_doors()
 
     @property
+    def doors(self):
+        return self._doors
+
+    @property
     def empty_parameters(self):
         empty_params = {}
 
@@ -232,10 +335,6 @@ class Neighborhood:
                 empty_params[pname] = p
 
         return empty_params
-
-    @property
-    def doors(self):
-        return self._doors
 
     @property
     def parameters(self):
@@ -247,11 +346,11 @@ class Neighborhood:
 
     @property
     def required_parameters(self):
-        '''Defines parameters that must not be empty at the start of a run.
-
-        TK TODO: Need to anticipate what parameters are returned during
-        run_step.
+        '''Defines parameters that must not be empty at the start of a run
+        for the run to successfully execute.
         '''
+        # TK TODO need to anticipate what parameters are returned during
+        # run_step.
         req_args = []
 
         for d in self._doors.values():

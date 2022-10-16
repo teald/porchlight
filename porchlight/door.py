@@ -1,7 +1,7 @@
 import inspect
 import string
 
-from param import Empty, ParameterError, Param
+from .param import Empty, ParameterError, Param
 
 from typing import Any, Callable, Dict, List, Type
 
@@ -12,6 +12,42 @@ logger = logging.getLogger(__name__)
 class BaseDoor:
     '''Contains the basic information of a Door object, as well as base
     functions.
+
+    Attributes
+    ----------
+    arguments : :py:obj:`dict`, :py:obj:`str`: :class:`~typing.Type`
+        Dictionary of all arguments taken as input when the `BaseDoor` object
+        is called.
+
+    keyword_args : :py:obj:`dict`, :py:obj:`str`: :class:`~typing.Any`
+        Keyword arguments accepted by the `BaseDoor` as input when called. This
+        includes all arguments that are not positional-only. Positional
+        arguments without a default value are assigned a
+        :class:~porchlight.param.Empty` value instead of their default value.
+
+    max_n_return : :py:obj:`int`
+        Maximum number of returned values.
+
+    min_n_return : :py:obj:`int`
+        Minimum number of returned values.
+
+    n_args : :py:obj:`int`
+        Number of arguments accepted by this `BaseDoor`
+
+    name : :py:obj:`str`
+        The name of the function as visible from the base function's __name__.
+
+    return_vals : :py:obj:`list` of :py:obj:`list` of :py:obj:`str`
+        Values returned by any return statements in the base function.
+
+    typecheck : :py:obj:`bool`
+        If True, when arguments are passed to the `BaseDoor`'s base function
+        the input types are checked against the types in `BaseDoor.arguments`.
+        If there is a mismatch, a `TypeError` will be thrown.
+
+    _base_function : :py:obj:`~typing.Callable`
+        This holds a reference to the function being managed by the `BaseDoor`
+        instance.
     '''
     _base_function: Callable
     arguments: Dict[str, Type]
@@ -30,6 +66,17 @@ class BaseDoor:
 
         if typecheck is True (default True), the type of inputs passed to
         BaseDoor.__call__ will be checked for matches to known input Types.
+
+        Parameters
+        ----------
+        function : :py:class:`typing.Callable`
+            The callable/function to be managed by the BaseDoor class.
+
+        typecheck : :py:obj:`bool`, optional
+            If `True`, the `BaseDoor` object will assert that arguments passed
+            to `__call__` (when the `BaseDoor` itself is called like a
+            function) have the type expected by type annotations and any user
+            specifications. By default, this is `True`.
         '''
         self._base_function = function
         self.typecheck = typecheck
@@ -43,7 +90,12 @@ class BaseDoor:
         return False
 
     def _inspect_base_callable(self):
-        '''Inspect the BaseDoor's baseline callable for primary attributes.'''
+        '''Inspect the BaseDoor's baseline callable for primary attributes.
+
+        This checks for type annotations, return statements, and all
+        information accessible to :py:obj:`inspect.Signature` relevant to
+        `BaseDoor`.
+        '''
         function = self._base_function
 
         self.name = function.__name__
@@ -98,7 +150,7 @@ class BaseDoor:
         '''Calls the BaseDoor's function as normal.
 
         The keys of kwargs must be passed with the same name as variables
-        within the BaseDoor. As of right now, if *extra* values are included,
+        within the BaseDoor. As of right now, if extra values are included,
         they are ignored.
         '''
         # This is currently filtering out all the arguments the function
@@ -181,7 +233,7 @@ class BaseDoor:
 
 
 class Door(BaseDoor):
-    '''Extension of BaseDoor Class that interacts with Porchlight objects.'''
+    '''Inherits from and extends :class:`~porchlight.door.BaseDoor`'''
     def __init__(self, function: Callable):
         super().__init__(function)
 

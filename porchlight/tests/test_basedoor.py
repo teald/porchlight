@@ -11,6 +11,7 @@ import logging
 import os
 logging.basicConfig(filename=f"{os.getcwd()}/porchlight_unittest.log")
 
+
 class TestBaseDoor(TestCase):
     def test___init__(self):
         def test_fxn(x: int) -> int:
@@ -64,11 +65,12 @@ class TestBaseDoor(TestCase):
 
         # Call the BaseDoor with erroneous types based on annotations.
         with self.assertRaises(ParameterError):
-            result = door(x='6')
+            door(x='6')
 
     def test__get_return_vals(self):
         # Should be able to handle one return val.
         def fxn_one_return(x):
+            y = 1
             return y
 
         result = BaseDoor._get_return_vals(fxn_one_return)
@@ -77,6 +79,7 @@ class TestBaseDoor(TestCase):
 
         # Multiple return values, no inputs
         def fxn_no_inputs():
+            x, y, z, = 0, 0, 0
             return x, y, z
 
         result = BaseDoor._get_return_vals(fxn_no_inputs)
@@ -118,7 +121,7 @@ class TestBaseDoor(TestCase):
         self.assertTrue(fxn1 == other_fxn1)
 
     def test__inspect_base_callable(self):
-        def bigfxn(x, y, *, z = 5):
+        def bigfxn(x, y, *, z=5):
             output = sum((x, y, z))
             return output
 
@@ -130,24 +133,13 @@ class TestBaseDoor(TestCase):
         # positional arguments. That will come later, and this test will need
         # to be updated.
         def bad_fxn(x1, y1, /, x3, *, z7):
+            c = 'blah'
             return c
 
         with self.assertRaises(NotImplementedError):
-            f = BaseDoor(bad_fxn)
+            BaseDoor(bad_fxn)
 
-    def test__get_return_vals(self):
-        def testfxn(x = 4, y = 6, z = "beep"):
-            # This is a test comment
-            if x == 1:
-                return str(x)
-
-            z += " " + str(x + y)
-
-            return z  # This is a test comment
-
-        retvals = BaseDoor._get_return_vals(testfxn)
-
-        self.assertEqual(retvals, [[None], ['z']])
 
 if __name__ == "__main__":
+    import unittest
     unittest.main()

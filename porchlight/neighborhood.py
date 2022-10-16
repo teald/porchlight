@@ -23,14 +23,21 @@ class Neighborhood:
     _params : :py:obj:`dict`, :py:obj:`str`: :class:`~porchlight.param.Param`
         Contains all the parameters currently known to and managed by the
         :class:`~porchlight.neighborhood.Neighborhood` object.
+
+    _call_order : :py:obj:`list`, :py:obj:`str`
+        The order in which the :class:`~porchlight.door.Door` objects in
+        `_doors` are called. By default, this is the order in which
+        :class:`~porchlight.door.Door`s are added to the `Neighborhood`.
     '''
     _doors: Dict[str, param.Param]
     _params: Dict[str, param.Param]
+    _call_order: List[str]
 
     def __init__(self):
         '''Initializes the Neighborhood object.'''
         self._doors = {}
         self._params = {}
+        self._call_order = []
 
     def add_function(self,
                      function: Callable,
@@ -52,25 +59,7 @@ class Neighborhood:
         '''
         new_door = door.Door(function)
 
-        self._doors[new_door.name] = new_door
-
-        # Update the parameters as necesssary.
-        # This will prefer default values passed by earlier
-        for pname, ptype in new_door.arguments.items():
-            if pname not in self._params or overwrite_defaults:
-                # This is a new parameter.
-                parameter_name = pname
-                value = param.Empty()
-
-                if pname in new_door.keyword_args:
-                    value = new_door.keyword_args[pname]
-
-                self.add_param(parameter_name, value)
-
-        for pname in [p[0] for p in new_door.return_vals]:
-            if pname not in self._params:
-                value = param.Empty()
-                self.add_param(pname, value)
+        self.add_door(new_door, overwrite_defaults)
 
     def add_door(self,
                  new_door: Union[door.Door, List[door.Door]],
@@ -101,6 +90,9 @@ class Neighborhood:
             return
 
         self._doors[new_door.name] = new_door
+
+        # Add the new door to the call order.
+        self._call_order.append(new_door.name)
 
         # Update the parameters as necesssary.
         # This will prefer default values passed by earlier
@@ -254,7 +246,8 @@ class Neighborhood:
         name, this will break.
         '''
         # Need to call the doors directly.
-        for cur_door in self._doors.values():
+        for doorname in self._call_order:
+            cur_door = self._doors[doorname]
             req_params = cur_door.arguments
             input_params = {}
 
@@ -321,6 +314,27 @@ class Neighborhood:
             raise param.ParameterError(msg)
 
         self.call_all_doors()
+
+    def order_doors(self, order: List[str]):
+        '''Allows the doors to be ordered when called.
+
+        If this is never called, the call order will be equivalent to the order
+        in which the doors are added to the `Neighborhood`. As of right now,
+        all doors present must be included in the `order` argument or a
+        `KeyError` will be thrown.
+
+        Arguments
+        ---------
+        order : :py:obj:`list`, str
+            The order for doors to be called in. Each `str` must correspond to
+            a key in `Neighborhood._doors` at the time of calling this
+            method.
+        '''
+        if any(n not in self._doors for n in order):
+            i = [n not in self._doors for n in order].index(True)
+            raise KeyError(f"Could not find door with label: {order[i]}")
+
+        self._call_order = order
 
     @property
     def doors(self):

@@ -1,4 +1,3 @@
-import porchlight.neighborhood as neighhborhood
 from porchlight import Neighborhood
 
 from porchlight import Door
@@ -27,7 +26,7 @@ class TestNeighborhood(TestCase):
         # compare them directly.
         neighborhood = Neighborhood()
 
-        def test1(x, y = 1) -> int:
+        def test1(x, y=1) -> int:
             z = x + y
             return z
 
@@ -42,7 +41,7 @@ class TestNeighborhood(TestCase):
         self.assertTrue(neighborhood_door == door_equiv)
 
         # Now try to overwrite the function.
-        def test1(x, y = 2) -> int:
+        def test1(x, y=2) -> int:
             z = x + y
             return z
 
@@ -61,7 +60,7 @@ class TestNeighborhood(TestCase):
         neighborhood = Neighborhood()
 
         @Door
-        def test1(x, y = 1) -> int:
+        def test1(x, y=1) -> int:
             z = x + y
             return z
 
@@ -72,7 +71,7 @@ class TestNeighborhood(TestCase):
 
         # Now try to overwrite the function.
         @Door
-        def test1(x, y = 2) -> int:
+        def test1(x, y=2) -> int:
             z = x + y
             return z
 
@@ -115,12 +114,14 @@ class TestNeighborhood(TestCase):
         def test2(z):
             z = 3 * z
             return z
+
         @Door
         def test3():
             pass
 
         @Door
         def test4():
+            arbitrary = None
             return arbitrary
 
         neighborhood = Neighborhood()
@@ -173,6 +174,7 @@ class TestNeighborhood(TestCase):
         def test2(z):
             z = 3 * z
             return z
+
         @Door
         def test3():
             pass
@@ -225,7 +227,9 @@ class TestNeighborhood(TestCase):
                                      neighborhood.params['x'].value + 1
                                      )
 
-        self.assertEqual(neighborhood._params['rettest'].value, expected_param.value)
+        self.assertEqual(neighborhood._params['rettest'].value,
+                         expected_param.value
+                         )
 
         # Make one of the parameters constant.
         neighborhood.set_param('rettest', 1, constant=True)
@@ -264,7 +268,7 @@ class TestNeighborhood(TestCase):
 
     def test_remove_door(self):
         @Door
-        def test1(x, y, z = 1):
+        def test1(x, y, z=1):
             x += y + z
             return x
 
@@ -307,7 +311,7 @@ class TestNeighborhood(TestCase):
 
     def test_required_args_present(self):
         @Door
-        def test1(x, y = 2, *, z):
+        def test1(x, y=2, *, z):
             return x
 
         neighborhood = Neighborhood()
@@ -360,5 +364,7 @@ class TestNeighborhood(TestCase):
         expected_param = param.Param('y', 5)
         self.assertEqual(neighborhood._params['y'], expected_param)
 
+
 if __name__ == "__main__":
+    import unittest
     unittest.main()

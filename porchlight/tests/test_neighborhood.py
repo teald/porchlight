@@ -1,9 +1,9 @@
-import neighborhood
-from neighborhood import Neighborhood
+import porchlight.neighborhood as neighhborhood
+from porchlight import Neighborhood
 
-from door import Door
-import param
-from param import ParameterError, Empty
+from porchlight import Door
+import porchlight.param as param
+from porchlight.param import ParameterError, Empty
 
 import unittest
 from unittest import TestCase

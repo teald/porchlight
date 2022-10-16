@@ -1,4 +1,4 @@
-import param
+import porchlight.param as param
 
 from unittest import TestCase
 import unittest

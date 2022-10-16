@@ -3,8 +3,8 @@ relevant helper functions or objects.
 '''
 from unittest import TestCase
 
-from door import Door
-from param import Empty, ParameterError
+from porchlight.door import Door
+from porchlight.param import Empty, ParameterError
 
 import logging
 import os

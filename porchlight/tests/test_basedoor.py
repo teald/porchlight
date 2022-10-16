@@ -3,9 +3,9 @@ relevant helper functions or objects.
 '''
 from unittest import TestCase
 
-import door
-from door import BaseDoor
-from param import Empty, ParameterError, Param
+import porchlight.door as door
+from porchlight.door import BaseDoor
+from porchlight.param import Empty, ParameterError, Param
 
 import logging
 import os

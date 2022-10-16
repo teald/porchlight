@@ -32,6 +32,7 @@ release = '0.0.1'
 # ones.
 extensions = [
         'm2r2',
+        'sphinx.ext.intersphinx',
         'sphinx.ext.autodoc',
         'sphinx.ext.coverage',
         'sphinx.ext.napoleon'

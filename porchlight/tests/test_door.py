@@ -1,6 +1,6 @@
-'''Tests to verify the integrity of the porchlight.door.Door class and any
+"""Tests to verify the integrity of the porchlight.door.Door class and any
 relevant helper functions or objects.
-'''
+"""
 from unittest import TestCase
 
 from porchlight.door import Door
@@ -8,6 +8,7 @@ from porchlight.param import Empty, ParameterError
 
 import logging
 import os
+
 logging.basicConfig(filename=f"{os.getcwd()}/porchlight_unittest.log")
 
 
@@ -20,9 +21,9 @@ class TestDoor(TestCase):
         door = Door(test_fxn)
 
         # Must contain both input and output parameter.
-        arguments = ['x']
-        keyword_args = ['x']
-        return_vals = [['y']]
+        arguments = ["x"]
+        keyword_args = ["x"]
+        return_vals = [["y"]]
 
         # Not comparing any values during this test.
         for arg in arguments:
@@ -47,11 +48,9 @@ class TestDoor(TestCase):
 
         self.assertEqual(fxn_use_decorator(10), 20)
 
-        self.assertEqual(fxn_use_decorator.name,
-                         "fxn_use_decorator"
-                         )
+        self.assertEqual(fxn_use_decorator.name, "fxn_use_decorator")
 
-        self.assertEqual(fxn_use_decorator.arguments, {'x': Empty})
+        self.assertEqual(fxn_use_decorator.arguments, {"x": Empty})
 
     def test___call__(self):
         def test_fxn(x: int) -> int:
@@ -62,7 +61,7 @@ class TestDoor(TestCase):
 
         # Call the Door with erroneous types based on annotations.
         with self.assertRaises(ParameterError):
-            door(x='6')
+            door(x="6")
 
     def test_required_arguments(self):
         # This property is critical for the functioning of the Neighborhood
@@ -80,7 +79,7 @@ class TestDoor(TestCase):
             return b, a
 
         @Door
-        def test3(key1='beta', key2='beeeeta'):
+        def test3(key1="beta", key2="beeeeta"):
             return
 
         @Door
@@ -93,12 +92,12 @@ class TestDoor(TestCase):
             return x
 
         test_cases = (
-                (test1, ['x']),
-                (test2, ['a', 'b', 'x']),
-                (test3, []),
-                (test4, []),
-                (test5, [])
-                )
+            (test1, ["x"]),
+            (test2, ["a", "b", "x"]),
+            (test3, []),
+            (test4, []),
+            (test5, []),
+        )
 
         for fxn, exp in test_cases:
             self.assertEqual(fxn.required_arguments, exp)
@@ -116,7 +115,7 @@ class TestDoor(TestCase):
             return b, a
 
         @Door
-        def test3(key1='beta', key2='beeeeta'):
+        def test3(key1="beta", key2="beeeeta"):
             return
 
         @Door
@@ -129,12 +128,12 @@ class TestDoor(TestCase):
             return x
 
         test_cases = (
-                (test1, ['x', 'y']),
-                (test2, ['a', 'b', 'x']),
-                (test3, ['key1', 'key2']),
-                (test4, []),
-                (test5, ['x'])
-                )
+            (test1, ["x", "y"]),
+            (test2, ["a", "b", "x"]),
+            (test3, ["key1", "key2"]),
+            (test4, []),
+            (test5, ["x"]),
+        )
 
         for fxn, exp in test_cases:
             self.assertEqual(fxn.variables, exp)
@@ -142,4 +141,5 @@ class TestDoor(TestCase):
 
 if __name__ == "__main__":
     import unittest
+
     unittest.main()

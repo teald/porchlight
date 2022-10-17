@@ -1,15 +1,16 @@
-'''Defines the `Neighbor` class.'''
+"""Defines the `Neighbor` class."""
 from . import door
 from . import param
 
 from typing import Any, Callable, Dict, List, Union
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
 class Neighborhood:
-    '''A neighborhood manages the interactions between Doors. It consists of a
+    """A neighborhood manages the interactions between Doors. It consists of a
     modifiable collection of :class:`~porchlight.door.Door` (or
     :class:`~porchlight.door.BaseDoor`) objects.
 
@@ -28,22 +29,20 @@ class Neighborhood:
         The order in which the :class:`~porchlight.door.Door` objects in
         `_doors` are called. By default, this is the order in which
         :class:`~porchlight.door.Door`s are added to the `Neighborhood`.
-    '''
+    """
+
     _doors: Dict[str, param.Param]
     _params: Dict[str, param.Param]
     _call_order: List[str]
 
     def __init__(self):
-        '''Initializes the Neighborhood object.'''
+        """Initializes the Neighborhood object."""
         self._doors = {}
         self._params = {}
         self._call_order = []
 
-    def add_function(self,
-                     function: Callable,
-                     overwrite_defaults: bool = False
-                     ):
-        '''Adds a new function to the Neighborhood object.
+    def add_function(self, function: Callable, overwrite_defaults: bool = False):
+        """Adds a new function to the Neighborhood object.
 
         Parameters
         ----------
@@ -56,16 +55,17 @@ class Neighborhood:
             `function` and `Neighborhood._params` to be equal to the defaults
             set by `function`. If `False` (default), no parameters that exist
             in the `Neighborhood` object already will be changed.
-        '''
+        """
         new_door = door.Door(function)
 
         self.add_door(new_door, overwrite_defaults)
 
-    def add_door(self,
-                 new_door: Union[door.Door, List[door.Door]],
-                 overwrite_defaults: bool = False
-                 ):
-        '''Adds an already-initialized Door to the neighborhood.
+    def add_door(
+        self,
+        new_door: Union[door.Door, List[door.Door]],
+        overwrite_defaults: bool = False,
+    ):
+        """Adds an already-initialized Door to the neighborhood.
 
         Parameters
         ----------
@@ -79,13 +79,10 @@ class Neighborhood:
             `new_door` and `Neighborhood._params` to be equal to the defaults
             set by `new_door`. If `False` (default), no parameters that exist
             in the `Neighborhood` object already will be changed.
-        '''
+        """
         if isinstance(new_door, List):
             for nd in new_door:
-                self.add_door(
-                        nd,
-                        overwrite_defaults=overwrite_defaults
-                        )
+                self.add_door(nd, overwrite_defaults=overwrite_defaults)
 
             return
 
@@ -116,7 +113,7 @@ class Neighborhood:
                 self._params[pname] = param.Param(pname, param.Empty())
 
     def remove_door(self, name: str):
-        '''Removes a :class:`~porchlight.door.Door` from :attr:`_doors`.
+        """Removes a :class:`~porchlight.door.Door` from :attr:`_doors`.
 
         Parameters
         ----------
@@ -128,20 +125,21 @@ class Neighborhood:
         ------
         KeyError
             If `name` is not present in `_doors` attribute.
-        '''
+        """
         if name not in self._doors:
             raise KeyError(f"Could not find a door named {name}.")
 
         del self._doors[name]
 
-    def set_param(self,
-                  parameter_name: str,
-                  new_value: Any,
-                  constant: bool = False,
-                  *,
-                  ignore_constant: bool = False
-                  ) -> param.Param:
-        '''Set the value of a parameter to a new value. Since parameters are
+    def set_param(
+        self,
+        parameter_name: str,
+        new_value: Any,
+        constant: bool = False,
+        *,
+        ignore_constant: bool = False,
+    ) -> param.Param:
+        """Set the value of a parameter to a new value. Since parameters are
         not meant to be modified like this right now, generate a new parameter.
 
         Parameters
@@ -166,7 +164,7 @@ class Neighborhood:
             Is raised if the parameter attempting to be changed has `True` for
             its `constant` attribute. Will not be raised by this method if
             `ignore_constant` is `True`.
-        '''
+        """
         _old_param = self._params[parameter_name]
 
         if not ignore_constant and _old_param.constant:
@@ -176,17 +174,10 @@ class Neighborhood:
 
             raise param.ParameterError(msg)
 
-        self._params[parameter_name] = param.Param(parameter_name,
-                                                   new_value,
-                                                   constant
-                                                   )
+        self._params[parameter_name] = param.Param(parameter_name, new_value, constant)
 
-    def add_param(self,
-                  parameter_name: str,
-                  value: Any,
-                  constant: bool = False
-                  ):
-        '''Adds a new parameter to the `Neighborhood` object.
+    def add_param(self, parameter_name: str, value: Any, constant: bool = False):
+        """Adds a new parameter to the `Neighborhood` object.
 
         The parameters all correspond to arguments passed directly to the
         :class:`~porchlight.param.Param` initializer.
@@ -201,7 +192,7 @@ class Neighborhood:
 
         constant : :py:obj:`bool`, optional
             If `True`, the parameter is set to constant.
-        '''
+        """
         if not isinstance(value, param.Param):
             new_param = param.Param(parameter_name, value, constant)
 
@@ -211,9 +202,9 @@ class Neighborhood:
         self._params[parameter_name] = new_param
 
     def required_args_present(self) -> bool:
-        '''Returns True if all the necessary arguments to run all Doors in the
+        """Returns True if all the necessary arguments to run all Doors in the
         Neighborhood object are included in the Neighborhood object.
-        '''
+        """
         done = []
         for d_params in (d.arguments for d in self.doors.values()):
             for pname in d_params:
@@ -226,9 +217,7 @@ class Neighborhood:
                 is_empty_param = False
 
                 if not pname_missing:
-                    is_empty_param = isinstance(self._params[pname].value,
-                                                param.Empty
-                                                )
+                    is_empty_param = isinstance(self._params[pname].value, param.Empty)
 
                 if pname_missing or is_empty_param:
                     return False
@@ -236,7 +225,7 @@ class Neighborhood:
         return True
 
     def call_all_doors(self):
-        '''Calls every door currently present in the neighborhood object.
+        """Calls every door currently present in the neighborhood object.
 
         This order is currently dictated by the order in which
         :class:`~parameter.door.Door`s are added to the `Neighborhood`.
@@ -244,7 +233,7 @@ class Neighborhood:
         The way this is currently set up, it will not handle positional
         arguments. That is, if an input cannot be passed using its variable
         name, this will break.
-        '''
+        """
         # Need to call the doors directly.
         for doorname in self._call_order:
             cur_door = self._doors[doorname]
@@ -267,9 +256,7 @@ class Neighborhood:
                 # possible output. This, frankly, should probably be the case
                 # nearly all of the time. Still need to make a call on if
                 # there's support in a subset of cases.
-                update_params = {
-                        v: x for v, x in zip(cur_door.return_vals[0], output)
-                        }
+                update_params = {v: x for v, x in zip(cur_door.return_vals[0], output)}
 
             else:
                 assertmsg = "Mismatched output/return."
@@ -284,9 +271,10 @@ class Neighborhood:
 
                 # If the parameter is supposed to be constant, raise an error.
                 if pname in self._params and self._params[pname].constant:
-                    msg = (f"Door {cur_door.name} is attempting to change a "
-                           f"constant parameter: {pname}."
-                           )
+                    msg = (
+                        f"Door {cur_door.name} is attempting to change a "
+                        f"constant parameter: {pname}."
+                    )
 
                     logger.error(msg)
                     raise param.ParameterError(msg)
@@ -296,13 +284,13 @@ class Neighborhood:
                 self._params[pname]._value = new_value
 
     def run_step(self):
-        '''Runs a single step forward for all functions, in specified order,
+        """Runs a single step forward for all functions, in specified order,
         based on the current parameter state of the Neighborhood object.
 
         The way this is currently set up, it will not handle positional
         arguments. That is, if an input cannot be passed using its variable
         name, this will break.
-        '''
+        """
         # Ensure that all required parameters are defined.
         empty_params = self.empty_parameters
         req_args = self.required_parameters
@@ -316,7 +304,7 @@ class Neighborhood:
         self.call_all_doors()
 
     def order_doors(self, order: List[str]):
-        '''Allows the doors to be ordered when called.
+        """Allows the doors to be ordered when called.
 
         If this is never called, the call order will be equivalent to the order
         in which the doors are added to the `Neighborhood`. As of right now,
@@ -329,7 +317,7 @@ class Neighborhood:
             The order for doors to be called in. Each `str` must correspond to
             a key in `Neighborhood._doors` at the time of calling this
             method.
-        '''
+        """
         if any(n not in self._doors for n in order):
             i = [n not in self._doors for n in order].index(True)
             raise KeyError(f"Could not find door with label: {order[i]}")
@@ -360,9 +348,9 @@ class Neighborhood:
 
     @property
     def required_parameters(self):
-        '''Defines parameters that must not be empty at the start of a run
+        """Defines parameters that must not be empty at the start of a run
         for the run to successfully execute.
-        '''
+        """
         # TK TODO need to anticipate what parameters are returned during
         # run_step.
         req_args = []

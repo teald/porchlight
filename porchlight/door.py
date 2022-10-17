@@ -6,11 +6,12 @@ from .param import Empty, ParameterError, Param
 from typing import Any, Callable, Dict, List, Type
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
 class BaseDoor:
-    '''Contains the basic information of a Door object, as well as base
+    """Contains the basic information of a Door object, as well as base
     functions.
 
     Attributes
@@ -48,7 +49,8 @@ class BaseDoor:
     _base_function : :py:obj:`~typing.Callable`
         This holds a reference to the function being managed by the `BaseDoor`
         instance.
-    '''
+    """
+
     _base_function: Callable
     arguments: Dict[str, Type]
     keyword_args: Dict[str, Any]
@@ -60,7 +62,7 @@ class BaseDoor:
     typecheck: bool
 
     def __init__(self, function: Callable, typecheck: bool = True):
-        '''Initializes the BaseDoor class. It takes any callable (function,
+        """Initializes the BaseDoor class. It takes any callable (function,
         lambda, method...) and inspects it to get at its arguments and
         structure.
 
@@ -77,25 +79,25 @@ class BaseDoor:
             to `__call__` (when the `BaseDoor` itself is called like a
             function) have the type expected by type annotations and any user
             specifications. By default, this is `True`.
-        '''
+        """
         self._base_function = function
         self.typecheck = typecheck
         self._inspect_base_callable()
 
     def __eq__(self, other) -> bool:
-        '''Equality is defined as referencing the same base function.'''
+        """Equality is defined as referencing the same base function."""
         if self.name is other.name:
             return True
 
         return False
 
     def _inspect_base_callable(self):
-        '''Inspect the BaseDoor's baseline callable for primary attributes.
+        """Inspect the BaseDoor's baseline callable for primary attributes.
 
         This checks for type annotations, return statements, and all
         information accessible to :py:obj:`inspect.Signature` relevant to
         `BaseDoor`.
-        '''
+        """
         function = self._base_function
 
         self.name = function.__name__
@@ -111,9 +113,9 @@ class BaseDoor:
             # argument types.
             if param.kind == inspect.Parameter.POSITIONAL_ONLY:
                 msg = (
-                        f"porchlight does not support positional-only "
-                        f"arguments, which were found in {self.name}."
-                        )
+                    f"porchlight does not support positional-only "
+                    f"arguments, which were found in {self.name}."
+                )
 
                 logger.error(msg)
                 raise NotImplementedError(msg)
@@ -142,17 +144,15 @@ class BaseDoor:
         # The return values require some more effort.
         self.return_vals = self._get_return_vals(function)
 
-        logger.debug(
-                f"Found {self.n_args} arguments in {self.name}."
-                )
+        logger.debug(f"Found {self.n_args} arguments in {self.name}.")
 
     def __call__(self, *args, **kwargs):
-        '''Calls the BaseDoor's function as normal.
+        """Calls the BaseDoor's function as normal.
 
         The keys of kwargs must be passed with the same name as variables
         within the BaseDoor. As of right now, if extra values are included,
         they are ignored.
-        '''
+        """
         # This is currently filtering out all the arguments the function
         # actually needs. But this way of doing it should probably be handled
         # by the Neighborhood object in the future.
@@ -170,7 +170,7 @@ class BaseDoor:
                         f"Type checking is on, and the type for input "
                         f"parameter {k}, {type(v)} to {self.name} does not "
                         f"match the detected type(s), {self.arguments}"
-                        )
+                    )
 
                     logger.error(msg)
                     raise ParameterError(msg)
@@ -179,19 +179,15 @@ class BaseDoor:
 
     @staticmethod
     def _get_return_vals(function: Callable) -> List[str]:
-        '''Gets the names of the return value variables for a given
+        """Gets the names of the return value variables for a given
         function.
-        '''
+        """
         lines, start_line = inspect.getsourcelines(function)
 
         # These characters signal that the return statement does not contain
         # any operations on the return values, which is undefined for the
         # purposes of the BaseDoor
-        allowed_chars = list(
-                string.ascii_letters
-                + string.digits
-                + '_'
-                )
+        allowed_chars = list(string.ascii_letters + string.digits + "_")
 
         return_vals = []
 
@@ -199,13 +195,13 @@ class BaseDoor:
             orig_line = line
 
             # Strip comments.
-            if '#' in line:
-                line = line[:line.index('#')]
+            if "#" in line:
+                line = line[: line.index("#")]
 
-            if 'return ' == line.strip()[:len('return ')]:
+            if "return " == line.strip()[: len("return ")]:
                 # This is a set of possible return values.
-                line = line.strip()[len('return '):]
-                vals = line.split(',') if ',' in line else [line]
+                line = line.strip()[len("return ") :]
+                vals = line.split(",") if "," in line else [line]
                 vals = [v.strip() for v in vals]
 
                 for val in vals:
@@ -215,14 +211,14 @@ class BaseDoor:
                         # a warning.
                         source_file = inspect.getfile(function)
                         logger.warning(
-                                f"Could not define any set of return variable "
-                                f"names for the following return line: \n"
-                                f"{source_file}: {start_line+i}) "
-                                f"{orig_line.strip()}\n While not crucial to "
-                                f"this function, be aware that this means no "
-                                f"return value will be modified by this "
-                                f"callable."
-                                )
+                            f"Could not define any set of return variable "
+                            f"names for the following return line: \n"
+                            f"{source_file}: {start_line+i}) "
+                            f"{orig_line.strip()}\n While not crucial to "
+                            f"this function, be aware that this means no "
+                            f"return value will be modified by this "
+                            f"callable."
+                        )
 
                         vals = [None]
                         break
@@ -233,13 +229,14 @@ class BaseDoor:
 
 
 class Door(BaseDoor):
-    '''Inherits from and extends :class:`~porchlight.door.BaseDoor`'''
+    """Inherits from and extends :class:`~porchlight.door.BaseDoor`"""
+
     def __init__(self, function: Callable):
         super().__init__(function)
 
     @property
     def variables(self) -> List[str]:
-        '''Returns a list of all known return values and input arguments.'''
+        """Returns a list of all known return values and input arguments."""
         all_vars = []
 
         for arg in self.arguments:
@@ -255,7 +252,7 @@ class Door(BaseDoor):
 
     @property
     def required_arguments(self) -> List[str]:
-        '''Returns a list of arguments with no default values.'''
+        """Returns a list of arguments with no default values."""
         required = []
 
         for x in self.arguments:

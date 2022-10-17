@@ -9,6 +9,7 @@ from unittest import TestCase
 
 import logging
 import os
+
 logging.basicConfig(filename=f"{os.getcwd()}/porchlight_unittest.log")
 
 
@@ -47,12 +48,12 @@ class TestNeighborhood(TestCase):
 
         neighborhood.add_function(test1)
 
-        self.assertEqual(neighborhood._params['y'].value, 1)
+        self.assertEqual(neighborhood._params["y"].value, 1)
 
         # Now actually overwrite the function.
         neighborhood.add_function(test1, overwrite_defaults=True)
 
-        self.assertEqual(neighborhood._params['y'].value, 2)
+        self.assertEqual(neighborhood._params["y"].value, 2)
 
     def test_add_door(self):
         # We only need to test if the correct type of door is created---can
@@ -77,12 +78,12 @@ class TestNeighborhood(TestCase):
 
         neighborhood.add_door(test1)
 
-        self.assertEqual(neighborhood._params['y'].value, 1)
+        self.assertEqual(neighborhood._params["y"].value, 1)
 
         # Now actually overwrite the function.
         neighborhood.add_door(test1, overwrite_defaults=True)
 
-        self.assertEqual(neighborhood._params['y'].value, 2)
+        self.assertEqual(neighborhood._params["y"].value, 2)
 
         # Add a different Door
         @Door
@@ -126,9 +127,7 @@ class TestNeighborhood(TestCase):
 
         neighborhood = Neighborhood()
 
-        neighborhood.add_door(
-                [test1, test2, test3, test4]
-                )
+        neighborhood.add_door([test1, test2, test3, test4])
 
         self.assertEqual(len(neighborhood._doors), 4)
         self.assertEqual(len(neighborhood._params), 4)
@@ -157,10 +156,11 @@ class TestNeighborhood(TestCase):
         neighborhood.add_door(test2)
         neighborhood.add_door([test3, test4])
 
-    @unittest.skip("Already comprehensively tested by other tests for the "
-                   "time being, but will need to be intdependently tested "
-                   "once Groups are implemented"
-                   )
+    @unittest.skip(
+        "Already comprehensively tested by other tests for the "
+        "time being, but will need to be intdependently tested "
+        "once Groups are implemented"
+    )
     def test_add_param(self):
         pass
 
@@ -187,23 +187,21 @@ class TestNeighborhood(TestCase):
 
         neighborhood = Neighborhood()
 
-        neighborhood.add_door(
-                [test1, test2, test3, test4]
-                )
+        neighborhood.add_door([test1, test2, test3, test4])
 
-        neighborhood.add_param('x', 1)
-        neighborhood.add_param('z', 1)
+        neighborhood.add_param("x", 1)
+        neighborhood.add_param("z", 1)
 
         neighborhood.run_step()
         neighborhood.run_step()
         neighborhood.run_step()
 
         # Check that the state of the parameters is the expected values
-        x = neighborhood._params['x']
-        y = neighborhood._params['y']
-        z = neighborhood._params['z']
-        arb = neighborhood._params['arbitrary']
-        smthn = neighborhood._params['something_else']
+        x = neighborhood._params["x"]
+        y = neighborhood._params["y"]
+        z = neighborhood._params["z"]
+        arb = neighborhood._params["arbitrary"]
+        smthn = neighborhood._params["something_else"]
 
         self.assertEqual(x._value, 1)
         self.assertEqual(y._value, 1)
@@ -219,20 +217,16 @@ class TestNeighborhood(TestCase):
 
         neighborhood.add_function(retval_empty_test)
 
-        self.assertEqual(neighborhood._params['rettest'].value, param.Empty())
+        self.assertEqual(neighborhood._params["rettest"].value, param.Empty())
 
         neighborhood.run_step()
 
-        expected_param = param.Param('rettest',
-                                     neighborhood.params['x'].value + 1
-                                     )
+        expected_param = param.Param("rettest", neighborhood.params["x"].value + 1)
 
-        self.assertEqual(neighborhood._params['rettest'].value,
-                         expected_param.value
-                         )
+        self.assertEqual(neighborhood._params["rettest"].value, expected_param.value)
 
         # Make one of the parameters constant.
-        neighborhood.set_param('rettest', 1, constant=True)
+        neighborhood.set_param("rettest", 1, constant=True)
 
         with self.assertRaises(param.ParameterError):
             neighborhood.run_step()
@@ -289,25 +283,20 @@ class TestNeighborhood(TestCase):
         neighborhood = Neighborhood()
         neighborhood.add_door([test1, test2, test3, test4])
 
-        neighborhood.remove_door('test1')
+        neighborhood.remove_door("test1")
 
         self.assertEqual(len(neighborhood.doors), 3)
         self.assertEqual(
-                neighborhood._doors,
-                {
-                    'test2': test2,
-                    'test3': test3,
-                    'test4': test4
-                    }
-                )
+            neighborhood._doors, {"test2": test2, "test3": test3, "test4": test4}
+        )
 
         with self.assertRaises(KeyError):
-            neighborhood.remove_door('bad door')
+            neighborhood.remove_door("bad door")
 
         # Make sure that the remove door has stayed removed, and that it's no
         # longer referenced in the Neighborhood._doors attr
         with self.assertRaises(KeyError):
-            neighborhood.remove_door('test1')
+            neighborhood.remove_door("test1")
 
     def test_required_args_present(self):
         @Door
@@ -320,8 +309,8 @@ class TestNeighborhood(TestCase):
 
         self.assertFalse(neighborhood.required_args_present())
 
-        neighborhood.set_param('x', 7)
-        neighborhood.set_param('z', 'fourty-two')
+        neighborhood.set_param("x", 7)
+        neighborhood.set_param("z", "fourty-two")
 
         def test2(x, z):
             y = x + z
@@ -340,11 +329,11 @@ class TestNeighborhood(TestCase):
 
         neighborhood.add_door(test1)
 
-        self.assertEqual(neighborhood._params['x'].value, Empty())
+        self.assertEqual(neighborhood._params["x"].value, Empty())
 
-        neighborhood.set_param('x', 1)
+        neighborhood.set_param("x", 1)
 
-        self.assertEqual(neighborhood._params['x'].value, 1)
+        self.assertEqual(neighborhood._params["x"].value, 1)
 
         # Test constants
         @Door
@@ -354,17 +343,18 @@ class TestNeighborhood(TestCase):
 
         neighborhood.add_door(test2)
 
-        neighborhood.add_param('y', 1, constant=True)
+        neighborhood.add_param("y", 1, constant=True)
 
         with self.assertRaises(param.ParameterError):
-            neighborhood.set_param('y', 5)
+            neighborhood.set_param("y", 5)
 
-        neighborhood.set_param('y', 5, ignore_constant=True)
+        neighborhood.set_param("y", 5, ignore_constant=True)
 
-        expected_param = param.Param('y', 5)
-        self.assertEqual(neighborhood._params['y'], expected_param)
+        expected_param = param.Param("y", 5)
+        self.assertEqual(neighborhood._params["y"], expected_param)
 
 
 if __name__ == "__main__":
     import unittest
+
     unittest.main()

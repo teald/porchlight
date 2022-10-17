@@ -1,6 +1,6 @@
-'''Tests to verify the integrity of the porchlight.door.BaseDoor class and any
+"""Tests to verify the integrity of the porchlight.door.BaseDoor class and any
 relevant helper functions or objects.
-'''
+"""
 from unittest import TestCase
 
 import porchlight.door as door
@@ -9,6 +9,7 @@ from porchlight.param import Empty, ParameterError, Param
 
 import logging
 import os
+
 logging.basicConfig(filename=f"{os.getcwd()}/porchlight_unittest.log")
 
 
@@ -21,9 +22,9 @@ class TestBaseDoor(TestCase):
         door = BaseDoor(test_fxn)
 
         # Must contain both input and output parameter.
-        arguments = ['x']
-        keyword_args = ['x']
-        return_vals = [['y']]
+        arguments = ["x"]
+        keyword_args = ["x"]
+        return_vals = [["y"]]
 
         # Not comparing any values during this test.
         for arg in arguments:
@@ -48,13 +49,9 @@ class TestBaseDoor(TestCase):
 
         self.assertEqual(fxn_use_decorator(10), 20)
 
-        self.assertEqual(fxn_use_decorator.name,
-                         "fxn_use_decorator"
-                         )
+        self.assertEqual(fxn_use_decorator.name, "fxn_use_decorator")
 
-        self.assertEqual(fxn_use_decorator.arguments,
-                         {'x': Empty}
-                         )
+        self.assertEqual(fxn_use_decorator.arguments, {"x": Empty})
 
     def test___call__(self):
         def test_fxn(x: int) -> int:
@@ -65,7 +62,7 @@ class TestBaseDoor(TestCase):
 
         # Call the BaseDoor with erroneous types based on annotations.
         with self.assertRaises(ParameterError):
-            door(x='6')
+            door(x="6")
 
     def test__get_return_vals(self):
         # Should be able to handle one return val.
@@ -75,16 +72,20 @@ class TestBaseDoor(TestCase):
 
         result = BaseDoor._get_return_vals(fxn_one_return)
 
-        self.assertEqual(result, [['y']])
+        self.assertEqual(result, [["y"]])
 
         # Multiple return values, no inputs
         def fxn_no_inputs():
-            x, y, z, = 0, 0, 0
+            x, y, z, = (
+                0,
+                0,
+                0,
+            )
             return x, y, z
 
         result = BaseDoor._get_return_vals(fxn_no_inputs)
 
-        self.assertEqual([['x', 'y', 'z']], result)
+        self.assertEqual([["x", "y", "z"]], result)
 
         # No-return function.
         def fxn_no_return(x, y):
@@ -101,7 +102,7 @@ class TestBaseDoor(TestCase):
 
         result = BaseDoor._get_return_vals(fxn_return_types)
 
-        self.assertEqual([['outstr']], result)
+        self.assertEqual([["outstr"]], result)
 
     def test___eq__(self):
         @BaseDoor
@@ -127,13 +128,13 @@ class TestBaseDoor(TestCase):
 
         new_door = BaseDoor(bigfxn)
 
-        self.assertEqual(new_door.keyword_only_args, {'z': Param('z', 5)})
+        self.assertEqual(new_door.keyword_only_args, {"z": Param("z", 5)})
 
         # For now, there should *not* be any functionality for required
         # positional arguments. That will come later, and this test will need
         # to be updated.
         def bad_fxn(x1, y1, /, x3, *, z7):
-            c = 'blah'
+            c = "blah"
             return c
 
         with self.assertRaises(NotImplementedError):
@@ -142,4 +143,5 @@ class TestBaseDoor(TestCase):
 
 if __name__ == "__main__":
     import unittest
+
     unittest.main()

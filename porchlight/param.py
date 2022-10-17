@@ -41,14 +41,14 @@ class Param:
 
     _value : :py:class:`~typing.Any`
         Value of the parameter. If the parameter does not contain an assigned
-        value, this should be `~porchlight.param.Empty`
+        value, this should be :class:`~porchlight.param.Empty`
 
     _type : :py:class:`~typing.type`
         The type corresponding to the type of `Param._value`
 
     constants : :py:obj:`bool`
         True if this object should be considered a constant. If the `Param`
-        value is modified by `Param.value`'s `setter`, but `constant` is True,
+        value is modified by :class:`Param.value`'s `setter`, but `constant` is True,
         a :class:`~porchlight.param.ParameterError` will be raised.
     '''
     # A parameter, to be updated from the API, needs to be replaced rather than

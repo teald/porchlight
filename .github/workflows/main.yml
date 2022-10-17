@@ -20,11 +20,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 pytest black
+          pip install flake8 pytest
           pip install -r requirements.txt
-      - name: Reformat with black
-        run: |
-         black . --exclude docs build dist htmlcov .git .venv .tox .mypy_cache .__pycache__ .hg buck-out --line-length=80
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names

@@ -3,3 +3,4 @@
 m2r2
 sphinx_rtd_theme
 poetry
+pre-commit

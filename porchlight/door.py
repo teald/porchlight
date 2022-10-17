@@ -190,6 +190,8 @@ class BaseDoor:
         allowed_chars = list(string.ascii_letters + string.digits + "_")
 
         return_vals = []
+        ret_statement = "return "
+        ret_statement_len = len(ret_statement)
 
         for i, line in enumerate(lines):
             orig_line = line
@@ -198,9 +200,9 @@ class BaseDoor:
             if "#" in line:
                 line = line[: line.index("#")]
 
-            if "return " == line.strip()[: len("return ")]:
+            if "return " == line.strip()[:ret_statement_len]:
                 # This is a set of possible return values.
-                line = line.strip()[len("return ") :]
+                line = line.strip()[ret_statement_len:]
                 vals = line.split(",") if "," in line else [line]
                 vals = [v.strip() for v in vals]
 

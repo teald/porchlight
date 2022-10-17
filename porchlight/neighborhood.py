@@ -41,7 +41,9 @@ class Neighborhood:
         self._params = {}
         self._call_order = []
 
-    def add_function(self, function: Callable, overwrite_defaults: bool = False):
+    def add_function(
+        self, function: Callable, overwrite_defaults: bool = False
+    ):
         """Adds a new function to the Neighborhood object.
 
         Parameters
@@ -174,9 +176,13 @@ class Neighborhood:
 
             raise param.ParameterError(msg)
 
-        self._params[parameter_name] = param.Param(parameter_name, new_value, constant)
+        self._params[parameter_name] = param.Param(
+            parameter_name, new_value, constant
+        )
 
-    def add_param(self, parameter_name: str, value: Any, constant: bool = False):
+    def add_param(
+        self, parameter_name: str, value: Any, constant: bool = False
+    ):
         """Adds a new parameter to the `Neighborhood` object.
 
         The parameters all correspond to arguments passed directly to the
@@ -217,7 +223,9 @@ class Neighborhood:
                 is_empty_param = False
 
                 if not pname_missing:
-                    is_empty_param = isinstance(self._params[pname].value, param.Empty)
+                    is_empty_param = isinstance(
+                        self._params[pname].value, param.Empty
+                    )
 
                 if pname_missing or is_empty_param:
                     return False
@@ -256,7 +264,9 @@ class Neighborhood:
                 # possible output. This, frankly, should probably be the case
                 # nearly all of the time. Still need to make a call on if
                 # there's support in a subset of cases.
-                update_params = {v: x for v, x in zip(cur_door.return_vals[0], output)}
+                update_params = {
+                    v: x for v, x in zip(cur_door.return_vals[0], output)
+                }
 
             else:
                 assertmsg = "Mismatched output/return."

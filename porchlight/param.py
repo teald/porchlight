@@ -51,8 +51,8 @@ class Param:
 
     constants : :py:obj:`bool`
         True if this object should be considered a constant. If the `Param`
-        value is modified by :class:`Param.value`'s `setter`, but `constant` is True,
-        a :class:`~porchlight.param.ParameterError` will be raised.
+        value is modified by :class:`Param.value`'s `setter`, but `constant` is
+        True, a :class:`~porchlight.param.ParameterError` will be raised.
     """
 
     # A parameter, to be updated from the API, needs to be replaced rather than
@@ -69,13 +69,13 @@ class Param:
             Parameter name.
 
         value : :py:class:`~typing.Any`
-            Value of the parameter. If the parameter does not contain an assigned
-            value, this should be `~porchlight.param.Empty`
+            Value of the parameter. If the parameter does not contain an
+            assigned value, this should be `~porchlight.param.Empty`
 
         constants : :py:obj:`bool`
             True if this object should be considered a constant. If the `Param`
-            value is modified by `Param.value`'s `setter`, but `constant` is True,
-            a :class:`~porchlight.param.ParameterError` will be raised.
+            value is modified by `Param.value`'s `setter`, but `constant` is
+            True, a :class:`~porchlight.param.ParameterError` will be raised.
         """
         self._name = name
         self._value = value

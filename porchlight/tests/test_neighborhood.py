@@ -221,9 +221,13 @@ class TestNeighborhood(TestCase):
 
         neighborhood.run_step()
 
-        expected_param = param.Param("rettest", neighborhood.params["x"].value + 1)
+        expected_param = param.Param(
+            "rettest", neighborhood.params["x"].value + 1
+        )
 
-        self.assertEqual(neighborhood._params["rettest"].value, expected_param.value)
+        self.assertEqual(
+            neighborhood._params["rettest"].value, expected_param.value
+        )
 
         # Make one of the parameters constant.
         neighborhood.set_param("rettest", 1, constant=True)
@@ -287,7 +291,8 @@ class TestNeighborhood(TestCase):
 
         self.assertEqual(len(neighborhood.doors), 3)
         self.assertEqual(
-            neighborhood._doors, {"test2": test2, "test3": test3, "test4": test4}
+            neighborhood._doors,
+            {"test2": test2, "test3": test3, "test4": test4},
         )
 
         with self.assertRaises(KeyError):

@@ -1,26 +1,15 @@
-[project]
+[tool.poetry]
 name = "porchlight"
 version = "0.0.1"
-authors = [
-  { name="D J Teal", email="teal.dillon@gmail.com" },
-]
-description = "A function-managing package for evolving inputs and outputs"
+description = "A function-managing package for models and systems with shared variables."
+authors = ["Teal, D <teal.dillon@gmail.com>"]
+license = "GNU General Public License v3.0 or later"
 readme = "README.md"
-requires-python = ">=3.9"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
-    "Operating System :: OS Independent",
-    "Development Status :: 3 - Alpha"
-]
 
-[project.urls]
-"Homepage" = "https://github.com/teald/porchlight"
-"Bug Tracker" = "https://github.com/teald/porchlight/issues"
- 
+[tool.poetry.dependencies]
+python = "^3.9"
+
+
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[black]
-line-length = 79
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

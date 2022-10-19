@@ -1,5 +1,4 @@
 import inspect
-import string
 import re
 
 from .param import Empty, ParameterError, Param

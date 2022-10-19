@@ -16,7 +16,8 @@ repos:
               buck-out|
               build|
               dist|
-              docs"""
+              docs|
+              ^tests/"""
 
         additional_dependencies: ['click==8.0.4']
 -   repo: https://github.com/pre-commit/pre-commit-hooks

@@ -104,6 +104,53 @@ class TestBaseDoor(TestCase):
 
         self.assertEqual([["outstr"]], result)
 
+        # Test retrieving a return value for a function that wraps another
+        # function to return.
+        def test_wrap():
+            def int_func():
+                output = "Hello world!"
+                return output
+
+            return int_func
+
+        result = BaseDoor._get_return_vals(test_wrap)
+
+        self.assertEqual(result, [["int_func"]])
+
+        # Test single-line definitions.
+        def test_oneline(x):
+            return x
+
+        result = BaseDoor._get_return_vals(test_oneline)
+
+        self.assertEqual(result, [["x"]])
+
+        def test_oneline_bad(x):
+            return x * 2
+
+        result = BaseDoor._get_return_vals(test_oneline_bad)
+
+        self.assertEqual(result, [])
+
+        # Tests with non-return values in it.
+        class Return_Type:
+            pass
+
+        def bad_ret_vals() -> Return_Type:
+            return_at_beginning = None
+            mid_return_loc = None
+            end_loc_return = None
+
+            # To appease flake8
+            other_ret = (return_at_beginning, mid_return_loc, end_loc_return)
+
+            other_ret = Return_Type()
+            return other_ret
+
+        result = BaseDoor._get_return_vals(bad_ret_vals)
+
+        self.assertEqual(result, [["other_ret"]])
+
     def test___eq__(self):
         @BaseDoor
         def fxn1(x, y):

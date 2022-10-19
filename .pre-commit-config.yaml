@@ -4,7 +4,7 @@ repos:
     hooks:
     -   id: black
         args:
-            - --line-length=80
+            - --line-length=79
               # these folders wont be formatted by black
             - --exclude="""\.git |
               \.__pycache__|
@@ -16,7 +16,9 @@ repos:
               buck-out|
               build|
               dist|
-              docs"""
+              docs|
+              tests"""
+            - --force-exclude="""tests/"""
 
         additional_dependencies: ['click==8.0.4']
 -   repo: https://github.com/pre-commit/pre-commit-hooks
@@ -27,6 +29,6 @@ repos:
     -   id: trailing-whitespace
     -   id: flake8
         args:
-            - "--max-line-length=80"
+            - "--max-line-length=79"
             - "--max-complexity=18"
             - "--ignore=F401"

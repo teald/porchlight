@@ -1,5 +1,5 @@
 import inspect
-import string
+import re
 
 from .param import Empty, ParameterError, Param
 
@@ -61,7 +61,12 @@ class BaseDoor:
     return_vals: List[List[str]]
     typecheck: bool
 
-    def __init__(self, function: Callable, typecheck: bool = True):
+    def __init__(
+        self,
+        function: Callable,
+        typecheck: bool = True,
+        returned_def_to_door: bool = False,
+    ):
         """Initializes the BaseDoor class. It takes any callable (function,
         lambda, method...) and inspects it to get at its arguments and
         structure.
@@ -79,7 +84,35 @@ class BaseDoor:
             to `__call__` (when the `BaseDoor` itself is called like a
             function) have the type expected by type annotations and any user
             specifications. By default, this is `True`.
+
+        returned_def_to_door : :py:obj:`bool`, optional
+            If `True`, functions that are defined within other functions are
+            parsed for their return values as if they were door objects
+            themselves. If `False` (default), any return values for internal
+            def's will be ignored.
+
+            An example of this is:
+                ```python
+                from porchlight import BaseDoor
+
+                def my_func_gen():
+                    def int_func():
+                        output = 'bingbong'
+                        return output
+
+                    return int_func
+
+                # In this case, "return output" will be ignored since
+                # returned_def_to_door == False.
+                no_int_ret_door = BaseDoor(my_func_gen)
+
+                # Here, however, the output callable becomes a door upon
+                # creation.
+                my_door = BaseDoor(my_func_gen, returned_def_to_door=True)
+                int_ret_door = my_door()  # This is now the internal door
+                ```
         """
+        self._returned_def_to_door = returned_def_to_door
         self._base_function = function
         self.typecheck = typecheck
         self._inspect_base_callable()
@@ -175,39 +208,110 @@ class BaseDoor:
                     logger.error(msg)
                     raise ParameterError(msg)
 
-        return self._base_function(*args, **input_kwargs)
+        return_val = self._base_function(*args, **input_kwargs)
+
+        if self._returned_def_to_door:
+            if isinstance(return_val, Callable):
+                return_val = Door(return_val)
+
+        return return_val
 
     @staticmethod
     def _get_return_vals(function: Callable) -> List[str]:
         """Gets the names of the return value variables for a given
         function.
+
+        For functions that wrap other functions (i.e., the return value is a
+        function def'd in the function body), the return statements in the body
+        are not parsed.
+
+        Arguments
+        ---------
+        function : :py:class:`typing.Callable`
+            The function to retrieve the return values for.
         """
+        return_vals = []
+
+        # TK TODO: make this a file instead of getting the lines --- for
+        # functions with many lines this is incredibly slow. Not urgent since
+        # there's no common case where a many-line function could not be
+        # refactored into smaller functions.
         lines, start_line = inspect.getsourcelines(function)
 
-        # These characters signal that the return statement does not contain
-        # any operations on the return values, which is undefined for the
-        # purposes of the BaseDoor
-        allowed_chars = list(string.ascii_letters + string.digits + "_")
+        # Tracking indentation for python-like parsing.
+        cur_indent = 0
+        last_check_indent = 0
+        checking_for_returns = True
+        main_def_found = False
 
-        return_vals = []
-        ret_statement = "return "
-        ret_statement_len = len(ret_statement)
+        # These include mandatory space at the beginning since syntactically
+        # there must exist non-\n whitespace for all lines after a funciton
+        # definition.
+        defmatch_str = r"^(\ )+def\s+"
+        retmatch_str = r".*\s+return\s(.*)"
+        indentmatch_str = r"^(\s)*"
 
         for i, line in enumerate(lines):
-            orig_line = line
+            orig_line = line.strip()
 
-            # Strip comments.
+            # Remove comments
             if "#" in line:
                 line = line[: line.index("#")]
 
-            if "return " == line.strip()[:ret_statement_len]:
-                # This is a set of possible return values.
-                line = line.strip()[ret_statement_len:]
-                vals = line.split(",") if "," in line else [line]
+            # Ignore empty lines
+            if not line.strip():
+                continue
+
+            # Get the current indent level.
+            indentmatch = re.match(indentmatch_str, line)
+            cur_indent = len(indentmatch.group())
+
+            # Ignore empty lines
+            # Check for matches for both, in case there's something like
+            #   def wtf(): return 5
+            # Which is atrocious but possible.
+            defmatch = re.match(defmatch_str, line)
+            retmatch = re.match(retmatch_str, line)
+
+            # Ignore decorators
+            if re.match(r"@\w+\(?.*\)?\s?$", line):
+                continue
+
+            if defmatch and i > 0 and main_def_found:
+                # TK TODO: This is currently just disabling the relevant lines,
+                # but in the future should offer to catch this function somehow
+                # too. See https://github.com/teald/porchlight/issues/3
+                checking_for_returns = False
+                last_check_indent = cur_indent
+                continue
+
+            if not main_def_found and defmatch:
+                main_def_found = True
+
+            print(line)
+            if not checking_for_returns and cur_indent <= last_check_indent:
+                print("NOWCHECK")
+                # This is outside the def scope
+                checking_for_returns = True
+                last_check_indent = 0
+
+            if not checking_for_returns:
+                print("NOCHECK")
+                continue
+
+            if retmatch:
+                # This is a return value that belongs to the object.
+                ret_string = retmatch.group(1)
+                if "," in ret_string:
+                    vals = ret_string.split(",")
+
+                else:
+                    vals = [ret_string]
+
                 vals = [v.strip() for v in vals]
 
                 for val in vals:
-                    if any(c not in allowed_chars for c in val):
+                    if not re.match(r"\w+$", val):
                         # This is undefined, not an error. So assign return
                         # value 'undefined' for this return statement and issue
                         # a warning.
@@ -222,10 +326,11 @@ class BaseDoor:
                             f"callable."
                         )
 
-                        vals = [None]
+                        vals = []
                         break
 
-                return_vals.append(vals)
+                if vals:
+                    return_vals.append(vals)
 
         return return_vals
 

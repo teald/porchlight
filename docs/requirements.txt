@@ -1,0 +1,6 @@
+# The requirements here are only for building the docs using
+# sphinx/readthedocs.io
+m2r2
+sphinx_rtd_theme
+poetry
+pre-commit

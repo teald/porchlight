@@ -288,15 +288,12 @@ class BaseDoor:
             if not main_def_found and defmatch:
                 main_def_found = True
 
-            print(line)
             if not checking_for_returns and cur_indent <= last_check_indent:
-                print("NOWCHECK")
                 # This is outside the def scope
                 checking_for_returns = True
                 last_check_indent = 0
 
             if not checking_for_returns:
-                print("NOCHECK")
                 continue
 
             if retmatch:

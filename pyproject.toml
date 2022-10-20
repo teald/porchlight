@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "porchlight"
-version = "0.1.1"
+version = "0.1.2"
 description = "A function-managing package for models and systems with shared variables."
 authors = ["Teal, D <teal.dillon@gmail.com>"]
 license = "GNU General Public License v3.0 or later"

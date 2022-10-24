@@ -1,4 +1,4 @@
-"""Defines the `Neighbor` class."""
+"""Defines the `Neighborhood` class."""
 from . import door
 from . import param
 

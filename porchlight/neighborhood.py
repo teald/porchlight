@@ -361,21 +361,19 @@ class Neighborhood:
         """Defines parameters that must not be empty at the start of a run
         for the run to successfully execute.
         """
-        req_args = []
-        returned_args = []
+        req_args = set()
+        returned_args = set()
 
         for d in self._doors.values():
             for pname in d.required_arguments:
-                if pname not in req_args and pname not in returned_args:
-                    req_args.append(pname)
+                if pname not in returned_args:
+                    req_args.add(pname)
 
-                # Add returned values that would now be initializied. This is
+                # Add returned values that would now be initialized. This is
                 # assuming that all returns will successfully.
-                # TODO: optimize with list comprehension + sets
                 for ra in d.return_vals:
                     for p in ra:
-                        if p not in returned_args:
-                            returned_args.append(p)
+                        returned_args.add(p)
 
         return req_args
 

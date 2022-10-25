@@ -384,6 +384,38 @@ class TestNeighborhood(TestCase):
         neighborhood.run_step()
         self.assertEqual(neighborhood._params["y"], expected_param)
 
+        # If another uninitialized value is added but will not be created, the
+        # neighborhood should raise an error.
+        @Door
+        def fxn_three(barf):
+            return
+
+        neighborhood.add_door(fxn_three)
+
+        with self.assertRaises(param.ParameterError):
+            neighborhood.run_step()
+
+    def test_uninitialized_inputs(self):
+        @Door
+        def test1(x, y=1):
+            z = x * y
+            return z
+
+        @Door
+        def test2(z):
+            return
+
+        @Door
+        def test3():
+            x = 0
+            return x
+
+        neighborhood = Neighborhood()
+
+        neighborhood.add_door([test1, test2, test3])
+
+        self.assertEqual(neighborhood.uninitialized_inputs, ["x", "z"])
+
 
 if __name__ == "__main__":
     import unittest

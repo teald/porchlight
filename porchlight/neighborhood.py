@@ -378,3 +378,20 @@ class Neighborhood:
                             returned_args.append(p)
 
         return req_args
+
+    @property
+    def uninitialized_inputs(self):
+        """Parameters that are inputs to Doors within this Neighborhood with
+        Empty values.
+        """
+        input_args = []
+
+        for d in self._doors.values():
+            for pname in d.required_arguments:
+                if (
+                    pname not in input_args
+                    and self._params[pname].value == param.Empty()
+                ):
+                    input_args.append(pname)
+
+        return input_args

@@ -31,4 +31,4 @@ repos:
         args:
             - "--max-line-length=79"
             - "--max-complexity=18"
-            - "--ignore=F401"
+            - "--ignore=F401,W503"

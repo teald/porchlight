@@ -2,7 +2,7 @@ from porchlight import Neighborhood
 
 from porchlight import Door
 import porchlight.param as param
-from porchlight.param import ParameterError, Empty
+from porchlight.param import Param, ParameterError, Empty
 
 import unittest
 from unittest import TestCase
@@ -357,6 +357,64 @@ class TestNeighborhood(TestCase):
 
         expected_param = param.Param("y", 5)
         self.assertEqual(neighborhood._params["y"], expected_param)
+
+    def test_anticipated_parameters(self):
+        def fxn_one(x):
+            y = x + 1
+            return y
+
+        def fxn_two(y):
+            return "Hello!"
+
+        neighborhood = Neighborhood()
+
+        neighborhood.add_function(fxn_one)
+        neighborhood.add_function(fxn_two)
+
+        # Provide the required first arg, x
+        neighborhood.set_param("x", 0)
+
+        neighborhood.run_step()
+
+        # Check that y is now sucessfully initialized.
+        expected_param = Param("y", 1)
+        self.assertEqual(neighborhood._params["y"], expected_param)
+
+        # Make sure the value doesn't change after another run.
+        neighborhood.run_step()
+        self.assertEqual(neighborhood._params["y"], expected_param)
+
+        # If another uninitialized value is added but will not be created, the
+        # neighborhood should raise an error.
+        @Door
+        def fxn_three(barf):
+            return
+
+        neighborhood.add_door(fxn_three)
+
+        with self.assertRaises(param.ParameterError):
+            neighborhood.run_step()
+
+    def test_uninitialized_inputs(self):
+        @Door
+        def test1(x, y=1):
+            z = x * y
+            return z
+
+        @Door
+        def test2(z):
+            return
+
+        @Door
+        def test3():
+            x = 0
+            return x
+
+        neighborhood = Neighborhood()
+
+        neighborhood.add_door([test1, test2, test3])
+
+        self.assertEqual(neighborhood.uninitialized_inputs, ["x", "z"])
 
 
 if __name__ == "__main__":

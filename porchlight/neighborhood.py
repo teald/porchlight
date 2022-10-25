@@ -361,13 +361,35 @@ class Neighborhood:
         """Defines parameters that must not be empty at the start of a run
         for the run to successfully execute.
         """
-        # TK TODO need to anticipate what parameters are returned during
-        # run_step.
-        req_args = []
+        req_args = set()
+        returned_args = set()
 
         for d in self._doors.values():
             for pname in d.required_arguments:
-                if pname not in req_args:
-                    req_args.append(pname)
+                if pname not in returned_args:
+                    req_args.add(pname)
+
+                # Add returned values that would now be initialized. This is
+                # assuming that all returns will successfully.
+                for ra in d.return_vals:
+                    for p in ra:
+                        returned_args.add(p)
 
         return req_args
+
+    @property
+    def uninitialized_inputs(self):
+        """Parameters that are inputs to Doors within this Neighborhood with
+        Empty values.
+        """
+        input_args = []
+
+        for d in self._doors.values():
+            for pname in d.required_arguments:
+                if (
+                    pname not in input_args
+                    and self._params[pname].value == param.Empty()
+                ):
+                    input_args.append(pname)
+
+        return input_args

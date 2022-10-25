@@ -2,7 +2,7 @@ from porchlight import Neighborhood
 
 from porchlight import Door
 import porchlight.param as param
-from porchlight.param import ParameterError, Empty
+from porchlight.param import Param, ParameterError, Empty
 
 import unittest
 from unittest import TestCase
@@ -356,6 +356,32 @@ class TestNeighborhood(TestCase):
         neighborhood.set_param("y", 5, ignore_constant=True)
 
         expected_param = param.Param("y", 5)
+        self.assertEqual(neighborhood._params["y"], expected_param)
+
+    def test_anticipated_parameters(self):
+        def fxn_one(x):
+            y = x + 1
+            return y
+
+        def fxn_two(y):
+            return "Hello!"
+
+        neighborhood = Neighborhood()
+
+        neighborhood.add_function(fxn_one)
+        neighborhood.add_function(fxn_two)
+
+        # Provide the required first arg, x
+        neighborhood.set_param("x", 0)
+
+        neighborhood.run_step()
+
+        # Check that y is now sucessfully initialized.
+        expected_param = Param("y", 1)
+        self.assertEqual(neighborhood._params["y"], expected_param)
+
+        # Make sure the value doesn't change after another run.
+        neighborhood.run_step()
         self.assertEqual(neighborhood._params["y"], expected_param)
 
 

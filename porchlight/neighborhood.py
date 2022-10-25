@@ -361,13 +361,20 @@ class Neighborhood:
         """Defines parameters that must not be empty at the start of a run
         for the run to successfully execute.
         """
-        # TK TODO need to anticipate what parameters are returned during
-        # run_step.
         req_args = []
+        returned_args = []
 
         for d in self._doors.values():
             for pname in d.required_arguments:
-                if pname not in req_args:
+                if pname not in req_args and pname not in returned_args:
                     req_args.append(pname)
+
+                # Add returned values that would now be initializied. This is
+                # assuming that all returns will successfully.
+                # TODO: optimize with list comprehension + sets
+                for ra in d.return_vals:
+                    for p in ra:
+                        if p not in returned_args:
+                            returned_args.append(p)
 
         return req_args

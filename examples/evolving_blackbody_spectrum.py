@@ -20,7 +20,7 @@ def blackbody(temperature: u.Quantity) -> Callable:
         """Blackbody function initialized at some temperature"""
         wl = wl * u.m if not isinstance(wl, u.Quantity) else wl
 
-        term1 = 2 * const.h * const.c / wl ** 5
+        term1 = 2 * const.h * const.c ** 2 / wl ** 5
 
         exponent = const.h * const.c / (wl * const.k_B * temperature)
 
@@ -52,6 +52,7 @@ def temp_evolution(time: u.Quantity) -> u.Quantity:
 
 @porchlight.Door
 def gen_spectrum(bb_fxn: Callable, wavelengths: u.Quantity):
+    "Updates the blackbody spectrum."
     spectrum = bb_fxn(wavelengths)
 
     return spectrum
@@ -59,6 +60,7 @@ def gen_spectrum(bb_fxn: Callable, wavelengths: u.Quantity):
 
 @porchlight.Door
 def step_time_forward(time, dt=1e4 * u.s):
+    """Applies the only real change in this model, stepping forward."""
     time = time + dt
     return time
 
@@ -68,7 +70,7 @@ def main():
     nbr = porchlight.Neighborhood()
 
     # Adding the Doors we've defined above
-    nbr.add_door(temp_evolution)
+    nbr.add_door(temp_evolution)  # This will initialize the temperature
     nbr.add_door(blackbody)
     nbr.add_door(blackbody_peak)
     nbr.add_door(gen_spectrum)
@@ -126,7 +128,7 @@ def main():
     ax.set(
         xscale="log",
         xlabel="Wavelength (micron)",
-        ylabel="Radiance (W/m^2)",
+        ylabel="Flux (W/m^2/m)",
     )
 
     times = list(data.keys())
@@ -162,6 +164,7 @@ def main():
 
     ax.plot(times, temperatures, "k-")
 
+    # Add in the points sampled for the spectra.
     for i, (time, temp) in enumerate(zip(sample_times, sample_temps)):
         time = float(time)
         ax.plot(time, temp, marker="o", color=colors[i])

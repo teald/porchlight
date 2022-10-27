@@ -264,6 +264,40 @@ class TestNeighborhood(TestCase):
         with self.assertRaises(ParameterError):
             neighborhood.run_step()
 
+    def test_order_doors(self):
+        neighborhood = Neighborhood()
+
+        @Door
+        def test1(x, y, z=1):
+            x += y + z
+            return x
+
+        @Door
+        def test2(z):
+            z *= 5
+            return z
+
+        @Door
+        def test3():
+            pass
+
+        @Door
+        def test4(x):
+            outstr = str(f"My x is: {x}")
+            return outstr
+
+        neighborhood.add_door([test1, test2, test3, test4])
+
+        self.assertEqual(
+            neighborhood._call_order, ["test1", "test2", "test3", "test4"]
+        )
+
+        neighborhood.order_doors(["test2", "test1", "test4", "test3"])
+
+        self.assertEqual(
+            neighborhood._call_order, ["test2", "test1", "test4", "test3"]
+        )
+
     def test_remove_door(self):
         @Door
         def test1(x, y, z=1):

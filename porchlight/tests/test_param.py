@@ -52,14 +52,13 @@ class ParamTest(TestCase):
 
         self.assertNotEqual(param1, nonparam)
 
-    def test___str__(self):
-        outstr = str(param.Param("x", 1))
+    def test___repr__(self):
+        param1 = param.Param("x", 1)
+        expected_string = (
+            "Param(name=x, value=1, constant=False, " "type=<class 'int'>)"
+        )
 
-        self.assertEqual(outstr, "x (<class 'int'>): 1")
-
-        outstr = str(param.Param("exodia", "bing", True))
-
-        self.assertEqual(outstr, "exodia (<class 'str'>): bing (constant)")
+        self.assertEqual(repr(param1), expected_string)
 
     def test_properties(self):
         # Properties should not be directly mutable.

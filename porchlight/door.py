@@ -124,6 +124,20 @@ class BaseDoor:
 
         return False
 
+    def __repr__(self):
+        info = {
+            "name": self.name,
+            "base_function": self._base_function,
+            "arguments": self.arguments,
+            "return_vals": self.return_vals,
+        }
+
+        substrs = [f"{key}={value}" for key, value in info.items()]
+
+        outstr = f"BaseDoor({', '.join(substrs)})"
+
+        return outstr
+
     def _inspect_base_callable(self):
         """Inspect the BaseDoor's baseline callable for primary attributes.
 

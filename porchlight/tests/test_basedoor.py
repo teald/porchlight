@@ -168,6 +168,22 @@ class TestBaseDoor(TestCase):
         self.assertFalse(fxn1 == fxn2)
         self.assertTrue(fxn1 == other_fxn1)
 
+    def test___repr__(self):
+        """Test the BaseDoor"""
+
+        def test(x: int) -> int:
+            y = x ** 2
+            return y
+
+        expected_repr = (
+            f"BaseDoor(name=test, base_function={str(test)}, "
+            f"arguments={{'x': <class 'int'>}}, "
+            f"return_vals=[['y']])"
+        )
+
+        test_door = BaseDoor(test)
+        self.assertEqual(repr(test_door), expected_repr)
+
     def test__inspect_base_callable(self):
         def bigfxn(x, y, *, z=5):
             output = sum((x, y, z))

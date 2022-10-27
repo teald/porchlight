@@ -343,8 +343,7 @@ class Neighborhood:
         ---------
         order : :py:obj:`list`, str
             The order for doors to be called in. Each `str` must correspond to
-            a key in `Neighborhood._doors` at the time of calling this
-            method.
+            a key in `Neighborhood._doors`.
         """
         if any(n not in self._doors for n in order):
             i = [n not in self._doors for n in order].index(True)

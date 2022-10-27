@@ -43,7 +43,7 @@ neighborhood.add_function(increment_x)
 # The neighborhood object inspects the function, finding input and output
 # variables if present. These are added to the collections of functions and
 # parameters.
-print(neighborhood)  # porchlight.Neighborhood has a pretty-print string.
+print(neighborhood)
 ```
 
 Although this is the current extent of documentation, there should be some more

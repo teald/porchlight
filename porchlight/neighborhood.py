@@ -41,6 +41,24 @@ class Neighborhood:
         self._params = {}
         self._call_order = []
 
+    def __repr__(self):
+        """Must communicate teh following:
+        + A unique identifier.
+        + List of doors
+        + list of tracked parameters and their values.
+        """
+        info = {
+            "doors": self.doors,
+            "params": self.params,
+            "call_order": self._call_order,
+        }
+
+        infostrs = [f"{key}={value}" for key, value in info.items()]
+
+        outstring = f"Neighborhood({', '.join(infostrs)})"
+
+        return outstring
+
     def add_function(
         self, function: Callable, overwrite_defaults: bool = False
     ):
@@ -94,7 +112,7 @@ class Neighborhood:
         self._call_order.append(new_door.name)
 
         # Update the parameters as necesssary.
-        # This will prefer default values passed by earlier
+        # This will prefer default values passed by earlier doors.
         for pname, ptype in new_door.arguments.items():
             if pname not in self._params or overwrite_defaults:
                 # This is a new parameter.

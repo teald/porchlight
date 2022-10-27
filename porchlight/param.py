@@ -60,7 +60,9 @@ class Param:
     # have easy access, so just hiding these behind properties.
     __slots__ = ["_name", "_value", "constant", "_type"]
 
-    def __init__(self, name: str, value: Any = Empty(), constant: bool = False):
+    def __init__(
+        self, name: str, value: Any = Empty(), constant: bool = False
+    ):
         """Initializes the Param object.
 
         Arguments
@@ -82,9 +84,18 @@ class Param:
         self.constant = constant
         self._type = type(self._value)
 
-    def __str__(self):
-        outstr = f"{self._name} ({self._type}): {self._value}"
-        outstr += "" if not self.constant else " (constant)"
+    def __repr__(self):
+        info = {
+            "name": self.name,
+            "value": self.value,
+            "constant": self.constant,
+            "type": self.type,
+        }
+
+        infostrings = [f"{key}={value}" for key, value in info.items()]
+
+        outstr = f"Param({', '.join(infostrings)})"
+
         return outstr
 
     def __eq__(self, other):

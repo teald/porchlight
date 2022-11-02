@@ -154,6 +154,19 @@ class TestBaseDoor(TestCase):
 
         self.assertEqual(result, [["other_ret"]])
 
+        # Test internal decorators.
+        def int_decorator(x: int) -> int:
+            @BaseDoor
+            def int_func():
+                return 10
+
+            y = x + int_func()
+            return y
+
+        result = BaseDoor._get_return_vals(int_decorator)
+
+        self.assertEqual(result, [["y"]])
+
         # TODO: Below is commented out intentionally for github issue #17.
         # # Test decorators.
         # def dummy_decorator(fun) -> Callable:

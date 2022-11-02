@@ -283,7 +283,7 @@ class BaseDoor:
             retmatch = re.match(retmatch_str, line)
 
             # Ignore decorators
-            if re.match(r"@\w+\(?.*\)?\s?$", line):
+            if re.match(r"\s*@\w+.*", line):
                 continue
 
             if defmatch and i > 0 and main_def_found:

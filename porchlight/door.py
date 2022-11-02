@@ -92,31 +92,10 @@ class BaseDoor:
             specifications. By default, this is `True`.
 
         returned_def_to_door : :py:obj:`bool`, optional
-            If `True`, functions that are defined within other functions are
-            parsed for their return values as if they were door objects
-            themselves. If `False` (default), any return values for internal
-            def's will be ignored.
-
-            An example of this is:
-                ```python
-                from porchlight import BaseDoor
-
-                def my_func_gen():
-                    def int_func():
-                        output = 'bingbong'
-                        return output
-
-                    return int_func
-
-                # In this case, "return output" will be ignored since
-                # returned_def_to_door == False.
-                no_int_ret_door = BaseDoor(my_func_gen)
-
-                # Here, however, the output callable becomes a door upon
-                # creation.
-                my_door = BaseDoor(my_func_gen, returned_def_to_door=True)
-                int_ret_door = my_door()  # This is now the internal door
-                ```
+            Returns a Door generated from the output of the base function.
+            Note, this is not the same as a DynamicDoor, and internal
+            variables/updating is not handled as with a DynamicDoor. This just
+            calls Door's initializer on the output of the base function.
         """
         self._returned_def_to_door = returned_def_to_door
         self._base_function = function
@@ -241,8 +220,8 @@ class BaseDoor:
         return_val = self._base_function(*args, **input_kwargs)
 
         if self._returned_def_to_door:
-            if isinstance(return_val, Callable):
-                return_val = Door(return_val)
+            if not isinstance(return_val, BaseDoor):
+                return_val = BaseDoor(return_val)
 
         return return_val
 

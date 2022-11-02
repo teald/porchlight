@@ -450,6 +450,42 @@ class TestNeighborhood(TestCase):
 
         self.assertEqual(neighborhood.uninitialized_inputs, ["x", "z"])
 
+    def test_dynamic_doors(self):
+        # TODO: There is a case for updating multiple doors with one function.
+        # It shouldn't be too hard to execute, but need to keep it in mind.
+        @Door
+        def test1(x: int) -> Door:
+            @Door
+            def test1_door():
+                y = x + 1
+                return y
+
+            return test1_door
+
+        neighborhood = Neighborhood()
+
+        # Adding this to the neighborhood should add two doors.
+        neighborhood.add_door(test1, dynamic_door=True)
+
+        self.assertEqual(
+            list(neighborhood.doors.keys()), ["test1", "test1_door"]
+        )
+
+        self.assertEqual(list(neighborhood.params.keys()), ["x", "test1_door"])
+
+        neighborhood.set_param("x", 1)
+        neighborhood.run_step()
+
+        self.assertEqual(neighborhood.params["y"].value, 2)
+
+        # This should fail if dynamic doors are not requested.
+        neighborhood = Neighborhood()
+        neighborhood.add_door(test1)
+
+        self.assertEqual(list(neighborhood.doors.keys()), ["test1"])
+
+        self.assertEqual(list(neighborhood.params.keys()), ["x", "test1_door"])
+
 
 if __name__ == "__main__":
     import unittest

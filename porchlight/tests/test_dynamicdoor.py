@@ -1,9 +1,8 @@
 """Tests for the porchlight.door.DynamicDoor class."""
 import porchlight.door as door
 
-import unittest
-
 import os
+import unittest
 
 
 class TestDynamicDoor(unittest.TestCase):

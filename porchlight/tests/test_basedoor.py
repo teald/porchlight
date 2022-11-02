@@ -252,6 +252,7 @@ class TestBaseDoor(TestCase):
             "kwarg1": Param("kwarg1", None),
             "kwarg2": Param("kwarg2", ["hi"]),
         }
+
         self.assertEqual(test_prop.keyword_arguments, expected_val)
 
     def test_kwargs(self):
@@ -266,6 +267,7 @@ class TestBaseDoor(TestCase):
             "kwarg1": Param("kwarg1", None),
             "kwarg2": Param("kwarg2", ["hi"]),
         }
+
         self.assertEqual(test_prop.kwargs, expected_val)
 
 

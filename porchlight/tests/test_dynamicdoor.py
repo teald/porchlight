@@ -29,6 +29,60 @@ class TestDynamicDoor(unittest.TestCase):
 
         self.assertEqual(_y, 4)
 
+    def test___repr__(self):
+        @door.DynamicDoor
+        def doorgen1() -> door.Door:
+            @door.Door
+            def my_door(x: int) -> int:
+                y = x + 1
+                return y
+
+            return my_door
+
+        # Initially, should be uninitialized with no meta-info.
+        self.assertEqual(repr(doorgen1), "DynamicDoor(uninitialized)")
+
+        # Once the generator function has been run once and the Dynamic door
+        # has been updated, expect a door-like string with "Dynamic" prepended.
+        doorgen1(1)
+        my_door = doorgen1._cur_door
+        expected_repr = repr(my_door)
+        expected_repr = expected_repr.replace("Door", "DynamicDoor")
+
+        self.assertEqual(repr(doorgen1), expected_repr)
+
+    def test_bad_returns(self):
+        # Non-BaseDoor returns should raise a TypeError at update.
+        def test1() -> int:
+            return 1
+
+        def test2() -> str:
+            x = ""
+            return x
+
+        def test3(x: int) -> int:
+            return x
+
+        def test4() -> door.Door:
+            return
+
+        def test5() -> door.BaseDoor:
+            x = 1
+            return x
+
+        def test6(bing: str) -> door.Door:
+            def fxn():
+                return "hello"
+
+            return fxn
+
+        all_tests = [test1, test2, test3, test4, test5, test6]
+
+        for test in all_tests:
+            with self.assertRaises(TypeError):
+                new_ddoor = door.DynamicDoor(test)
+                new_ddoor.update()
+
 
 if __name__ == "__main__":
     unittest.main()

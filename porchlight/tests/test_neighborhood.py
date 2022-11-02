@@ -513,6 +513,31 @@ class TestNeighborhood(TestCase):
 
         self.assertEqual(neighborhood.params["y"].value, 2)
 
+        # Now add a dynamic door with a keyword argument.
+        @Door
+        def test2() -> Door:
+            @Door
+            def test2_door(z: int = 3):
+                # Note: this will override any previously calculated values of
+                # y---on purpose here!
+                y = z + 3
+                return y
+
+            return test2_door
+
+        neighborhood.add_door(test2, dynamic_door=True)
+        neighborhood.run_step()
+
+        self.assertEqual(
+            list(neighborhood.doors.keys()),
+            ["test1", "test1_door", "test2", "test2_door"],
+        )
+        self.assertEqual(neighborhood.params["y"].value, 6)
+        self.assertEqual(
+            list(neighborhood.params.keys()),
+            ["x", "test1_door", "y", "test2_door", "z"],
+        )
+
         # This should fail if dynamic doors are not requested.
         neighborhood = Neighborhood()
         neighborhood.add_door(test1)

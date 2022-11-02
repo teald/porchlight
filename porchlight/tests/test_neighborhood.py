@@ -1,8 +1,5 @@
-from porchlight import Neighborhood
-
-from porchlight import Door
-import porchlight.param as param
-from porchlight.param import Param, ParameterError, Empty
+import porchlight
+from porchlight import Neighborhood, Door, Param
 
 import unittest
 from unittest import TestCase
@@ -21,6 +18,40 @@ class TestNeighborhood(TestCase):
 
         self.assertEqual(neighborhood._doors, {})
         self.assertEqual(neighborhood._params, {})
+
+    def test___repr__(self):
+        neighborhood = Neighborhood()
+        expected = r"Neighborhood(doors={}, params={}, call_order=[])"
+        self.assertEqual(repr(neighborhood), expected)
+
+        @Door
+        def test1(x: int) -> int:
+            y = x + 1
+            return y
+
+        neighborhood.add_door(test1)
+
+        expected = (
+            "Neighborhood(doors={'test1': Door(name=test1, "
+            "base_function=<function test1 at 0x7f247d8c48b0>, "
+            "arguments={'x': <class 'int'>}, return_vals=[['y']])}, "
+            "params={'x': Param(name=x, value=<porchlight.param."
+            "Empty object at 0x7f247e1bd060>, constant=False, type=<class "
+            "'porchlight.param.Empty'>), 'y': Param(name="
+            "y, value=<porchlight.param.Empty object at 0x7f247d8c9660>, "
+            "constant=False, type=<class 'porchlight.param "
+            ".Empty'>)}, call_order=['test1'])"
+        )
+
+        params = neighborhood.params
+
+        expected = (
+            f"Neighborhood(doors={{'test1': {test1}}}, "
+            f"params={params}, call_order=['test1'])"
+        )
+
+        print(repr(neighborhood))
+        self.assertEqual(repr(neighborhood), expected)
 
     def test_add_function(self):
         # We only need to test if the correct type of door is created---can
@@ -217,11 +248,13 @@ class TestNeighborhood(TestCase):
 
         neighborhood.add_function(retval_empty_test)
 
-        self.assertEqual(neighborhood._params["rettest"].value, param.Empty())
+        self.assertEqual(
+            neighborhood._params["rettest"].value, porchlight.param.Empty()
+        )
 
         neighborhood.run_step()
 
-        expected_param = param.Param(
+        expected_param = porchlight.param.Param(
             "rettest", neighborhood.params["x"].value + 1
         )
 
@@ -232,7 +265,7 @@ class TestNeighborhood(TestCase):
         # Make one of the parameters constant.
         neighborhood.set_param("rettest", 1, constant=True)
 
-        with self.assertRaises(param.ParameterError):
+        with self.assertRaises(porchlight.param.ParameterError):
             neighborhood.run_step()
 
     def test_empty_variable_check(self):
@@ -261,7 +294,7 @@ class TestNeighborhood(TestCase):
         neighborhood.add_door([test3, test4])
 
         # Don't pass the required parameters
-        with self.assertRaises(ParameterError):
+        with self.assertRaises(porchlight.param.ParameterError):
             neighborhood.run_step()
 
     def test_order_doors(self):
@@ -368,7 +401,9 @@ class TestNeighborhood(TestCase):
 
         neighborhood.add_door(test1)
 
-        self.assertEqual(neighborhood._params["x"].value, Empty())
+        self.assertEqual(
+            neighborhood._params["x"].value, porchlight.param.Empty()
+        )
 
         neighborhood.set_param("x", 1)
 
@@ -384,12 +419,12 @@ class TestNeighborhood(TestCase):
 
         neighborhood.add_param("y", 1, constant=True)
 
-        with self.assertRaises(param.ParameterError):
+        with self.assertRaises(porchlight.param.ParameterError):
             neighborhood.set_param("y", 5)
 
         neighborhood.set_param("y", 5, ignore_constant=True)
 
-        expected_param = param.Param("y", 5)
+        expected_param = porchlight.param.Param("y", 5)
         self.assertEqual(neighborhood._params["y"], expected_param)
 
     def test_anticipated_parameters(self):
@@ -426,7 +461,7 @@ class TestNeighborhood(TestCase):
 
         neighborhood.add_door(fxn_three)
 
-        with self.assertRaises(param.ParameterError):
+        with self.assertRaises(porchlight.param.ParameterError):
             neighborhood.run_step()
 
     def test_uninitialized_inputs(self):
@@ -485,6 +520,22 @@ class TestNeighborhood(TestCase):
         self.assertEqual(list(neighborhood.doors.keys()), ["test1"])
 
         self.assertEqual(list(neighborhood.params.keys()), ["x", "test1_door"])
+
+    def test_bad_dynamic_door(self):
+        @Door
+        def test1(x: int):
+            @Door
+            def test1_door():
+                y = x + 1
+                return y
+
+            return test1_door
+
+        neighborhood = Neighborhood()
+
+        # Adding this to the neighborhood should add two doors.
+        with self.assertRaises(porchlight.neighborhood.NeighborhoodError):
+            neighborhood.add_door(test1, dynamic_door=True)
 
 
 if __name__ == "__main__":

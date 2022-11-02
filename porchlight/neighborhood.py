@@ -169,7 +169,7 @@ class Neighborhood:
         # error.
         return_types = new_door.return_types
 
-        if len(return_types) != len(new_door.return_vals):
+        if not return_types or len(return_types) != len(new_door.return_vals):
             raise NeighborhoodError(
                 "Dynamic doors with return values must be type annotated."
             )

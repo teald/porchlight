@@ -25,10 +25,6 @@ class Neighborhood:
         are, by default, the :meth:`~porchlight.door.Door.name`
         property for the corresponding :class:`~porchlight.door.Door` values.
 
-    _dynamic_doors : :py:obj:`set`, :py:obj:`str`
-        These doors are changed as outputs of other functions. When a door is
-        called that would modify these doors, they are updated.
-
     _params : :py:obj:`dict`, :py:obj:`str`: :class:`~porchlight.param.Param`
         Contains all the parameters currently known to and managed by the
         :class:`~porchlight.neighborhood.Neighborhood` object.
@@ -47,7 +43,6 @@ class Neighborhood:
     def __init__(self):
         """Initializes the Neighborhood object."""
         self._doors = {}
-        self._dynamic_doors = set()
         self._params = {}
         self._call_order = []
 

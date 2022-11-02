@@ -138,6 +138,20 @@ class TestDoor(TestCase):
         for fxn, exp in test_cases:
             self.assertEqual(fxn.variables, exp)
 
+    def test___repr___(self):
+        def test(x: int) -> int:
+            y = x ** 2
+            return y
+
+        expected_repr = (
+            f"Door(name=test, base_function={str(test)}, "
+            f"arguments={{'x': <class 'int'>}}, "
+            f"return_vals=[['y']])"
+        )
+
+        test_door = Door(test)
+        self.assertEqual(repr(test_door), expected_repr)
+
 
 if __name__ == "__main__":
     import unittest

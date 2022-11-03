@@ -1,7 +1,7 @@
 """Defines the `Neighborhood` class."""
 from . import door
 from . import param
-
+from .utils.typing_functions import decompose_type
 from typing import Any, Callable, Dict, List, Union
 
 import logging
@@ -167,9 +167,20 @@ class Neighborhood:
         #
         # Dynamic doors must also be type-annotated. If they are not raise an
         # error.
+        if not new_door.return_types:
+            msg = (
+                "DynamicDoor requires a type annotation for the "
+                "function generator."
+            )
+
+            logger.error(msg)
+            raise NeighborhoodError(msg)
+
         return_types = new_door.return_types
 
-        if not return_types or len(return_types) != len(new_door.return_vals):
+        if not return_types or len(return_types) != len(
+            new_door.return_vals[0]
+        ):
             raise NeighborhoodError(
                 "Dynamic doors with return values must be type annotated."
             )
@@ -423,9 +434,25 @@ class Neighborhood:
             The order for doors to be called in. Each `str` must correspond to
             a key in `Neighborhood._doors`.
         """
-        if any(n not in self._doors for n in order):
+        if not order:
+            msg = f"Empty or invalid input: {order}."
+            logger.error(msg)
+            raise ValueError(msg)
+
+        elif len(order) > len(self._doors):
+            msg = (
+                f"More labels provided than doors "
+                f"({len(order)} labels vs {len(self._doors)} doors)."
+            )
+            logger.error(msg)
+            raise ValueError(msg)
+
+        elif any(n not in self._doors for n in order):
             i = [n not in self._doors for n in order].index(True)
-            raise KeyError(f"Could not find door with label: {order[i]}")
+
+            msg = f"Could not find door with label: {order[i]}"
+            logger.error(msg)
+            raise KeyError(msg)
 
         self._call_order = order
 

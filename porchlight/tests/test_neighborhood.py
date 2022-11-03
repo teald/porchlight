@@ -6,6 +6,7 @@ from unittest import TestCase
 
 import logging
 import os
+import typing
 
 logging.basicConfig(filename=f"{os.getcwd()}/porchlight_unittest.log")
 
@@ -331,6 +332,20 @@ class TestNeighborhood(TestCase):
             neighborhood._call_order, ["test2", "test1", "test4", "test3"]
         )
 
+        # Should raise an error if a door is missing/extra door provided.
+        with self.assertRaises(ValueError):
+            neighborhood.order_doors(["t", "t", "t", "t", "test4"])
+
+        with self.assertRaises(ValueError):
+            neighborhood.order_doors([])
+
+        with self.assertRaises(KeyError):
+            neighborhood.order_doors([""])
+
+        with self.assertRaises(KeyError):
+            # test2 -> tset2
+            neighborhood.order_doors(["test1", "tset2", "test3", "test4"])
+
     def test_remove_door(self):
         @Door
         def test1(x, y, z=1):
@@ -546,6 +561,29 @@ class TestNeighborhood(TestCase):
 
         self.assertEqual(list(neighborhood.params.keys()), ["x", "test1_door"])
 
+        # Add two dynamic doors using a single generator function.
+        def doublegen_test(
+            x: int,
+        ) -> typing.Tuple[porchlight.Door, porchlight.Door]:
+            @porchlight.Door
+            def test1(y: float) -> float:
+                z = y ** x
+                return z
+
+            @porchlight.Door
+            def test2(z: float) -> float:
+                x = 2 * z
+                return x
+
+            return test1, test2
+
+        neighborhood = Neighborhood()
+        neighborhood.add_function(doublegen_test, dynamic_door=True)
+
+        import pytest
+
+        pytest.set_trace()
+
     def test_bad_dynamic_door(self):
         @Door
         def test1(x: int):
@@ -561,6 +599,20 @@ class TestNeighborhood(TestCase):
         # Adding this to the neighborhood should add two doors.
         with self.assertRaises(porchlight.neighborhood.NeighborhoodError):
             neighborhood.add_door(test1, dynamic_door=True)
+
+    def test_properties(self):
+        @porchlight.Door
+        def test1(x: typing.Union[int | float], y: str = "15.5") -> typing.Any:
+            z = x + float(y)
+            return z
+
+        neighborhood = Neighborhood()
+        neighborhood.add_door(test1)
+
+        # Neighborhood.parameters
+        result = neighborhood.parameters
+        self.assertEqual(result["x"], Param("x", porchlight.param.Empty()))
+        self.assertEqual(result["y"], Param("y", "15.5"))
 
 
 if __name__ == "__main__":

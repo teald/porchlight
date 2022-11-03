@@ -1,4 +1,7 @@
 import typing
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def decompose_type(
@@ -25,6 +28,13 @@ def decompose_type(
         are ignored. These are only for *resolvable* types at return, such as
         Tuples, Lists, and Iterables. Callables are excluded by default.
     """
+    # Catch non-types
+    # if not isinstance(typevar, typing.Type):
+    #     """Cannot decompose non-typing.Type object."""
+    #     msg = f"typevar must be a type (typing.Type), not {type(typevar)}"
+    #     logger.error(msg)
+    #     raise TypeError(msg)
+
     all_types = []
 
     # Check that typevar is not one of interest to any of the types in
@@ -37,19 +47,38 @@ def decompose_type(
 
     # If there are internal arguments (i.e., in brackets like List[str, ...])
     # then the type can be further decomposed.
-    if "__args__" in typevar.__dict__:
-        # Do not do this for callables, since their arguments and return types
-        # are not accessible at the time they are returned.
-        if base_type == typing.get_origin(typing.Callable):
-            return [typevar]
+    try:
+        if "__args__" in typevar.__dict__:
+            # Do not do this for callables, since their arguments and return
+            # types are not accessible at the time they are returned.
+            if (
+                base_type == typing.get_origin(typing.Callable)
+                or not typevar.__args__
+            ):
+                return [typevar]
 
-        if include_base_types:
-            all_types += [typevar]
+            if include_base_types:
+                all_types += [typevar]
 
-        for arg in typevar.__args__:
-            all_types += decompose_type(arg, break_types)
+            for arg in typevar.__args__:
+                all_types += decompose_type(arg, break_types)
 
-    else:
-        all_types = [typevar]
+        else:
+            all_types = [typevar]
+
+    except AttributeError as e:
+        # This should only be allowed if typevar does not have a __dict__ attr,
+        # in which case we assume that this is a user-defined type.
+        try:
+            typevar.__dict__
+            raise e
+
+        except AttributeError:
+            all_types = [typevar]
+
+            # Log this.
+            logger.debug(
+                f"Return type parsed allowed without __dict__: {typevar}"
+            )
 
     return all_types

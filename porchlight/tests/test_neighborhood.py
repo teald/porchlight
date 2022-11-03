@@ -567,7 +567,7 @@ class TestNeighborhood(TestCase):
         ) -> typing.Tuple[porchlight.Door, porchlight.Door]:
             @porchlight.Door
             def test1(y: float) -> float:
-                z = y ** x
+                z = y ** x + 1
                 return z
 
             @porchlight.Door
@@ -579,10 +579,27 @@ class TestNeighborhood(TestCase):
 
         neighborhood = Neighborhood()
         neighborhood.add_function(doublegen_test, dynamic_door=True)
+        neighborhood.add_param("x", 0)
+        neighborhood.add_param("y", 2)
 
-        import pytest
+        expected_doors = ["doublegen_test", "test1", "test2"]
+        expected_params = ["x", "test1", "test2", "y", "z"]
 
-        pytest.set_trace()
+        self.assertEqual(list(neighborhood.doors.keys()), expected_doors)
+
+        neighborhood.run_step()
+
+        self.assertEqual(list(neighborhood.params.keys()), expected_params)
+        self.assertEqual(neighborhood.params["x"].value, 4)
+        self.assertEqual(neighborhood.params["y"].value, 2)
+        self.assertEqual(neighborhood.params["z"].value, 2)
+
+        neighborhood.run_step()
+
+        self.assertEqual(list(neighborhood.params.keys()), expected_params)
+        self.assertEqual(neighborhood.params["x"].value, 34)
+        self.assertEqual(neighborhood.params["y"].value, 2)
+        self.assertEqual(neighborhood.params["z"].value, 17)
 
     def test_bad_dynamic_door(self):
         @Door

@@ -619,7 +619,7 @@ class TestNeighborhood(TestCase):
 
     def test_properties(self):
         @porchlight.Door
-        def test1(x: typing.Union[int | float], y: str = "15.5") -> typing.Any:
+        def test1(x: typing.Union[int, float], y: str = "15.5") -> typing.Any:
             z = x + float(y)
             return z
 

@@ -359,7 +359,6 @@ class Neighborhood:
                 input_params[pname] = self._params[pname].value
 
             # Run the cur_door object and catch its output.
-            # TK TODO: include support for positional-only arguments.
             output = cur_door(**input_params)
 
             # Check if the cur_door has a known return value.
@@ -367,10 +366,10 @@ class Neighborhood:
                 continue
 
             elif len(cur_door.return_vals[0]) > 1:
-                # TODO: TK REFACTORING this only works for functions with one
-                # possible output. This, frankly, should probably be the case
-                # nearly all of the time. Still need to make a call on if
-                # there's support in a subset of cases.
+                # This only works for functions with one possible output. This,
+                # frankly, should probably be the case nearly all of the time.
+                # Still need to make a call on if there's support in a subset
+                # of cases. See issue #19 for updates.
                 update_params = {
                     v: x for v, x in zip(cur_door.return_vals[0], output)
                 }

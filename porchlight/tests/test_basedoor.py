@@ -10,6 +10,8 @@ from porchlight.param import Empty, ParameterError, Param
 import logging
 import os
 
+from typing import Callable
+
 logging.basicConfig(filename=f"{os.getcwd()}/porchlight_unittest.log")
 
 
@@ -132,7 +134,7 @@ class TestBaseDoor(TestCase):
 
         self.assertEqual(result, [])
 
-        # Tests with non-return values in it.
+        # Tests with non-return local variables.
         class Return_Type:
             pass
 
@@ -141,8 +143,9 @@ class TestBaseDoor(TestCase):
             mid_return_loc = None
             end_loc_return = None
 
-            # To appease flake8
+            # To appease flake8, but also a test itself.
             other_ret = (return_at_beginning, mid_return_loc, end_loc_return)
+            other_ret = "Putting return in a new place: return"
 
             other_ret = Return_Type()
             return other_ret
@@ -150,6 +153,36 @@ class TestBaseDoor(TestCase):
         result = BaseDoor._get_return_vals(bad_ret_vals)
 
         self.assertEqual(result, [["other_ret"]])
+
+        # Test internal decorators.
+        def int_decorator(x: int) -> int:
+            @BaseDoor
+            def int_func():
+                return 10
+
+            y = x + int_func()
+            return y
+
+        result = BaseDoor._get_return_vals(int_decorator)
+
+        self.assertEqual(result, [["y"]])
+
+        # TODO: Below is commented out intentionally for github issue #17.
+        # # Test decorators.
+        # def dummy_decorator(fun) -> Callable:
+        #     def wrapper(*args, **kwargs):
+        #         return fun(*args, **kwargs)
+
+        #     return wrapper
+
+        # @dummy_decorator
+        # def test_decorator() -> int:
+        #     x = 1
+        #     return x
+
+        # result = BaseDoor._get_return_vals(test_decorator)
+
+        # self.assertEqual(result, [["x"]])
 
     def test___eq__(self):
         @BaseDoor
@@ -202,6 +235,53 @@ class TestBaseDoor(TestCase):
 
         with self.assertRaises(NotImplementedError):
             BaseDoor(bad_fxn)
+
+    def test__returned_def_to_door(self):
+        def my_func_gen():
+            def int_func():
+                output = "bingbong"
+                return output
+
+            return int_func
+
+        no_int_ret_door = BaseDoor(my_func_gen)
+        int_ret_door = BaseDoor(my_func_gen, returned_def_to_door=True)
+
+        self.assertEqual(no_int_ret_door.name, int_ret_door.name)
+        self.assertEqual(no_int_ret_door.arguments, int_ret_door.arguments)
+
+        self.assertTrue(isinstance(no_int_ret_door(), Callable))
+        self.assertTrue(isinstance(int_ret_door(), BaseDoor))
+
+    def test_keyword_arguments(self):
+        @BaseDoor
+        def test_prop(arg1, arg2, kwarg1=None, kwarg2=["hi"]) -> int:
+            kwarg1 = 1 if kwarg1 is None else kwarg1 + 1
+            return kwarg1
+
+        expected_val = {
+            "arg1": Param("arg1", Empty()),
+            "arg2": Param("arg2", Empty()),
+            "kwarg1": Param("kwarg1", None),
+            "kwarg2": Param("kwarg2", ["hi"]),
+        }
+
+        self.assertEqual(test_prop.keyword_arguments, expected_val)
+
+    def test_kwargs(self):
+        @BaseDoor
+        def test_prop(arg1, arg2, kwarg1=None, kwarg2=["hi"]) -> int:
+            kwarg1 = 1 if kwarg1 is None else kwarg1 + 1
+            return kwarg1
+
+        expected_val = {
+            "arg1": Param("arg1", Empty()),
+            "arg2": Param("arg2", Empty()),
+            "kwarg1": Param("kwarg1", None),
+            "kwarg2": Param("kwarg2", ["hi"]),
+        }
+
+        self.assertEqual(test_prop.kwargs, expected_val)
 
 
 if __name__ == "__main__":

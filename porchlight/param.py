@@ -21,8 +21,6 @@ class Empty:
         """Force Equality of this special value regardless of whether it is
         initialized or not.
         """
-        # TK TODO need to deecide if this should include uninitialized Empty
-        # objects.
         if isinstance(other, Empty) or other == Empty:
             return True
 

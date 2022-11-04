@@ -1,12 +1,16 @@
 """Defines the `Neighborhood` class."""
 from . import door
 from . import param
-
+from .utils.typing_functions import decompose_type
 from typing import Any, Callable, Dict, List, Union
 
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+class NeighborhoodError(Exception):
+    pass
 
 
 class Neighborhood:
@@ -31,7 +35,8 @@ class Neighborhood:
         :class:`~porchlight.door.Door`s are added to the `Neighborhood`.
     """
 
-    _doors: Dict[str, param.Param]
+    _doors: Dict[str, door.Door]
+    _dynamic_doors: set[str]
     _params: Dict[str, param.Param]
     _call_order: List[str]
 
@@ -60,7 +65,10 @@ class Neighborhood:
         return outstring
 
     def add_function(
-        self, function: Callable, overwrite_defaults: bool = False
+        self,
+        function: Callable,
+        overwrite_defaults: bool = False,
+        dynamic_door: bool = False,
     ):
         """Adds a new function to the Neighborhood object.
 
@@ -75,22 +83,31 @@ class Neighborhood:
             `function` and `Neighborhood._params` to be equal to the defaults
             set by `function`. If `False` (default), no parameters that exist
             in the `Neighborhood` object already will be changed.
+
+        dynamic_door : bool, optional
+            If `True` (default `False`), then the output(s) of this `Door` will
+            be converted into a `Door` or set of `Door`s in the `Neighborhood`
+            object.
         """
         new_door = door.Door(function)
 
-        self.add_door(new_door, overwrite_defaults)
+        self.add_door(new_door, overwrite_defaults, dynamic_door)
 
     def add_door(
         self,
         new_door: Union[door.Door, List[door.Door]],
         overwrite_defaults: bool = False,
+        dynamic_door: bool = False,
     ):
         """Adds an already-initialized Door to the neighborhood.
 
         Parameters
         ----------
-        new_door : :class:`~porchlight.door.Door` or :py:obj:`list` of
-            :class:`~porchlight.door.Door` objects. Either a single initialized
+        new_door : :class:`~porchlight.door.Door`,
+            :class:`~porchlight.door.DynamicDoor`, or :py:obj:`list` of
+            :class:`~porchlight.door.Door` objects.
+
+            Either a single initialized
             `door.Door` object or a list of them.  If a list is provided, this
             function is called for each item in the list.
 
@@ -99,10 +116,19 @@ class Neighborhood:
             `new_door` and `Neighborhood._params` to be equal to the defaults
             set by `new_door`. If `False` (default), no parameters that exist
             in the `Neighborhood` object already will be changed.
+
+        dynamic_door : bool, optional
+            If `True` (default `False`), then the output(s) of this `Door` will
+            be converted into a `Door` or set of `Door`s in the `Neighborhood`
+            object.
         """
         if isinstance(new_door, List):
             for nd in new_door:
-                self.add_door(nd, overwrite_defaults=overwrite_defaults)
+                self.add_door(
+                    nd,
+                    overwrite_defaults=overwrite_defaults,
+                    dynamic_door=dynamic_door,
+                )
 
             return
 
@@ -128,9 +154,55 @@ class Neighborhood:
         if not new_door.return_vals:
             return
 
-        for pname in [p for rvs in new_door.return_vals for p in rvs]:
-            if pname not in self._params:
-                self._params[pname] = param.Param(pname, param.Empty())
+        # Add all return values as parameters.
+        if not dynamic_door:
+            for pname in [p for rvs in new_door.return_vals for p in rvs]:
+                if pname not in self._params:
+                    self._params[pname] = param.Param(pname, param.Empty())
+
+            return
+
+        # Dynamic doors must be specified separately. They get initialized when
+        # first modified.
+        #
+        # Dynamic doors must also be type-annotated. If they are not raise an
+        # error.
+        if not new_door.return_types:
+            msg = (
+                "DynamicDoor requires a type annotation for the "
+                "function generator."
+            )
+
+            logger.error(msg)
+            raise NeighborhoodError(msg)
+
+        return_types = new_door.return_types
+
+        if not return_types or len(return_types) != len(
+            new_door.return_vals[0]
+        ):
+            raise NeighborhoodError(
+                "Dynamic doors with return values must be type annotated."
+            )
+
+        for i, rt in enumerate(return_types):
+            if isinstance(rt, door.Door) or rt is door.Door:
+                ret_val = new_door.return_vals[0][i]
+                if ret_val not in self.doors:
+                    # Can define a function that just pulls out the attr
+                    # independent of its current reference.
+                    @door.DynamicDoor
+                    def template_ddoor(param_name):
+                        return getattr(self, "params")[param_name].value
+
+                    # Need to rename this appropriately for the neighborhood.
+                    # And provide a static copy of the current return value's
+                    # name.
+                    template_ddoor.name = ret_val
+                    template_ddoor.generator_kwargs = {"param_name": ret_val}
+
+                    self.add_door(template_ddoor)
+                    self.add_param(ret_val, param.Empty)
 
     def remove_door(self, name: str):
         """Removes a :class:`~porchlight.door.Door` from :attr:`_doors`.
@@ -254,7 +326,7 @@ class Neighborhood:
         """Calls every door currently present in the neighborhood object.
 
         This order is currently dictated by the order in which
-        :class:`~parameter.door.Door`s are added to the `Neighborhood`.
+        :class:`~porchlight.door.Door`s are added to the `Neighborhood`.
 
         The way this is currently set up, it will not handle positional
         arguments. That is, if an input cannot be passed using its variable
@@ -262,6 +334,23 @@ class Neighborhood:
         """
         # Need to call the doors directly.
         for doorname in self._call_order:
+            # Dynamic doors must first be updated and parsed.
+            if isinstance(self._doors[doorname], door.DynamicDoor):
+                self._doors[doorname].update()
+
+                # Need to ensure all params are present in the neighborhood.
+                dynamic_params = self._doors[doorname].variables
+
+                for p in (p for p in dynamic_params if p not in self._params):
+                    # Check for a default value here.
+                    if p in self._doors[doorname].keyword_args:
+                        value = self._doors[doorname].keyword_args[p]
+
+                    else:
+                        value = param.Empty
+
+                    self.add_param(p, value)
+
             cur_door = self._doors[doorname]
             req_params = cur_door.arguments
             input_params = {}
@@ -270,7 +359,6 @@ class Neighborhood:
                 input_params[pname] = self._params[pname].value
 
             # Run the cur_door object and catch its output.
-            # TK TODO: include support for positional-only arguments.
             output = cur_door(**input_params)
 
             # Check if the cur_door has a known return value.
@@ -278,10 +366,10 @@ class Neighborhood:
                 continue
 
             elif len(cur_door.return_vals[0]) > 1:
-                # TK REFACTORING this only works for functions with one
-                # possible output. This, frankly, should probably be the case
-                # nearly all of the time. Still need to make a call on if
-                # there's support in a subset of cases.
+                # This only works for functions with one possible output. This,
+                # frankly, should probably be the case nearly all of the time.
+                # Still need to make a call on if there's support in a subset
+                # of cases. See issue #19 for updates.
                 update_params = {
                     v: x for v, x in zip(cur_door.return_vals[0], output)
                 }
@@ -292,7 +380,7 @@ class Neighborhood:
                 update_params = {cur_door.return_vals[0][0]: output}
 
             for pname, new_value in update_params.items():
-                # If ther parameter is currently empty, just reassign and
+                # If the parameter is currently empty, just reassign and
                 # continue. This refreshes the type value of the parameter
                 if isinstance(self._params[pname].value, param.Empty):
                     self._params[pname] = param.Param(pname, new_value)
@@ -345,9 +433,25 @@ class Neighborhood:
             The order for doors to be called in. Each `str` must correspond to
             a key in `Neighborhood._doors`.
         """
-        if any(n not in self._doors for n in order):
+        if not order:
+            msg = f"Empty or invalid input: {order}."
+            logger.error(msg)
+            raise ValueError(msg)
+
+        elif len(order) > len(self._doors):
+            msg = (
+                f"More labels provided than doors "
+                f"({len(order)} labels vs {len(self._doors)} doors)."
+            )
+            logger.error(msg)
+            raise ValueError(msg)
+
+        elif any(n not in self._doors for n in order):
             i = [n not in self._doors for n in order].index(True)
-            raise KeyError(f"Could not find door with label: {order[i]}")
+
+            msg = f"Could not find door with label: {order[i]}"
+            logger.error(msg)
+            raise KeyError(msg)
 
         self._call_order = order
 
@@ -371,7 +475,7 @@ class Neighborhood:
 
     @property
     def params(self):
-        return self.parameters
+        return self._params
 
     @property
     def required_parameters(self):

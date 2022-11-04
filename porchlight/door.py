@@ -2,7 +2,9 @@ import inspect
 import re
 
 from .param import Empty, ParameterError, Param
+from .utils.typing_functions import decompose_type
 
+import typing
 from typing import Any, Callable, Dict, List, Type
 
 import logging
@@ -38,6 +40,9 @@ class BaseDoor:
     name : :py:obj:`str`
         The name of the function as visible from the base function's __name__.
 
+    return_types : :py:obj:`list` of :py:obj:`list` of `~typing.Type`
+        Values returned by any return statements in the base function.
+
     return_vals : :py:obj:`list` of :py:obj:`list` of :py:obj:`str`
         Values returned by any return statements in the base function.
 
@@ -58,6 +63,7 @@ class BaseDoor:
     min_n_return: int
     n_args: int
     name: str
+    return_types: List[List[Type]]
     return_vals: List[List[str]]
     typecheck: bool
 
@@ -86,31 +92,10 @@ class BaseDoor:
             specifications. By default, this is `True`.
 
         returned_def_to_door : :py:obj:`bool`, optional
-            If `True`, functions that are defined within other functions are
-            parsed for their return values as if they were door objects
-            themselves. If `False` (default), any return values for internal
-            def's will be ignored.
-
-            An example of this is:
-                ```python
-                from porchlight import BaseDoor
-
-                def my_func_gen():
-                    def int_func():
-                        output = 'bingbong'
-                        return output
-
-                    return int_func
-
-                # In this case, "return output" will be ignored since
-                # returned_def_to_door == False.
-                no_int_ret_door = BaseDoor(my_func_gen)
-
-                # Here, however, the output callable becomes a door upon
-                # creation.
-                my_door = BaseDoor(my_func_gen, returned_def_to_door=True)
-                int_ret_door = my_door()  # This is now the internal door
-                ```
+            Returns a Door generated from the output of the base function.
+            Note, this is not the same as a DynamicDoor, and internal
+            variables/updating is not handled as with a DynamicDoor. This just
+            calls Door's initializer on the output of the base function.
         """
         self._returned_def_to_door = returned_def_to_door
         self._base_function = function
@@ -152,6 +137,16 @@ class BaseDoor:
         self.arguments = {}
         self.keyword_args = {}
         self.keyword_only_args = {}
+
+        try:
+            ret_type_annotation = typing.get_type_hints(function)["return"]
+            self.return_types = decompose_type(
+                ret_type_annotation, include_base_types=False
+            )
+
+        except KeyError:
+            # No return types there.
+            self.return_types = None
 
         for name, param in inspect.signature(function).parameters.items():
             self.arguments[name] = param.annotation
@@ -225,8 +220,8 @@ class BaseDoor:
         return_val = self._base_function(*args, **input_kwargs)
 
         if self._returned_def_to_door:
-            if isinstance(return_val, Callable):
-                return_val = Door(return_val)
+            if not isinstance(return_val, BaseDoor):
+                return_val = BaseDoor(return_val)
 
         return return_val
 
@@ -288,7 +283,7 @@ class BaseDoor:
             retmatch = re.match(retmatch_str, line)
 
             # Ignore decorators
-            if re.match(r"@\w+\(?.*\)?\s?$", line):
+            if re.match(r"\s*@\w+.*", line):
                 continue
 
             if defmatch and i > 0 and main_def_found:
@@ -345,12 +340,23 @@ class BaseDoor:
 
         return return_vals
 
+    @property
+    def keyword_arguments(self):
+        return self.keyword_args
+
+    @property
+    def kwargs(self):
+        return self.keyword_args
+
 
 class Door(BaseDoor):
     """Inherits from and extends :class:`~porchlight.door.BaseDoor`"""
 
     def __init__(self, function: Callable):
         super().__init__(function)
+
+    def __repr__(self):
+        return super().__repr__().replace("BaseDoor", "Door")
 
     @property
     def variables(self) -> List[str]:
@@ -378,3 +384,90 @@ class Door(BaseDoor):
                 required.append(x)
 
         return required
+
+
+class DynamicDoor(Door):
+    """A dynamic door takes a door-generating function as its initializer.
+
+    Unlike BaseDoors and Doors, dynamic doors will only parse the source
+    when called.
+    """
+
+    def __init__(
+        self,
+        door_generator: Callable[Any, Door],
+        generator_args: List = [],
+        generator_kwargs: Dict = {},
+    ):
+        """Initializes the Dynamic Door. When __call__ is invoked, the door
+        generator is called.
+
+        Arguments
+        ---------
+        _door_generator : `~typing.Callable[Any, Door]`
+            A callable function that returns an initialized Door object.
+
+        generator_args : `~typing.List`
+            List of positional arguments for the generator function.
+
+        generator_kwargs : `~typing.Dict[str, Any]`
+            Dictionary of `str`/`Any` key/value pairs for keyword arguments
+            passed to the generator function.
+        """
+        self._door_generator = door_generator
+        self.generator_args = generator_args
+        self.generator_kwargs = generator_kwargs
+
+        # In order to pass some checks, a few key attributes need to be
+        # initialized. These will be initialized to whatever value evaluates to
+        # False for the relevant type.
+        self.name = ""
+        self.__name__ = ""
+        self.arguments = {}
+        self.keyword_args = {}
+        self.keyword_only_args = {}
+        self.return_vals = []
+        self._cur_door = None
+        self._last_door = None
+
+    def __call__(self, *args, **kwargs) -> Any:
+        self.update()
+        result = self._base_function(*args, **kwargs)
+
+        return result
+
+    def __repr__(self):
+        # Try generating a __str__ using the BaseDoor.__str__ method. If it
+        # fails, then revert to an uninitialized DynamicDoor string as
+        # appropriate.
+        try:
+            outstr = super().__repr__().replace("Door", "DynamicDoor")
+
+        except AttributeError:
+            outstr = "DynamicDoor(uninitialized)"
+
+        return outstr
+
+    def update(self):
+        """Updates the DynamicDoor using `DynamicDoor._door_generator`"""
+        self._last_door = self._cur_door
+
+        updated_door = self._door_generator(
+            *self.generator_args, **self.generator_kwargs
+        )
+
+        if not isinstance(updated_door, BaseDoor):
+            msg = f"Expected a BaseDoor object, but {updated_door} returned."
+            logger.error(msg)
+            raise TypeError(msg)
+
+        # This is so incredibly sus... but it works for now. There is
+        # definitely a more elegant way to do this.
+        for attr, value in updated_door.__dict__.items():
+            # Ignore all dunder attrs.
+            if attr[:2] == "__":
+                continue
+
+            setattr(self, attr, value)
+
+        self._cur_door = updated_door

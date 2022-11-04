@@ -241,10 +241,6 @@ class BaseDoor:
         """
         return_vals = []
 
-        # TK TODO: make this a file instead of getting the lines --- for
-        # functions with many lines this is incredibly slow. Not urgent since
-        # there's no common case where a many-line function could not be
-        # refactored into smaller functions.
         lines, start_line = inspect.getsourcelines(function)
 
         # Tracking indentation for python-like parsing.
@@ -287,9 +283,6 @@ class BaseDoor:
                 continue
 
             if defmatch and i > 0 and main_def_found:
-                # TK TODO: This is currently just disabling the relevant lines,
-                # but in the future should offer to catch this function somehow
-                # too. See https://github.com/teald/porchlight/issues/3
                 checking_for_returns = False
                 last_check_indent = cur_indent
                 continue

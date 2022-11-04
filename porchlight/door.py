@@ -382,8 +382,25 @@ class Door(BaseDoor):
 class DynamicDoor(Door):
     """A dynamic door takes a door-generating function as its initializer.
 
-    Unlike BaseDoors and Doors, dynamic doors will only parse the source
-    when called.
+    Unlike `~porchlight.door.BaseDoor`s and `~porchlight.door.Door`s, dynamic
+    doors will only parse the definition's source once it is generated.
+
+    These objects a function that returns a Door. The `DynamicDoor` then
+    contains identical attributes to the generated door. Once called again, all
+    attributes update to match the most recent call.
+
+    Attributes
+    ----------
+    _door_generator : `Callable`
+        A function returning a `~porchlight.door.Door` as its output.
+
+    generator_args : `List`
+        List of arguments to be passed as positional arguments to the
+        `_door_generator` function.
+
+    generator_kwards : `Dict`
+        Dict of key: value pairs representing keyword arguments to be passed as
+        positional arguments to the `_door_generator` function.
     """
 
     def __init__(
@@ -424,7 +441,52 @@ class DynamicDoor(Door):
         self._last_door = None
 
     def __call__(self, *args, **kwargs) -> Any:
+        """Executes the function stored in
+        `~porchlight.door.DynamicDoorc._base_function` once
+        `~porchlight.door.DynamicDoor.update` has executed.
+
+        Arguments
+        ---------
+        *args : positional arguments
+            Arguments directly passed to
+            `~porchlight.door.DynamicDoor._base_function`.
+
+        **kwargs : keyword arguments
+            Keyword arguments directly passed to
+            `~porchlight.door.DynamicDoor._base_function`.
+        """
         self.update()
+        result = self._base_function(*args, **kwargs)
+
+        return result
+
+    def call_without_update(self, *args, **kwargs) -> Any:
+        """Executes the function stored in
+        `~porchlight.door.DynamicDoor._base_function` *WITHOUT* executing
+        `~porchlight.door.DynamicDoor.update()`
+
+        Arguments
+        ---------
+        *args : positional arguments
+            Arguments directly passed to
+            `~porchlight.door.DynamicDoor._base_function`.
+
+        **kwargs : keyword arguments
+            Keyword arguments directly passed to
+            `~porchlight.door.DynamicDoor._base_function`.
+        """
+        # Give a specific, useful message if self._base_function is not
+        # initialized.
+        if "_base_function" not in self.__dict__:
+            msg = (
+                "DynamicDoor does not contain _base_function attribute. "
+                "Did you means to call DynamicDoor directly or with "
+                "DirectDoor()?"
+            )
+
+            logger.error(msg)
+            raise AttributeError(msg)
+
         result = self._base_function(*args, **kwargs)
 
         return result
@@ -442,7 +504,10 @@ class DynamicDoor(Door):
         return outstr
 
     def update(self):
-        """Updates the DynamicDoor using `DynamicDoor._door_generator`"""
+        """Updates the DynamicDoor using `DynamicDoor._door_generator`
+
+        This method is called when DynamicDoor.__call__ is invoked.
+        """
         self._last_door = self._cur_door
 
         updated_door = self._door_generator(

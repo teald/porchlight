@@ -168,21 +168,21 @@ class TestBaseDoor(TestCase):
         self.assertEqual(result, [["y"]])
 
         # TODO: Below is commented out intentionally for github issue #17.
-        # # Test decorators.
-        # def dummy_decorator(fun) -> Callable:
-        #     def wrapper(*args, **kwargs):
-        #         return fun(*args, **kwargs)
+        # Test decorators.
+        def dummy_decorator(fun) -> Callable:
+            def wrapper(*args, **kwargs):
+                return fun(*args, **kwargs)
 
-        #     return wrapper
+            return wrapper
 
-        # @dummy_decorator
-        # def test_decorator() -> int:
-        #     x = 1
-        #     return x
+        @dummy_decorator
+        def test_decorator() -> int:
+            x = 1
+            return x
 
-        # result = BaseDoor._get_return_vals(test_decorator)
+        result = BaseDoor._get_return_vals(test_decorator)
 
-        # self.assertEqual(result, [["x"]])
+        self.assertEqual(result, [["x"]])
 
     def test___eq__(self):
         @BaseDoor

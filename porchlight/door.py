@@ -3,6 +3,7 @@ import re
 
 from .param import Empty, ParameterError, Param
 from .utils.typing_functions import decompose_type
+from .utils.inspect_functions import get_all_source
 
 import typing
 from typing import Any, Callable, Dict, List, Type
@@ -241,7 +242,7 @@ class BaseDoor:
         """
         return_vals = []
 
-        lines, start_line = inspect.getsourcelines(function)
+        lines, start_line = get_all_source(function)
 
         # Tracking indentation for python-like parsing.
         cur_indent = 0
@@ -282,6 +283,7 @@ class BaseDoor:
             if re.match(r"\s*@\w+.*", line):
                 continue
 
+            # Catch in-function definitions and ignore them.
             if defmatch and i > 0 and main_def_found:
                 checking_for_returns = False
                 last_check_indent = cur_indent

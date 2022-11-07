@@ -3,7 +3,7 @@ import re
 
 from .param import Empty, ParameterError, Param
 from .utils.typing_functions import decompose_type
-from .utils.inspect_functions import get_all_source
+from .utils.inspect_functions import get_all_source, get_wrapped_function
 
 import typing
 from typing import Any, Callable, Dict, List, Type
@@ -131,7 +131,9 @@ class BaseDoor:
         information accessible to :py:obj:`inspect.Signature` relevant to
         `BaseDoor`.
         """
-        function = self._base_function
+        # Need to find the un-wrapped function that actually takes the
+        # arguments in the end.
+        function = get_wrapped_function(self._base_function)
 
         self.name = function.__name__
         self.__name__ = function.__name__

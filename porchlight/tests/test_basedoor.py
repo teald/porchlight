@@ -12,8 +12,6 @@ import os
 
 from typing import Callable
 
-logging.basicConfig(filename=f"{os.getcwd()}/porchlight_unittest.log")
-
 
 class TestBaseDoor(TestCase):
     def test___init__(self):
@@ -54,6 +52,40 @@ class TestBaseDoor(TestCase):
         self.assertEqual(fxn_use_decorator.name, "fxn_use_decorator")
 
         self.assertEqual(fxn_use_decorator.arguments, {"x": Empty})
+
+        # Test on a decorated function.
+        def test_decorator(fxn):
+            def wrapper(*args, **kwargs):
+                return fxn(*args, **kwargs)
+
+            return wrapper
+
+        @test_decorator
+        def test_fxn(x: int) -> int:
+            y = 2 * x
+            return y
+
+        door = BaseDoor(test_fxn)
+
+        # Must contain both input and output parameter.
+        arguments = ["x"]
+        keyword_args = ["x"]
+        return_vals = [["y"]]
+
+        # Not comparing any values during this test.
+        for arg in arguments:
+            self.assertIn(arg, door.arguments)
+
+        for kwarg in keyword_args:
+            self.assertIn(kwarg, door.keyword_args)
+
+        for retval in return_vals:
+            self.assertIn(retval, door.return_vals)
+
+        # Call the BaseDoor
+        result = door(x=5)
+
+        self.assertEqual(result, 10)
 
     def test___call__(self):
         def test_fxn(x: int) -> int:

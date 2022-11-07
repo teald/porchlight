@@ -167,7 +167,6 @@ class TestBaseDoor(TestCase):
 
         self.assertEqual(result, [["y"]])
 
-        # TODO: Below is commented out intentionally for github issue #17.
         # Test decorators.
         def dummy_decorator(fun) -> Callable:
             def wrapper(*args, **kwargs):

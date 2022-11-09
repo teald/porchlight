@@ -9,7 +9,8 @@ yet to be released. Rather than isolating this method to a single model, the
 already-developed work has been modified to stand alone as a package.
 
 `porchlight` does not have any dependencies outside of the standard CPython
-library. Please note that `porchlight` requires Python 3.9\+.
+library. Please note that `porchlight` requires Python 3.9\+, and that examples
+may require external libraries such as `numpy` and `matplotlib`.
 
 Installation
 ------------

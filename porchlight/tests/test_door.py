@@ -2,6 +2,7 @@
 relevant helper functions or objects.
 """
 from unittest import TestCase
+import unittest
 
 from porchlight.door import Door
 from porchlight.param import Empty, ParameterError
@@ -152,8 +153,25 @@ class TestDoor(TestCase):
         test_door = Door(test)
         self.assertEqual(repr(test_door), expected_repr)
 
+    def test_mapping_args(self):
+        @Door(argument_mapping={"hello": "x", "world": "y"})
+        def my_func(x, y):
+            z = x + y
+            x = x - 1
+            return z, x
+
+        @Door
+        def orig_func(x, y):
+            z = x + y
+            x = x - 1
+            return z, x
+
+        self.assertEqual(my_func.variables, ["hello", "world", "z"])
+        self.assertEqual(my_func.return_vals, [["z", "hello"]])
+        self.assertEqual(my_func.required_arguments, ["hello", "world"])
+        self.assertEqual(my_func.original_arguments, orig_func.arguments)
+        self.assertEqual(my_func.original_return_vals, orig_func.return_vals)
+
 
 if __name__ == "__main__":
-    import unittest
-
     unittest.main()

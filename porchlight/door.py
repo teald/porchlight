@@ -1,16 +1,23 @@
 import inspect
+import itertools
 import re
 
 from .param import Empty, ParameterError, Param
 from .utils.typing_functions import decompose_type
 from .utils.inspect_functions import get_all_source, get_wrapped_function
 
+import copy
 import typing
 from typing import Any, Callable, Dict, List, Type
 
 import logging
+import warnings
 
 logger = logging.getLogger(__name__)
+
+
+class DoorError(Exception):
+    pass
 
 
 class BaseDoor:
@@ -349,11 +356,143 @@ class BaseDoor:
 class Door(BaseDoor):
     """Inherits from and extends :class:`~porchlight.door.BaseDoor`"""
 
-    def __init__(self, function: Callable):
-        super().__init__(function)
+    def __init__(
+        self, function: Callable = None, *, argument_mapping: dict = {}
+    ):
+        self.argmap = argument_mapping
+
+        self.function_initialized = False
+        if function is None:
+            return
+
+        self.__call__(function)
+
+    def __call__(self, *args, **kwargs):
+        if not self.function_initialized:
+            # Need to recieve the function.
+            if len(args) != 1:
+                msg = f"Expected a function, but recieved {args}"
+
+                if kwargs:
+                    msg += f" and kwargs {kwargs}. Has Door been initialized?"
+
+                logger.error(msg)
+                raise ValueError(msg)
+
+            function = args[0]
+            super().__init__(function)
+            self.function_initialized = True
+
+            # Perform any necessary argument mapping.
+            self.map_arguments()
+
+            return self
+
+        return super().__call__(*args, **kwargs)
+
+    def map_arguments(self):
+        """Maps arguments if self.argmap is not {}."""
+        if not self.function_initialized:
+            msg = "Door has not yet been initialized with a function."
+            logging.error(msg)
+            raise DoorError(msg)
+
+        if self.argmap:
+            Door._check_argmap(self.argmap)
+
+            for mapped_name, old_name in self.argmap.items():
+                if old_name not in self.arguments:
+                    msg = f"{old_name} is not a valid argument for {self.name}"
+
+                    logger.error(msg)
+                    raise DoorError(msg)
+
+                self.arguments[mapped_name] = self.arguments[old_name]
+                del self.arguments[old_name]
+
+                # Change keyword arguments as well.
+                if old_name in self.keyword_args:
+                    self.keyword_args[mapped_name] = self.keyword_args[
+                        old_name
+                    ]
+                    del self.keyword_args[old_name]
+
+                # Also change outputs that contain the same name.
+                for i, ret_tuple in enumerate(self.return_vals):
+                    for j, ret_val in enumerate(ret_tuple):
+                        if old_name == ret_val:
+                            self.return_vals[i][j] = mapped_name
+
+                            if (
+                                self.return_types
+                                and old_name in self.return_types
+                            ):
+                                _temptype = self.return_types[old_name]
+                                self.return_types[mapped_name] = _temptype
+                                del self.return_types[old_name]
+
+    def _check_argmap(argmap):
+        """Assesses if an argumetn mapping is valid, raises an appropriate
+        exception if it is invalid. Will also raise warnings for certain
+        non-fatal actions.
+        """
+        for key, value in argmap.items():
+            # Argument map should contain valid python variable names.
+            if not re.match(r"^[a-zA-Z_]([a-zA-Z0-9_])*", key):
+                msg = f"Not a valid map name: {key}"
+                logging.error(msg)
+                raise DoorError(msg)
+
+            if not re.match(r"^[a-zA-Z_]([a-zA-Z0-9_])*", value):
+                msg = f"Not a valid argument name: {value}"
+                logging.error(msg)
+                raise DoorError(msg)
+
+            if key in argmap.values():
+                msg = (
+                    f"A mapped arguments, {key}, is also present as a value "
+                    f"{{{key}: {argmap[key]}}}"
+                )
+
+                logger.warn(msg)
+                warnings.warn(msg)
 
     def __repr__(self):
         return super().__repr__().replace("BaseDoor", "Door")
+
+    @property
+    def original_arguments(self):
+        arguments = copy.copy(self.arguments)
+
+        for i, arg in enumerate(self.arguments):
+            if arg in self.argmap:
+                orig_arg = self.argmap[arg]
+                _type = arguments[arg]
+
+                arguments[orig_arg] = _type
+                del arguments[arg]
+
+        return arguments
+
+    @property
+    def original_return_vals(self):
+        return_vals = copy.copy(self.return_vals)
+
+        # Also change outputs that contain the same name.
+        for i, ret_tuple in enumerate(self.return_vals):
+            for j, ret_val in enumerate(ret_tuple):
+                if ret_val in self.argmap:
+                    return_vals[i][j] = self.argmap[ret_val]
+
+        return return_vals
+
+    @property
+    def argument_mapping(self):
+        return self.argmap
+
+    @argument_mapping.setter
+    def argument_mapping(self, value):
+        self.argmap = value
 
     @property
     def variables(self) -> List[str]:

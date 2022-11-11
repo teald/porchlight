@@ -4,7 +4,7 @@ relevant helper functions or objects.
 from unittest import TestCase
 import unittest
 
-from porchlight.door import Door
+from porchlight.door import Door, DoorError
 from porchlight.param import Empty, ParameterError
 
 import logging
@@ -155,22 +155,75 @@ class TestDoor(TestCase):
 
     def test_mapping_args(self):
         @Door(argument_mapping={"hello": "x", "world": "y"})
-        def my_func(x, y):
+        def my_func(x, y: int = 1):
             z = x + y
             x = x - 1
             return z, x
 
         @Door
-        def orig_func(x, y):
+        def orig_func(x, y: int = 1):
             z = x + y
             x = x - 1
             return z, x
 
         self.assertEqual(my_func.variables, ["hello", "world", "z"])
         self.assertEqual(my_func.return_vals, [["z", "hello"]])
-        self.assertEqual(my_func.required_arguments, ["hello", "world"])
+        self.assertEqual(my_func.required_arguments, ["hello"])
         self.assertEqual(my_func.original_arguments, orig_func.arguments)
         self.assertEqual(my_func.original_return_vals, orig_func.return_vals)
+        self.assertEqual(
+            list(my_func.keyword_args.values()),
+            list(orig_func.keyword_args.values()),
+        )
+
+        # Mapping with more significant changes
+        @Door(argument_mapping={"pressure": "P", "temperature": "T"})
+        def test2_mapped(
+            T: float = 273.0, P: float = 1.01325e5, k_B: float = 1.38e-23
+        ) -> float:
+            density = P / (k_B * T)
+            return density
+
+        @Door
+        def test2_unmapped(
+            T: float = 273.0, P: float = 1.01325e5, k_B: float = 1.38e-23
+        ) -> float:
+            density = P / (k_B * T)
+            return density
+
+        self.assertEqual(
+            test2_mapped.variables,
+            ["temperature", "pressure", "k_B", "density"],
+        )
+        self.assertEqual(test2_mapped.return_vals, [["density"]])
+        self.assertEqual(test2_mapped.required_arguments, [])
+        self.assertEqual(
+            test2_mapped.original_arguments, test2_unmapped.arguments
+        )
+        self.assertEqual(
+            test2_mapped.original_return_vals, test2_unmapped.return_vals
+        )
+        self.assertEqual(
+            list(test2_mapped.keyword_args.values()),
+            list(test2_unmapped.keyword_args.values()),
+        )
+
+    def test_bad_mapping(self):
+        bad_names = ("0fign_", " bonk", "this is a sentence...", "there.dot")
+        good_names = ("_wello", "Im_fiNe_in_A_WAy", "_____", "h0rch4t4")
+
+        @Door
+        def base_def(x):
+            pass
+
+        for name in bad_names:
+            with self.assertRaises(DoorError):
+                cur_map = {name: "x"}
+                Door(argument_mapping=cur_map)(base_def)
+
+        for name in good_names:
+            cur_map = {name: "x"}
+            Door(argument_mapping=cur_map)(base_def)
 
 
 if __name__ == "__main__":

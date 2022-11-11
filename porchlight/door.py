@@ -112,7 +112,7 @@ class BaseDoor:
 
     def __eq__(self, other) -> bool:
         """Equality is defined as referencing the same base function."""
-        if self.name is other.name:
+        if isinstance(other, BaseDoor) and self.name is other.name:
             return True
 
         return False
@@ -156,7 +156,7 @@ class BaseDoor:
 
         except KeyError:
             # No return types there.
-            self.return_types = None
+            self.return_types = {}
 
         for name, param in inspect.signature(function).parameters.items():
             self.arguments[name] = param.annotation
@@ -249,6 +249,11 @@ class BaseDoor:
         function : :py:class:`typing.Callable`
             The function to retrieve the return values for.
         """
+        # If function is a Door, peel away Door wrappings until it's a non-Door
+        # callable.
+        while isinstance(function, BaseDoor):
+            function = function._base_function
+
         return_vals = []
 
         lines, start_line = get_all_source(function)
@@ -400,10 +405,12 @@ class Door(BaseDoor):
         if self.argmap:
             Door._check_argmap(self.argmap)
 
+            arg_order = tuple(self.arguments.keys())
+            kwarg_order = tuple(self.kwargs.keys())
+
             for mapped_name, old_name in self.argmap.items():
                 if old_name not in self.arguments:
                     msg = f"{old_name} is not a valid argument for {self.name}"
-
                     logger.error(msg)
                     raise DoorError(msg)
 
@@ -423,13 +430,19 @@ class Door(BaseDoor):
                         if old_name == ret_val:
                             self.return_vals[i][j] = mapped_name
 
-                            if (
-                                self.return_types
-                                and old_name in self.return_types
-                            ):
-                                _temptype = self.return_types[old_name]
-                                self.return_types[mapped_name] = _temptype
-                                del self.return_types[old_name]
+            # Place back in the original order.
+            rev_argmap = {v: k for k, v in self.argmap.items()}
+
+            arg_order = (
+                k if k not in rev_argmap else rev_argmap[k] for k in arg_order
+            )
+            kwarg_order = (
+                k if k not in rev_argmap else rev_argmap[k]
+                for k in kwarg_order
+            )
+
+            self.arguments = {a: self.arguments[a] for a in arg_order}
+            self.keyword_args = {a: self.keyword_args[a] for a in kwarg_order}
 
     def _check_argmap(argmap):
         """Assesses if an argumetn mapping is valid, raises an appropriate

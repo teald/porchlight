@@ -259,11 +259,6 @@ class BaseDoor:
         function : :py:class:`typing.Callable`
             The function to retrieve the return values for.
         """
-        # If function is a Door, peel away Door wrappings until it's a non-Door
-        # callable.
-        while isinstance(function, BaseDoor):
-            function = function._base_function
-
         return_vals = []
 
         lines, start_line = get_all_source(function)

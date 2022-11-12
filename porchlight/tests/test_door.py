@@ -263,6 +263,16 @@ class TestDoor(TestCase):
             cur_map = {name: "x"}
             Door(argument_mapping=cur_map)(base_def)
 
+    def test_nested_mapping(self):
+        @Door(argument_mapping={"hello": "x", "world": "z"})
+        def test1(x, y: int, z=1) -> int:
+            total = x + y * z
+            return total
+
+        test2 = Door(test1)
+
+        self.assertEqual(test2.arguments, {"x": Empty, "y": int, "z": Empty})
+
     def test_bad_mapping_bad_functions(self):
         # A bad argument
         with self.assertRaises(DoorError):

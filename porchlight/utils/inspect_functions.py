@@ -45,8 +45,8 @@ def get_wrapped_function(function: Callable) -> Callable:
     """
     if not isinstance(function, Callable):
         raise TypeError(
-            f"Source lines can only be retrieved for Callable "
-            f"objects, not {type(function)}."
+            f"Only Callable objects may be unwrapped in this way, "
+            f"not {type(function)}."
         )
 
     if "__closure__" in dir(function) and function.__closure__:

@@ -5,8 +5,9 @@ from unittest import TestCase
 import unittest
 
 from porchlight.door import Door, DoorError
-from porchlight.param import Empty, ParameterError
+from porchlight.param import Empty, Param, ParameterError
 
+import typing
 import logging
 import os
 
@@ -172,8 +173,8 @@ class TestDoor(TestCase):
         self.assertEqual(my_func.original_arguments, orig_func.arguments)
         self.assertEqual(my_func.original_return_vals, orig_func.return_vals)
         self.assertEqual(
-            list(my_func.keyword_args.values()),
-            list(orig_func.keyword_args.values()),
+            [x.value for x in my_func.keyword_args.values()],
+            [x.value for x in orig_func.keyword_args.values()],
         )
 
         # Mapping with more significant changes
@@ -204,11 +205,48 @@ class TestDoor(TestCase):
             test2_mapped.original_return_vals, test2_unmapped.return_vals
         )
         self.assertEqual(
-            list(test2_mapped.keyword_args.values()),
-            list(test2_unmapped.keyword_args.values()),
+            [x.value for x in test2_mapped.keyword_args.values()],
+            [x.value for x in test2_unmapped.keyword_args.values()],
         )
 
-    def test_bad_mapping(self):
+        # Empty mapping
+        @Door(argument_mapping={})
+        def test3():
+            pass
+
+        @Door(argument_mapping={})
+        def test4(x):
+            pass
+
+        self.assertEqual(list(test4.arguments.keys()), ["x"])
+
+    def test_mapping_multiple_returns(self):
+        @Door(argument_mapping={"hello": "x", "bing": "z"})
+        def test1(x, y: int, z=1) -> typing.Tuple[int]:
+            result = True if x < y else False
+
+            if result:
+                return result, x, z
+
+            else:
+                return result, y, z
+
+        self.maxDiff = None
+        self.assertEqual(
+            test1.return_vals,
+            [["result", "hello", "bing"], ["result", "y", "bing"]],
+        )
+        self.assertEqual(list(test1.arguments.keys()), ["hello", "y", "bing"])
+        self.assertEqual(
+            test1.keyword_arguments,
+            {
+                "hello": Param("hello"),
+                "y": Param("y"),
+                "bing": Param("bing", 1),
+            },
+        )
+
+    def test_bad_mapping_variable_names(self):
         bad_names = ("0fign_", " bonk", "this is a sentence...", "there.dot")
         good_names = ("_wello", "Im_fiNe_in_A_WAy", "_____", "h0rch4t4")
 
@@ -224,6 +262,14 @@ class TestDoor(TestCase):
         for name in good_names:
             cur_map = {name: "x"}
             Door(argument_mapping=cur_map)(base_def)
+
+    def test_bad_mapping_bad_functions(self):
+        # A bad argument
+        with self.assertRaises(DoorError):
+
+            @Door(argument_mapping={"not": "here"})
+            def test1():
+                pass
 
 
 if __name__ == "__main__":

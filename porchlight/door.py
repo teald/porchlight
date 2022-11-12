@@ -432,6 +432,10 @@ class Door(BaseDoor):
                     self.keyword_args[mapped_name] = self.keyword_args[
                         old_name
                     ]
+
+                    # Need to change the parameter name to reflect the mapping.
+                    self.keyword_args[mapped_name]._name = mapped_name
+
                     del self.keyword_args[old_name]
 
                 # Also change outputs that contain the same name.

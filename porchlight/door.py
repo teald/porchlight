@@ -389,6 +389,11 @@ class Door(BaseDoor):
                 logger.error(msg)
                 raise ValueError(msg)
 
+            if not isinstance(args[0], Callable):
+                msg = f"Cannot initialize this object as a door: {args[0]}"
+                logger.error(msg)
+                raise TypeError(msg)
+
             function = args[0]
             super().__init__(function)
             self.function_initialized = True

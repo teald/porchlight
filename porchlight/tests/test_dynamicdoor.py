@@ -83,6 +83,20 @@ class TestDynamicDoor(unittest.TestCase):
                 new_ddoor = door.DynamicDoor(test)
                 new_ddoor.update()
 
+    def test_argument_mapping(self):
+        @door.DynamicDoor
+        def doorgen1() -> door.Door:
+            @door.Door(argument_mapping={"hello": "x"})
+            def my_door(x: int, y: int = 1) -> int:
+                z = x ** y
+                return z
+
+            return my_door
+
+        self.assertEqual(doorgen1(2, 5), 2 ** 5)
+        self.assertEqual(doorgen1.arguments, {"hello": int, "y": int})
+        self.assertEqual(doorgen1.return_vals, [["z"]])
+
 
 if __name__ == "__main__":
     unittest.main()

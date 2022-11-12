@@ -1,6 +1,8 @@
+import functools
 import inspect
 import itertools
 import re
+import types
 
 from .param import Empty, ParameterError, Param
 from .utils.typing_functions import decompose_type
@@ -197,6 +199,14 @@ class BaseDoor:
         self.return_vals = self._get_return_vals(function)
 
         logger.debug(f"Found {self.n_args} arguments in {self.name}.")
+
+    @property
+    def __closure__(self):
+        """Since BaseDoor is a wrapper, and we use utils.get_all_source to
+        retrieve source, I'm mimicking the type a function wrapper would have
+        here.
+        """
+        return (types.CellType(self._base_function),)
 
     def __call__(self, *args, **kwargs):
         """Calls the BaseDoor's function as normal.
@@ -451,12 +461,12 @@ class Door(BaseDoor):
         """
         for key, value in argmap.items():
             # Argument map should contain valid python variable names.
-            if not re.match(r"^[a-zA-Z_]([a-zA-Z0-9_])*", key):
+            if not re.match(r"^[a-zA-Z_]([a-zA-Z0-9_])*$", key):
                 msg = f"Not a valid map name: {key}"
                 logging.error(msg)
                 raise DoorError(msg)
 
-            if not re.match(r"^[a-zA-Z_]([a-zA-Z0-9_])*", value):
+            if not re.match(r"^[a-zA-Z_]([a-zA-Z0-9_])*$", value):
                 msg = f"Not a valid argument name: {value}"
                 logging.error(msg)
                 raise DoorError(msg)

@@ -498,6 +498,20 @@ class Door(BaseDoor):
         return arguments
 
     @property
+    def original_kw_arguments(self):
+        arguments = copy.copy(self.keyword_args)
+
+        for i, arg in enumerate(self.keyword_args):
+            if arg in self.argmap:
+                orig_arg = self.argmap[arg]
+                _type = arguments[arg]
+
+                arguments[orig_arg] = _type
+                del arguments[arg]
+
+        return arguments
+
+    @property
     def original_return_vals(self):
         return_vals = copy.copy(self.return_vals)
 
@@ -515,7 +529,10 @@ class Door(BaseDoor):
 
     @argument_mapping.setter
     def argument_mapping(self, value):
+        self.arguments = self.original_arguments
+        self.keyword_args = self.original_kw_arguments
         self.argmap = value
+        self.map_arguments()
 
     @property
     def variables(self) -> List[str]:

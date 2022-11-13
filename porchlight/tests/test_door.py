@@ -304,6 +304,17 @@ class TestDoor(TestCase):
             def test1(x, y):
                 pass
 
+    def test_argument_mapping_property(self):
+        @Door(argument_mapping={"hello": "x", "world": "z"})
+        def test1(x, y: int, z=1) -> int:
+            total = x + y * z
+            return total
+
+        self.assertEqual(test1.argument_mapping, {"hello": "x", "world": "z"})
+
+        # Changing the argument mapping with the setter.
+        test1.argument_mapping = {"hello_again": "x", "world_two": "z"}
+
 
 if __name__ == "__main__":
     unittest.main()

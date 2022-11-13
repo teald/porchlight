@@ -13,7 +13,6 @@ import typing
 from typing import Any, Callable, Dict, List, Type
 
 import logging
-import warnings
 
 logger = logging.getLogger(__name__)
 
@@ -419,6 +418,16 @@ class Door(BaseDoor):
             kwarg_order = tuple(self.kwargs.keys())
 
             for mapped_name, old_name in self.argmap.items():
+                # Catch mappings that would conflict with an existing key.
+                if mapped_name in self.arguments:
+                    msg = (
+                        f"Conflicting map key: {mapped_name} is in arguments "
+                        f"list."
+                    )
+
+                    logger.error(msg)
+                    raise DoorError(msg)
+
                 if old_name not in self.arguments:
                     msg = f"{old_name} is not a valid argument for {self.name}"
                     logger.error(msg)
@@ -450,6 +459,7 @@ class Door(BaseDoor):
             arg_order = (
                 k if k not in rev_argmap else rev_argmap[k] for k in arg_order
             )
+
             kwarg_order = (
                 k if k not in rev_argmap else rev_argmap[k]
                 for k in kwarg_order
@@ -459,7 +469,7 @@ class Door(BaseDoor):
             self.keyword_args = {a: self.keyword_args[a] for a in kwarg_order}
 
     def _check_argmap(argmap):
-        """Assesses if an argumetn mapping is valid, raises an appropriate
+        """Assesses if an argument mapping is valid, raises an appropriate
         exception if it is invalid. Will also raise warnings for certain
         non-fatal actions.
         """
@@ -469,20 +479,6 @@ class Door(BaseDoor):
                 msg = f"Not a valid map name: {key}"
                 logging.error(msg)
                 raise DoorError(msg)
-
-            if not re.match(r"^[a-zA-Z_]([a-zA-Z0-9_])*$", value):
-                msg = f"Not a valid argument name: {value}"
-                logging.error(msg)
-                raise DoorError(msg)
-
-            if key in argmap.values():
-                msg = (
-                    f"A mapped arguments, {key}, is also present as a value "
-                    f"{{{key}: {argmap[key]}}}"
-                )
-
-                logger.warn(msg)
-                warnings.warn(msg)
 
     def __repr__(self):
         return super().__repr__().replace("BaseDoor", "Door")

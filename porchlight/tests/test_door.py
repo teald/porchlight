@@ -281,6 +281,29 @@ class TestDoor(TestCase):
             def test1():
                 pass
 
+    def test_bad_mapping_uninitialized(self):
+        with self.assertRaises(DoorError):
+            my_door = Door(argument_mapping={})
+            my_door.map_arguments()
+
+    def test_bad_call_inputs(self):
+        with self.assertRaises(TypeError):
+            Door(argument_mapping={})(1)
+
+        with self.assertRaises(ValueError):
+
+            def test1():
+                pass
+
+            Door(argument_mapping={})(test1, 1, y=2)
+
+    def test_bad_mapping_name_err_and_warning(self):
+        with self.assertRaises(DoorError):
+
+            @Door(argument_mapping={"x": "y"})
+            def test1(x, y):
+                pass
+
 
 if __name__ == "__main__":
     unittest.main()

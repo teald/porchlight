@@ -35,11 +35,11 @@ import porchlight
 neighborhood = porchlight.Neighborhood()
 
 # To add a function, we simply define it and pass it to porchlight.
-def increment_x(x: int, y: int) -> int:
+def increase_x(x: int, y: int) -> int:
     x = x * y
     return x
 
-neighborhood.add_function(increment_x)
+neighborhood.add_function(increase_x)
 
 # The neighborhood object inspects the function, finding input and output
 # variables if present. These are added to the collections of functions and

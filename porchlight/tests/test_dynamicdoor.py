@@ -97,6 +97,72 @@ class TestDynamicDoor(unittest.TestCase):
         self.assertEqual(doorgen1.arguments, {"hello": int, "y": int})
         self.assertEqual(doorgen1.return_vals, [["z"]])
 
+        @door.Door(argument_mapping={"hello": "x"})
+        def doorgen2(x: int, y: int = 1) -> door.Door:
+            @door.Door
+            def my_func():
+                z = x ** y
+                return z
+
+            return my_func
+
+        dynamicdoor = door.DynamicDoor(doorgen2, [], {"hello": 1, "y": 2})
+
+        self.assertEqual(dynamicdoor.generator_args, [])
+        self.assertEqual(dynamicdoor.generator_kwargs, {"hello": 1, "y": 2})
+
+        result = dynamicdoor()
+
+        self.assertEqual(result, 1)
+
+    def test_call_without_update(self):
+        @door.DynamicDoor
+        def test1(x: int = 4) -> door.Door:
+            x = x + 1
+
+            @door.Door
+            def my_door(y: int) -> int:
+                z = x ** y
+                return z
+
+            return my_door
+
+        result = test1(2)
+
+        self.assertEqual(result, 25)
+
+        result = test1.call_without_update(1)
+
+        self.assertEqual(result, 5)
+
+    def test_call_without_update_uninitialized(self):
+        # Baseline test; just an uninitialized function.
+        def test1() -> door.Door:
+            @door.Door
+            def new_door():
+                pass
+
+            return new_door
+
+        dyn_door = door.DynamicDoor(test1)
+
+        with self.assertRaises(AttributeError):
+            dyn_door.call_without_update()
+
+        # Test with inputs to both functions.
+        def test2(x) -> door.Door:
+            @door.Door
+            def new_door(y):
+                z = 2 * y + x
+                return z
+
+            return new_door
+
+        dyn_door = door.DynamicDoor(test2)
+
+        with self.assertRaises(AttributeError):
+            dyn_door.call_without_update(2)
+
 
 if __name__ == "__main__":
     unittest.main()

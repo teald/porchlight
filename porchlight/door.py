@@ -402,7 +402,32 @@ class Door(BaseDoor):
 
             return self
 
-        return super().__call__(*args, **kwargs)
+        # Check argument mappings.
+        if not self.argmap:
+            # Just pass arguments normally
+            return super().__call__(*args, **kwargs)
+
+        input_kwargs = {}
+        for key, value in kwargs.items():
+            if key in self.argmap:
+                input_kwargs[self.argmap[key]] = value
+
+            else:
+                input_kwargs[key] = value
+
+        # Temporarily restore the original arguments for the purposes of
+        # 'BaseDoor.__call__'.
+        _temp_arguments = self.arguments
+        _temp_keyword_arguments = self.keyword_args
+        self.arguments = self.original_arguments
+        self.keyword_args = self.original_kw_arguments
+
+        result = super().__call__(*args, **input_kwargs)
+
+        self.arguments = _temp_arguments
+        self.keyword_args = _temp_keyword_arguments
+
+        return result
 
     def map_arguments(self):
         """Maps arguments if self.argmap is not {}."""
@@ -639,7 +664,7 @@ class DynamicDoor(Door):
             `~porchlight.door.DynamicDoor._base_function`.
         """
         self.update()
-        result = self._base_function(*args, **kwargs)
+        result = super().__call__(*args, **kwargs)
 
         return result
 

@@ -115,6 +115,11 @@ class TestDynamicDoor(unittest.TestCase):
 
         self.assertEqual(result, 1)
 
+        dynamicdoor.generator_kwargs = {"hello": 5, "y": 5}
+
+        result = dynamicdoor()
+        self.assertEqual(result, 5 ** 5)
+
     def test_call_without_update(self):
         @door.DynamicDoor
         def test1(x: int = 4) -> door.Door:

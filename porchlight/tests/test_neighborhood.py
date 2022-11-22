@@ -631,6 +631,20 @@ class TestNeighborhood(TestCase):
         self.assertEqual(result["x"], Param("x", porchlight.param.Empty()))
         self.assertEqual(result["y"], Param("y", "15.5"))
 
+    def test_bad_dynamicdoor_return_values(self):
+        @porchlight.door.DynamicDoor
+        def test1():
+            def bad():
+                x = 1
+                return x
+
+            return bad
+
+        neighborhood = Neighborhood()
+
+        with self.assertRaises(porchlight.neighborhood.NeighborhoodError):
+            neighborhood.add_door(test1, dynamic_door=True)
+
 
 if __name__ == "__main__":
     import unittest

@@ -155,9 +155,14 @@ class BaseDoor:
                 ret_type_annotation, include_base_types=False
             )
 
-        except KeyError:
+        except KeyError as e:
             # No return types there.
-            self.return_types = {}
+            logger.info(f"No return type hints found for {self.name}.")
+            logger.debug(
+                f"KeyError message for missing return type hints: {str(e)}"
+            )
+
+            self.return_types = None
 
         for name, param in inspect.signature(function).parameters.items():
             self.arguments[name] = param.annotation

@@ -83,6 +83,21 @@ class ParamTest(TestCase):
         with self.assertRaises(param.ParameterError):
             testparam.value = "bing"
 
+    def test_restrict_value(self):
+        # Parameter should be set with a keyword that, if passed, is called on
+        # the new set value.
+        p = param.Param("test", 0.5, restrict=lambda x: x > 0)
+
+        # Here, zero + negative values must raise a ParameterError.
+        with self.assertRaises(param.ParameterError):
+            p.value = -1
+
+        with self.assertRaises(param.ParameterError):
+            p.value = 0.0
+
+        # However, positive values should be fine in this case.
+        p.value = 1.0
+
 
 class TestEmpty(TestCase):
     def test___eq__(self):

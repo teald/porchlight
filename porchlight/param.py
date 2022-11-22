@@ -1,4 +1,4 @@
-from typing import Any, Type
+from typing import Any, Callable, Type, Union
 
 import logging
 
@@ -56,10 +56,14 @@ class Param:
     # A parameter, to be updated from the API, needs to be replaced rather than
     # reassigned. That said there are a few use cases where it may be useful to
     # have easy access, so just hiding these behind properties.
-    __slots__ = ["_name", "_value", "constant", "_type"]
+    __slots__ = ["_name", "_value", "constant", "_type", "restrict"]
 
     def __init__(
-        self, name: str, value: Any = Empty(), constant: bool = False
+        self,
+        name: str,
+        value: Any = Empty(),
+        constant: bool = False,
+        restrict: Union[Callable, None] = None,
     ):
         """Initializes the Param object.
 
@@ -72,15 +76,21 @@ class Param:
             Value of the parameter. If the parameter does not contain an
             assigned value, this should be `~porchlight.param.Empty`
 
-        constants : :py:obj:`bool`
+        constant : :py:obj:`bool`
             True if this object should be considered a constant. If the `Param`
             value is modified by `Param.value`'s `setter`, but `constant` is
             True, a :class:`~porchlight.param.ParameterError` will be raised.
+
+        restrict : :py:class:`~typing.Callable` or `None`
+            If a callable is passed, whenever the value property of the
+            parameter is set, restrict will be called on the candidate value.
+            If the result evaluates to False, a ParameterError will be raised.
         """
         self._name = name
         self._value = value
         self.constant = constant
         self._type = type(self._value)
+        self.restrict = restrict
 
     def __repr__(self):
         info = {
@@ -120,6 +130,12 @@ class Param:
             msg = f"Parameter {self.name} is not mutable."
             logger.error(msg)
             raise ParameterError(msg)
+
+        if self.restrict is not None:
+            if not self.restrict(new_value):
+                msg = f"Parameter restriction rejected value: {new_value}"
+                logger.error(msg)
+                raise ParameterError(msg)
 
         self._value = new_value
 

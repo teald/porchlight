@@ -267,7 +267,11 @@ class Neighborhood:
         )
 
     def add_param(
-        self, parameter_name: str, value: Any, constant: bool = False
+        self,
+        parameter_name: str,
+        value: Any,
+        constant: bool = False,
+        restrict: Union[Callable, None] = None,
     ):
         """Adds a new parameter to the `Neighborhood` object.
 
@@ -284,9 +288,17 @@ class Neighborhood:
 
         constant : :py:obj:`bool`, optional
             If `True`, the parameter is set to constant.
+
+        restrict : :py:class:`~typing.Callable` or None, optional
+            Either a callable that returns something that can be evaluated to
+            True or False, or None. Raises an error if the parameter is set to
+            a value that fails the restriction check.
+
+            For a full description, see the docs for
+            :class:`~parameter.param.Param`.
         """
         if not isinstance(value, param.Param):
-            new_param = param.Param(parameter_name, value, constant)
+            new_param = param.Param(parameter_name, value, constant, restrict)
 
         else:
             new_param = value

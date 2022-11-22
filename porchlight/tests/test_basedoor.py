@@ -232,6 +232,47 @@ class TestBaseDoor(TestCase):
         self.assertFalse(fxn1 == fxn2)
         self.assertTrue(fxn1 == other_fxn1)
 
+    def test_nested_door(self):
+        # Without applying as a decorator.
+        def test1(x, y: int):
+            z = x + y
+            return z
+
+        door1 = BaseDoor(test1)
+        door2 = BaseDoor(door1)
+
+        self.assertEqual(door1.arguments, door2.arguments)
+        self.assertEqual(door1.keyword_arguments, door2.keyword_arguments)
+        self.assertEqual(door1.return_vals, door2.return_vals)
+
+        # With one decorator
+        @BaseDoor
+        def door1(x, y: int):
+            z = x + y
+            return z
+
+        door2 = BaseDoor(door1)
+
+        self.assertEqual(door1.arguments, door2.arguments)
+        self.assertEqual(door1.keyword_arguments, door2.keyword_arguments)
+        self.assertEqual(door1.return_vals, door2.return_vals)
+
+        # With two decorators
+        @BaseDoor
+        @BaseDoor
+        def door2(x, y: int):
+            z = x + y
+            return z
+
+        @BaseDoor
+        def door1(x, y: int):
+            z = x + y
+            return z
+
+        self.assertEqual(door1.arguments, door2.arguments)
+        self.assertEqual(door1.keyword_arguments, door2.keyword_arguments)
+        self.assertEqual(door1.return_vals, door2.return_vals)
+
     def test___repr__(self):
         """Test the BaseDoor"""
 

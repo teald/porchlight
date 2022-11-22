@@ -563,7 +563,7 @@ class TestNeighborhood(TestCase):
 
         # Add two dynamic doors using a single generator function.
         def doublegen_test(
-            x: int,
+            x: float,
         ) -> typing.Tuple[porchlight.Door, porchlight.Door]:
             @porchlight.Door
             def test1(y: float) -> float:
@@ -579,8 +579,8 @@ class TestNeighborhood(TestCase):
 
         neighborhood = Neighborhood()
         neighborhood.add_function(doublegen_test, dynamic_door=True)
-        neighborhood.add_param("x", 0)
-        neighborhood.add_param("y", 2)
+        neighborhood.add_param("x", 0.0)
+        neighborhood.add_param("y", 2.0)
 
         expected_doors = ["doublegen_test", "test1", "test2"]
         expected_params = ["x", "test1", "test2", "y", "z"]
@@ -590,16 +590,16 @@ class TestNeighborhood(TestCase):
         neighborhood.run_step()
 
         self.assertEqual(list(neighborhood.params.keys()), expected_params)
-        self.assertEqual(neighborhood.params["x"].value, 4)
-        self.assertEqual(neighborhood.params["y"].value, 2)
-        self.assertEqual(neighborhood.params["z"].value, 2)
+        self.assertAlmostEqual(neighborhood.params["x"].value, 4.0)
+        self.assertAlmostEqual(neighborhood.params["y"].value, 2.0)
+        self.assertAlmostEqual(neighborhood.params["z"].value, 2.0)
 
         neighborhood.run_step()
 
         self.assertEqual(list(neighborhood.params.keys()), expected_params)
-        self.assertEqual(neighborhood.params["x"].value, 34)
-        self.assertEqual(neighborhood.params["y"].value, 2)
-        self.assertEqual(neighborhood.params["z"].value, 17)
+        self.assertAlmostEqual(neighborhood.params["x"].value, 34.0)
+        self.assertAlmostEqual(neighborhood.params["y"].value, 2.0)
+        self.assertAlmostEqual(neighborhood.params["z"].value, 17.0)
 
     def test_bad_dynamic_door(self):
         @Door
@@ -630,6 +630,20 @@ class TestNeighborhood(TestCase):
         result = neighborhood.parameters
         self.assertEqual(result["x"], Param("x", porchlight.param.Empty()))
         self.assertEqual(result["y"], Param("y", "15.5"))
+
+    def test_bad_dynamicdoor_return_values(self):
+        @porchlight.door.DynamicDoor
+        def test1():
+            def bad():
+                x = 1
+                return x
+
+            return bad
+
+        neighborhood = Neighborhood()
+
+        with self.assertRaises(porchlight.neighborhood.NeighborhoodError):
+            neighborhood.add_door(test1, dynamic_door=True)
 
 
 if __name__ == "__main__":

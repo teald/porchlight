@@ -151,7 +151,7 @@ class Neighborhood:
                 self.add_param(parameter_name, value)
 
         # If not well-defined, we cannot modify outputs to this function.
-        if not new_door.return_vals:
+        if not new_door.return_vals and not dynamic_door:
             return
 
         # Add all return values as parameters.
@@ -167,7 +167,10 @@ class Neighborhood:
         #
         # Dynamic doors must also be type-annotated. If they are not raise an
         # error.
-        if not new_door.return_types:
+        if (
+            "return_types" not in new_door.__dict__
+            or not new_door.return_types
+        ):
             msg = (
                 "DynamicDoor requires a type annotation for the "
                 "function generator."
@@ -177,13 +180,6 @@ class Neighborhood:
             raise NeighborhoodError(msg)
 
         return_types = new_door.return_types
-
-        if not return_types or len(return_types) != len(
-            new_door.return_vals[0]
-        ):
-            raise NeighborhoodError(
-                "Dynamic doors with return values must be type annotated."
-            )
 
         for i, rt in enumerate(return_types):
             if isinstance(rt, door.Door) or rt is door.Door:

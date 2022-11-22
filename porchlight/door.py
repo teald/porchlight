@@ -1,16 +1,24 @@
+import functools
 import inspect
+import itertools
 import re
+import types
 
 from .param import Empty, ParameterError, Param
 from .utils.typing_functions import decompose_type
 from .utils.inspect_functions import get_all_source, get_wrapped_function
 
+import copy
 import typing
 from typing import Any, Callable, Dict, List, Type
 
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+class DoorError(Exception):
+    pass
 
 
 class BaseDoor:
@@ -105,7 +113,7 @@ class BaseDoor:
 
     def __eq__(self, other) -> bool:
         """Equality is defined as referencing the same base function."""
-        if self.name is other.name:
+        if isinstance(other, BaseDoor) and self.name is other.name:
             return True
 
         return False
@@ -195,6 +203,14 @@ class BaseDoor:
         self.return_vals = self._get_return_vals(function)
 
         logger.debug(f"Found {self.n_args} arguments in {self.name}.")
+
+    @property
+    def __closure__(self):
+        """Since BaseDoor is a wrapper, and we use utils.get_all_source to
+        retrieve source, I'm mimicking the type a function wrapper would have
+        here.
+        """
+        return (types.CellType(self._base_function),)
 
     def __call__(self, *args, **kwargs):
         """Calls the BaseDoor's function as normal.
@@ -354,11 +370,199 @@ class BaseDoor:
 class Door(BaseDoor):
     """Inherits from and extends :class:`~porchlight.door.BaseDoor`"""
 
-    def __init__(self, function: Callable):
-        super().__init__(function)
+    def __init__(
+        self, function: Callable = None, *, argument_mapping: dict = {}
+    ):
+        self.argmap = argument_mapping
+
+        self.function_initialized = False
+        if function is None:
+            return
+
+        self.__call__(function)
+
+    def __call__(self, *args, **kwargs):
+        if not self.function_initialized:
+            # Need to recieve the function.
+            if len(args) != 1:
+                msg = f"Expected a function, but recieved {args}"
+
+                if kwargs:
+                    msg += f" and kwargs {kwargs}. Has Door been initialized?"
+
+                logger.error(msg)
+                raise ValueError(msg)
+
+            if not isinstance(args[0], Callable):
+                msg = f"Cannot initialize this object as a door: {args[0]}"
+                logger.error(msg)
+                raise TypeError(msg)
+
+            function = args[0]
+            super().__init__(function)
+            self.function_initialized = True
+
+            # Perform any necessary argument mapping.
+            self.map_arguments()
+
+            return self
+
+        # Check argument mappings.
+        if not self.argmap:
+            # Just pass arguments normally
+            return super().__call__(*args, **kwargs)
+
+        input_kwargs = {}
+        for key, value in kwargs.items():
+            if key in self.argmap:
+                input_kwargs[self.argmap[key]] = value
+
+            else:
+                input_kwargs[key] = value
+
+        # Temporarily restore the original arguments for the purposes of
+        # 'BaseDoor.__call__'.
+        _temp_arguments = self.arguments
+        _temp_keyword_arguments = self.keyword_args
+        self.arguments = self.original_arguments
+        self.keyword_args = self.original_kw_arguments
+
+        result = super().__call__(*args, **input_kwargs)
+
+        self.arguments = _temp_arguments
+        self.keyword_args = _temp_keyword_arguments
+
+        return result
+
+    def map_arguments(self):
+        """Maps arguments if self.argmap is not {}."""
+        if not self.function_initialized:
+            msg = "Door has not yet been initialized with a function."
+            logging.error(msg)
+            raise DoorError(msg)
+
+        if self.argmap:
+            Door._check_argmap(self.argmap)
+
+            arg_order = tuple(self.arguments.keys())
+            kwarg_order = tuple(self.kwargs.keys())
+
+            for mapped_name, old_name in self.argmap.items():
+                # Catch mappings that would conflict with an existing key.
+                if mapped_name in self.arguments:
+                    msg = (
+                        f"Conflicting map key: {mapped_name} is in arguments "
+                        f"list."
+                    )
+
+                    logger.error(msg)
+                    raise DoorError(msg)
+
+                if old_name not in self.arguments:
+                    msg = f"{old_name} is not a valid argument for {self.name}"
+                    logger.error(msg)
+                    raise DoorError(msg)
+
+                self.arguments[mapped_name] = self.arguments[old_name]
+                del self.arguments[old_name]
+
+                # Change keyword arguments as well.
+                if old_name in self.keyword_args:
+                    self.keyword_args[mapped_name] = self.keyword_args[
+                        old_name
+                    ]
+
+                    # Need to change the parameter name to reflect the mapping.
+                    self.keyword_args[mapped_name]._name = mapped_name
+
+                    del self.keyword_args[old_name]
+
+                # Also change outputs that contain the same name.
+                for i, ret_tuple in enumerate(self.return_vals):
+                    for j, ret_val in enumerate(ret_tuple):
+                        if old_name == ret_val:
+                            self.return_vals[i][j] = mapped_name
+
+            # Place back in the original order.
+            rev_argmap = {v: k for k, v in self.argmap.items()}
+
+            arg_order = (
+                k if k not in rev_argmap else rev_argmap[k] for k in arg_order
+            )
+
+            kwarg_order = (
+                k if k not in rev_argmap else rev_argmap[k]
+                for k in kwarg_order
+            )
+
+            self.arguments = {a: self.arguments[a] for a in arg_order}
+            self.keyword_args = {a: self.keyword_args[a] for a in kwarg_order}
+
+    def _check_argmap(argmap):
+        """Assesses if an argument mapping is valid, raises an appropriate
+        exception if it is invalid. Will also raise warnings for certain
+        non-fatal actions.
+        """
+        for key, value in argmap.items():
+            # Argument map should contain valid python variable names.
+            if not re.match(r"^[a-zA-Z_]([a-zA-Z0-9_])*$", key):
+                msg = f"Not a valid map name: {key}"
+                logging.error(msg)
+                raise DoorError(msg)
 
     def __repr__(self):
         return super().__repr__().replace("BaseDoor", "Door")
+
+    @property
+    def original_arguments(self):
+        arguments = copy.copy(self.arguments)
+
+        for i, arg in enumerate(self.arguments):
+            if arg in self.argmap:
+                orig_arg = self.argmap[arg]
+                _type = arguments[arg]
+
+                arguments[orig_arg] = _type
+                del arguments[arg]
+
+        return arguments
+
+    @property
+    def original_kw_arguments(self):
+        arguments = copy.copy(self.keyword_args)
+
+        for i, arg in enumerate(self.keyword_args):
+            if arg in self.argmap:
+                orig_arg = self.argmap[arg]
+                _type = arguments[arg]
+
+                arguments[orig_arg] = _type
+                del arguments[arg]
+
+        return arguments
+
+    @property
+    def original_return_vals(self):
+        return_vals = copy.copy(self.return_vals)
+
+        # Also change outputs that contain the same name.
+        for i, ret_tuple in enumerate(self.return_vals):
+            for j, ret_val in enumerate(ret_tuple):
+                if ret_val in self.argmap:
+                    return_vals[i][j] = self.argmap[ret_val]
+
+        return return_vals
+
+    @property
+    def argument_mapping(self):
+        return self.argmap
+
+    @argument_mapping.setter
+    def argument_mapping(self, value):
+        self.arguments = self.original_arguments
+        self.keyword_args = self.original_kw_arguments
+        self.argmap = value
+        self.map_arguments()
 
     @property
     def variables(self) -> List[str]:
@@ -465,7 +669,7 @@ class DynamicDoor(Door):
             `~porchlight.door.DynamicDoor._base_function`.
         """
         self.update()
-        result = self._base_function(*args, **kwargs)
+        result = super().__call__(*args, **kwargs)
 
         return result
 

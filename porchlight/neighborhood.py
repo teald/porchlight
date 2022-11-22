@@ -181,11 +181,6 @@ class Neighborhood:
 
         return_types = new_door.return_types
 
-        if len(return_types) != len(new_door.return_vals[0]):
-            raise NeighborhoodError(
-                "Dynamic doors with return values must be type annotated."
-            )
-
         for i, rt in enumerate(return_types):
             if isinstance(rt, door.Door) or rt is door.Door:
                 ret_val = new_door.return_vals[0][i]

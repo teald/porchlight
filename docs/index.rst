@@ -1,10 +1,14 @@
 Welcome to porchlight's documentation!
 ======================================
 
+`porchlight` is an open-source function management package designed for
+coupling Python functions and managing shared data.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+   other/about
    source/neighborhood
    source/door
    source/param

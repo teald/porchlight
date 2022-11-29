@@ -31,6 +31,9 @@ class BaseDoor:
         Dictionary of all arguments taken as input when the `BaseDoor` object
         is called.
 
+    positional_only : :py:obj:`list` of :py:obj:`str`
+        List of positional-only arguments accepted by the function.
+
     keyword_args : :py:obj:`dict`, :py:obj:`str`: :class:`~typing.Any`
         Keyword arguments accepted by the `BaseDoor` as input when called. This
         includes all arguments that are not positional-only. Positional
@@ -146,6 +149,7 @@ class BaseDoor:
         self.name = function.__name__
         self.__name__ = function.__name__
         self.arguments = {}
+        self.positional_only = []
         self.keyword_args = {}
         self.keyword_only_args = {}
 
@@ -164,19 +168,19 @@ class BaseDoor:
 
             self.return_types = None
 
+        # Use function signature to introspect properties about the parameters.
         for name, param in inspect.signature(function).parameters.items():
             self.arguments[name] = param.annotation
 
             # Check for positional-only arguments first, then proceed to other
             # argument types.
             if param.kind == inspect.Parameter.POSITIONAL_ONLY:
-                msg = (
-                    f"porchlight does not support positional-only "
-                    f"arguments, which were found in {self.name}."
-                )
-
-                logger.error(msg)
-                raise NotImplementedError(msg)
+                # Positional-only arguments will not support default values for
+                # the function. That said, this is effectively overriden by
+                # Neighborhood objects, since they store the parameter's value
+                # and pass it regardless of whether the argument is
+                # positional-only or not.
+                self.positional_only.append(name)
 
             elif param.default != inspect._empty:
                 self.keyword_args[name] = Param(name, param.default)

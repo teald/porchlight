@@ -298,15 +298,24 @@ class TestBaseDoor(TestCase):
 
         self.assertEqual(new_door.keyword_only_args, {"z": Param("z", 5)})
 
-        # For now, there should *not* be any functionality for required
-        # positional arguments. That will come later, and this test will need
-        # to be updated.
-        def bad_fxn(x1, y1, /, x3, *, z7):
-            c = "blah"
-            return c
+        # Positional-only arguments.
+        def test1(
+            pos1, pos2, /, kwpos, kwposdef="default", *, kwonly="def4ult"
+        ):
+            pass
 
-        with self.assertRaises(NotImplementedError):
-            BaseDoor(bad_fxn)
+        new_door = BaseDoor(test1)
+
+        expected_arguments = {
+            "pos1": Empty(),
+            "pos2": Empty(),
+            "kwpos": Empty(),
+            "kwposdef": Empty(),
+            "kwonly": Empty,
+        }
+
+        self.assertEqual(new_door.arguments, expected_arguments)
+        self.assertEqual(new_door.positional_only, ["pos1", "pos2"])
 
     def test__returned_def_to_door(self):
         def my_func_gen():

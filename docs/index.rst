@@ -9,6 +9,7 @@ coupling Python functions and managing shared data.
    :caption: Contents:
 
    other/about
+   other/quickstart
    source/neighborhood
    source/door
    source/param

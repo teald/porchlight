@@ -28,12 +28,6 @@ def decompose_type(
         are ignored. These are only for *resolvable* types at return, such as
         Tuples, Lists, and Iterables. Callables are excluded by default.
     """
-    # Catch non-types
-    # if not isinstance(typevar, typing.Type):
-    #     """Cannot decompose non-typing.Type object."""
-    #     msg = f"typevar must be a type (typing.Type), not {type(typevar)}"
-    #     logger.error(msg)
-    #     raise TypeError(msg)
 
     all_types = []
 

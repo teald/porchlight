@@ -10,6 +10,8 @@ Functionality
   conditions or numerical instabilities.
 * Couple models in a single, short script, without hand-managing input files or
   writing long single-use automation scripts.
+* Provides a basic API for making development and research more accessible to
+  early developers.
 
 FAQ
 ---
@@ -33,7 +35,8 @@ FAQ
        to implementing and testing that idea ASAP.
     *  Coupling different programs together for specific use cases.
     *  Expanding your own code without writing new, specific implementations
-      for integrating new software.
+       for integrating new software.
+    *  Need a quick, basic API for an otherwise complex input/output system.
   * You *should consider other options* if you're looking for:
     * A permanent solution for poorly designed codebases. While in spirit
       `porchlight` is meant to circumvent hardships weird APIs (or complete

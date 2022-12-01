@@ -24,12 +24,14 @@ FAQ
       light" to the doorsteps of otherwise inaccessible models. Most importantly;
       it was available on the Python Package Index at the time and is relatively
       memorable.
+
 2. Why does everything have regular noun names, like
    :class:`~porchlight.door.Door` or
    :class:`~porchlight.neighborhood.Neighborhood`?
    -  To match the name of the software + to provide clear visualization of how
-      the objects function. That said, |porchlight| is still in alpha so it could
-      change by beta!
+      the objects function. That said, |porchlight| is still in alpha so it
+      could change by beta!
+
 3. Why should I use |porchlight|? Are there situations where I *shouldn't* use
    it?
    -  You *should use* this if you're:

@@ -34,6 +34,14 @@ You can install porchlight_ directly using ``pip``:
 
     import porchlight
 
+Type annotations and porchlight_
+--------------------------------
+
+Within porchlight_, type annotation are allowed and encouraged. Generally, save
+for a few *very special cases*, you can ignore type annotations when writing
+your code. porchlight_, via the Door_ class in particular, will note type
+annotations if they are present and otherwise will ignore them.
+
 Creating a Neighborhood_ object
 ----------------------------------
 
@@ -127,4 +135,4 @@ Behind the scenes, our :class:`~porchlight.neighborhood.Neighborhood`
 
 .. _porchlight: ``porchlight``
 .. _Python: https://www.python.org/downloads/
-.. _Neighborhood: :class:`~porchlight.neighborhood.Neighborhood`
+.. _Neighborhood: :py:class:`porchlight.neighborhood.Neighborhood`

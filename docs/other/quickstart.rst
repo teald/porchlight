@@ -35,7 +35,7 @@ You can install `porchlight` directly using `pip`:
     import porchlight
 
 Creating a `Neighborhood` object
-================================
+--------------------------------
 
 The `Door` class acts as an interface (an "open door") to the internals of a
 python function object. To create one, we just need to import porchlight

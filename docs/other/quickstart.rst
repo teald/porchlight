@@ -62,11 +62,11 @@ it. The `str` representation of Neighborhood contains most of the data:
 
 A few things are now kept track of by the neighborhood automatically:
 
-#. The function arguments, now tracked as a :class:`~porchlight.param.Param`
+1. The function arguments, now tracked as a :class:`~porchlight.param.Param`
    object. The default values found were sazed (in our case, it found `z = 0`),
    and any parameters not yet assigned a value have been given the
    :class:`~porchlight.param.Empty` value.
-#. Function return variables. We'll explore this in more detail later, but one
+2. Function return variables. We'll explore this in more detail later, but one
    important note here: the return variable name is important!
 
 Right now, our :class:`~porchlight.neighborhood.Neighborhood` is a
@@ -92,6 +92,7 @@ obviously. We could manage our own `x`, `y`, and `z` in a heartbeat, and all
 call :func:`~porchlight.neighborhood.Neighborhood.run_step`
 
 .. code-block:: python
+
     def my_new_function(y, z):
         z += y // 2
         return z

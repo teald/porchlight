@@ -53,12 +53,14 @@ and provide the function we want.
 
 At this point, `porchlight` will parse the function and store metadata about
 it. The `str` representation of Neighborhood contains most of the data:
+
 .. code-block:: python
 
     print(neighborhood)
     # >>  Neighborhood(doors={'my_function': Door(name=my_function, base_function=<function my_function at 0x1...F>, arguments={}, return_vals=[['y']])}, params={'y': Param(name=y, value=<porchlight.param.Empty object at 0x1...F>, constant=False, type=<class 'porchlight.param.Empty'>)}, call_order=['my_function'])
 
 A few things are now kept track of by the neighborhood automatically:
+
 #. The function arguments, now tracked as a :class:`~porchlight.param.Param`
    object. The default values found were sazed (in our case, it found `z = 0`),
    and any parameters not yet assigned a value have been given the

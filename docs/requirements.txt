@@ -5,3 +5,4 @@ sphinx_rtd_theme
 poetry
 pre-commit
 sphinx-autorun
+git+https://github.com/teald/porchlight@main

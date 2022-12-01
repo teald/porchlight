@@ -72,10 +72,10 @@ it. The `str` representation of Neighborhood contains most of the data:
 
 A few things are now kept track of by the |Neighborhood| automatically:
 
-1. The function arguments, now tracked as a :py:class:`~porchlight.param.Param`
-   object. The default values found were sazed (in our case, it found `z = 0`),
-   and any parameters not yet assigned a value have been given the
-   :py:class:`~porchlight.param.Empty` value.
+1. The function arguments, now tracked as a |param| object. The default values
+   found were sazed (in our case, it found `z = 0`), and any parameters not yet
+   assigned a value have been given the :py:class:`~porchlight.param.Empty`
+   value.
 2. Function return variables. We'll explore this in more detail later, but one
    important note here: the return variable name is important!
 
@@ -90,7 +90,7 @@ fully-fledged, if tiny, model. Let's set our variables and run it!
     print(neighborhood)
     # Neighborhood(doors={'my_function': Door(name=my_function, base_function=<function my_function at 0x1...f>, arguments={'x': <class 'int'>, 'z': <class 'int'>}, return_vals=[['y']])}, params={'x': Param(name=x, value=2, constant=False, type=<class 'int'>), 'z': Param(name=z, value=0, constant=False, type=<class 'int'>), 'y': Param(name=y, value=4, constant=False, type=<class 'int'>)}, call_order=['my_function'])
 
-:func:`~porchlight.neighborhood.Neighborhood.run_step` executes all
+:py:func:`~porchlight.neighborhood.Neighborhood.run_step` executes all
 functions that have been added to our |Neighborhood| object. The object passes
 the parameters with names matching the arguments in ``my_function``, and stores
 ``my_function``'s output in the parameter for ``y``.

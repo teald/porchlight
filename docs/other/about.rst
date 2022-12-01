@@ -40,12 +40,12 @@ FAQ
         for integrating new software.
      -  Need a quick, basic API for an otherwise complex input/output system.
    -  You *should consider other options* if you're looking for:
-     -  A permanent solution for poorly designed codebases. While in spirit
-        |porchlight| is meant to circumvent hardships weird APIs (or complete
-        lack of and API) present to hitting the ground running without coupling
-        models.
-     -  Threading/multiprocessing manager.
-     -  Static or partially-static typing schemes (use `mypy` or another strict
-        typing checker).
+      -  A permanent solution for poorly designed codebases. While in spirit
+         |porchlight| is meant to circumvent hardships weird APIs (or complete
+         lack of and API) present to hitting the ground running without coupling
+         models.
+      -  Threading/multiprocessing manager.
+      -  Static or partially-static typing schemes (use `mypy` or another strict
+         typing checker).
 
 .. |porchlight| replace:: ``porchlight``

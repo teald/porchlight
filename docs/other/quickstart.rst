@@ -80,16 +80,16 @@ fully-fledged, if tiny, model. Let's set our variables and run it!
     print(neighborhood)
     # Neighborhood(doors={'my_function': Door(name=my_function, base_function=<function my_function at 0x1...f>, arguments={'x': <class 'int'>, 'z': <class 'int'>}, return_vals=[['y']])}, params={'x': Param(name=x, value=2, constant=False, type=<class 'int'>), 'z': Param(name=z, value=0, constant=False, type=<class 'int'>), 'y': Param(name=y, value=4, constant=False, type=<class 'int'>)}, call_order=['my_function'])
 
-:method:`~porchlight.neighborhood.Neighborhood.run_step` executes all
+:func:`~porchlight.neighborhood.Neighborhood.run_step` executes all
 functions that have been added to our `neighborhood` object. The object passes
 the parameters with names matching the arguments in `my_function`, and stores
 `my_function`'s output in the parameter for `y`.
 
 All of this could be accomplished in a few lines of code without any imports,
 obviously. We could manage our own `x`, `y`, and `z` in a heartbeat, and all
-`porchlight` *really* did was what we could do with something as simple as
-`y = my_function(2, 0)`. Let's add another function to our neighborhood and
-call `~porchlight.neighborhood.Neighborhood.run_step`
+``porchlight`` *really* did was what we could do with something as simple as
+``y = my_function(2, 0)``. Let's add another function to our neighborhood and
+call :func:`~porchlight.neighborhood.Neighborhood.run_step`
 
 .. code-block:: python
     def my_new_function(y, z):

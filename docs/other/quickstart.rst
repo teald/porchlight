@@ -1,15 +1,15 @@
 Quickstart
 ==========
 
-Welcome to a short guide to hitting the ground running with `porchlight`! This
-tutorial will step through the basics of installing and using `porchlight`. If
-you are looking for more advanced examples, see the examples availabe in our
-`github repository <https://github.com/teald/porchlight/tree/main/examples>`_.
+Welcome to a short guide to hitting the ground running with porchlight_! This
+tutorial will step through the basics of installing and using porchlight_. If
+you are looking for more advanced examples, see the examples available in
+`the porchlight github repository <https://github.com/teald/porchlight/tree/main/examples>`_.
 
 Requirements
 ------------
 
-`porchlight` requires *Python version 3.9 or higher*.
+porchlight_ requires *Python version 3.9 or higher*.
 
 
 Installation
@@ -18,13 +18,13 @@ Installation
 For help installing Python 3.9 or above please see their respective
 instructions:
 
-* `Python 3.9 or above <https://www.python.org/downloads/>`_
+* :ref:`Python 3.9 or above<Python_>`
 
-You can install `porchlight` directly using `pip`:
+You can install porchlight_ directly using ``pip``:
 
 .. code-block:: console
-    pip install porchlight
 
+    pip install porchlight
 
  Once porchlight has installed, you're ready to start writing code. If you'd
  like, this guide can be followed line-for-line in an interactive python
@@ -34,12 +34,14 @@ You can install `porchlight` directly using `pip`:
 
     import porchlight
 
-Creating a `Neighborhood` object
---------------------------------
+Creating a Neighborhood_ object
+----------------------------------
 
-The `Door` class acts as an interface (an "open door") to the internals of a
-python function object. To create one, we just need to import porchlight
-and provide the function we want.
+The Neighborhood_ object collects various
+functions, extracts information about the function from existing metadata
+(using the `inspect <https://docs.python.org/3/library/inspect.html>`_ module
+in the CPython standard library) and the source code itself. Adding a function
+to a
 
 .. code-block:: python
 
@@ -120,3 +122,9 @@ As we see, instead of having to write our own script and manage variables, we
 are now running a system of two functions that share variables. As we step
 forward, the functions are called sequentially and the parameters are updated
 directly.
+
+Behind the scenes, our :class:`~porchlight.neighborhood.Neighborhood`
+
+.. _porchlight: ``porchlight``
+.. _Python: https://www.python.org/downloads/
+.. _Neighborhood: :class:`~porchlight.neighborhood.Neighborhood`

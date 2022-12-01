@@ -1,15 +1,15 @@
 Quickstart
 ==========
 
-Welcome to a short guide to hitting the ground running with porchlight_! This
-tutorial will step through the basics of installing and using porchlight_. If
+Welcome to a short guide to hitting the ground running with |porchlight|! This
+tutorial will step through the basics of installing and using |porchlight|. If
 you are looking for more advanced examples, see the examples available in
 `the porchlight github repository <https://github.com/teald/porchlight/tree/main/examples>`_.
 
 Requirements
 ------------
 
-porchlight_ requires *Python version 3.9 or higher*.
+|porchlight| requires *Python version 3.9 or higher*.
 
 
 Installation
@@ -20,7 +20,7 @@ instructions:
 
 * :ref:`Python 3.9 or above<Python_>`
 
-You can install porchlight_ directly using ``pip``:
+You can install |porchlight| directly using ``pip``:
 
 .. code-block:: console
 
@@ -34,12 +34,12 @@ You can install porchlight_ directly using ``pip``:
 
     import porchlight
 
-Type annotations and porchlight_
+Type annotations and |porchlight|
 --------------------------------
 
-Within porchlight_, type annotation are allowed and encouraged. Generally, save
+Within |porchlight|, type annotation are allowed and encouraged. Generally, save
 for a few *very special cases*, you can ignore type annotations when writing
-your code. porchlight_, via the Door_ class in particular, will note type
+your code. |porchlight|, via the Door_ class in particular, will note type
 annotations if they are present and otherwise will ignore them.
 
 Creating a Neighborhood_ object
@@ -62,7 +62,7 @@ to a
     neighborhood = porchlight.Neighborhood()  # Instantiates the object.
     neighborhood.add_function(my_function)
 
-At this point, `porchlight` will parse the function and store metadata about
+At this point, |porchlight| will parse the function and store metadata about
 it. The `str` representation of Neighborhood contains most of the data:
 
 .. code-block:: python
@@ -70,16 +70,16 @@ it. The `str` representation of Neighborhood contains most of the data:
     print(neighborhood)
     # >>  Neighborhood(doors={'my_function': Door(name=my_function, base_function=<function my_function at 0x1...F>, arguments={}, return_vals=[['y']])}, params={'y': Param(name=y, value=<porchlight.param.Empty object at 0x1...F>, constant=False, type=<class 'porchlight.param.Empty'>)}, call_order=['my_function'])
 
-A few things are now kept track of by the neighborhood automatically:
+A few things are now kept track of by the |Neighborhood| automatically:
 
-1. The function arguments, now tracked as a :class:`~porchlight.param.Param`
+1. The function arguments, now tracked as a :py:class:`~porchlight.param.Param`
    object. The default values found were sazed (in our case, it found `z = 0`),
    and any parameters not yet assigned a value have been given the
-   :class:`~porchlight.param.Empty` value.
+   :py:class:`~porchlight.param.Empty` value.
 2. Function return variables. We'll explore this in more detail later, but one
    important note here: the return variable name is important!
 
-Right now, our :class:`~porchlight.neighborhood.Neighborhood` is a
+Right now, our |Neighborhood| is a
 fully-fledged, if tiny, model. Let's set our variables and run it!
 
 .. code-block:: python
@@ -91,13 +91,13 @@ fully-fledged, if tiny, model. Let's set our variables and run it!
     # Neighborhood(doors={'my_function': Door(name=my_function, base_function=<function my_function at 0x1...f>, arguments={'x': <class 'int'>, 'z': <class 'int'>}, return_vals=[['y']])}, params={'x': Param(name=x, value=2, constant=False, type=<class 'int'>), 'z': Param(name=z, value=0, constant=False, type=<class 'int'>), 'y': Param(name=y, value=4, constant=False, type=<class 'int'>)}, call_order=['my_function'])
 
 :func:`~porchlight.neighborhood.Neighborhood.run_step` executes all
-functions that have been added to our `neighborhood` object. The object passes
-the parameters with names matching the arguments in `my_function`, and stores
-`my_function`'s output in the parameter for `y`.
+functions that have been added to our |Neighborhood| object. The object passes
+the parameters with names matching the arguments in ``my_function``, and stores
+``my_function``'s output in the parameter for ``y``.
 
 All of this could be accomplished in a few lines of code without any imports,
-obviously. We could manage our own `x`, `y`, and `z` in a heartbeat, and all
-``porchlight`` *really* did was what we could do with something as simple as
+obviously. We could manage our own ``x``, ``y``, and ``z`` in a heartbeat, and all
+|porchlight| *really* did was what we could do with something as simple as
 ``y = my_function(2, 0)``. Let's add another function to our neighborhood and
 call :func:`~porchlight.neighborhood.Neighborhood.run_step`
 
@@ -131,8 +131,11 @@ are now running a system of two functions that share variables. As we step
 forward, the functions are called sequentially and the parameters are updated
 directly.
 
-Behind the scenes, our :class:`~porchlight.neighborhood.Neighborhood`
+Behind the scenes, our |Neighborhood| object has generated a number of |Door|
+objects and |Param| objects
 
-.. _porchlight: ``porchlight``
+.. |porchlight| `|porchlight|`
 .. _Python: https://www.python.org/downloads/
-.. _Neighborhood: :py:class:`porchlight.neighborhood.Neighborhood`
+.. |Neighborhood| :py:class:`porchlight.neighborhood.Neighborhood`
+.. |Door| :py:class:`porchlight.door.Door`
+.. |Param| :py:class:`porchlight.param.Param`

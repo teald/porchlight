@@ -24,6 +24,7 @@ class TestNeighborhood(TestCase):
         def test1(x):
             pass
 
+        @door.Door
         def test2(y: int) -> int:
             z = y + 10
             return z

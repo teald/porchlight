@@ -3,17 +3,17 @@ About |porchlight|
 
 |porchlight| is an open-sourcee function
 
-Example uses
-^^^^^^^^^^^^
+Example use cases
+-----------------
 
-* Control external access to shared data.
-* Automate coupling models with shared, evolving parameter sets.
-* Set parameter limits to catch unique error cases, such as unphysical
-  conditions or numerical instabilities.
-* Couple models in a single, short script, without hand-managing input files or
-  writing long single-use automation scripts.
-* Provides a basic API for making development and research more accessible to
-  early developers.
+-  Pseudo-control external access to shared data.
+-  Automate coupling models with shared, evolving parameter sets.
+-  Set parameter limits to catch unique error cases, such as unphysical
+   conditions or numerical instabilities.
+-  Couple models in a single, short script, without hand-managing input files or
+   writing long single-use automation scripts.
+-  Provides a basic API for making development and research more accessible to
+   early developers.
 
 FAQ
 ---
@@ -37,10 +37,10 @@ FAQ
 3. Why should I use |porchlight|? Are there situations where I *shouldn't* use
    it?
 
-   -  You *should use* this if you're:
+   -  You *should use* this if you:
 
-     -  Looking for something to make getting from an interesting question/idea
-        to implementing and testing that idea ASAP.
+     -  Are looking for something to make getting from an interesting
+        question/idea to implementing and testing that idea ASAP.
      -  Coupling different programs together for specific use cases.
      -  Expanding your own code without writing new, specific implementations
         for integrating new software.
@@ -50,8 +50,8 @@ FAQ
 
       -  A permanent solution for poorly designed codebases. While in spirit
          |porchlight| is meant to circumvent hardships weird APIs (or complete
-         lack of and API) present to hitting the ground running without coupling
-         models.
+         lack of any supported API) present to hitting the ground running
+         without micromanagement.
       -  Threading/multiprocessing manager.
       -  Static or partially-static typing schemes (use `mypy` or another strict
          typing checker).

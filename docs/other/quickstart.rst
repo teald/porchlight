@@ -22,7 +22,7 @@ instructions:
 
 You can install |porchlight| directly using ``pip``:
 
-.. testcode:: console
+.. runblock:: console
 
     pip install porchlight
 
@@ -30,7 +30,7 @@ Once porchlight has installed, you're ready to start writing code. If you'd
 like, this guide can be followed line-for-line in an interactive python
 environment! To get started, just import the library:
 
-.. testcode:: python
+.. runblock:: python
 
     import porchlight
 
@@ -51,7 +51,7 @@ functions, extracts information about the function from existing metadata
 in the CPython standard library) and the source code itself. Adding a function
 to a
 
-.. testcode:: python
+.. runblock:: python
 
     def my_function(x: int, z: int = 0) -> int:
         '''This is a simple equation, but we want to return a named variable.'''
@@ -65,7 +65,7 @@ to a
 At this point, |porchlight| will parse the function and store metadata about
 it. The `str` representation of Neighborhood contains most of the data:
 
-.. testcode:: python
+.. runblock:: python
 
     print(neighborhood)
     # >>  Neighborhood(doors={'my_function': Door(name=my_function, base_function=<function my_function at 0x1...F>, arguments={}, return_vals=[['y']])}, params={'y': Param(name=y, value=<porchlight.param.Empty object at 0x1...F>, constant=False, type=<class 'porchlight.param.Empty'>)}, call_order=['my_function'])
@@ -82,7 +82,7 @@ A few things are now kept track of by the |Neighborhood| automatically:
 Right now, our |Neighborhood| is a
 fully-fledged, if tiny, model. Let's set our variables and run it!
 
-.. testcode:: python
+.. runblock:: python
     neighborhood.set_param('x', 2)
     neighborhood.set_param('z', 0)
 
@@ -101,7 +101,7 @@ obviously. We could manage our own ``x``, ``y``, and ``z`` in a heartbeat, and a
 ``y = my_function(2, 0)``. Let's add another function to our neighborhood and
 call :func:`~porchlight.neighborhood.Neighborhood.run_step`
 
-.. testcode:: python
+.. runblock:: python
 
     def my_new_function(y, z):
         z += y // 2

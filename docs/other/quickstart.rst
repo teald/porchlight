@@ -4,7 +4,7 @@ Quickstart
 Welcome to a short guide to hitting the ground running with `porchlight`! This
 tutorial will step through the basics of installing and using `porchlight`. If
 you are looking for more advanced examples, see the examples availabe in our
-`github repository <https://github.com/teald/porchlight/tree/main/examples>`.
+`github repository <https://github.com/teald/porchlight/tree/main/examples>`_.
 
 Requirements
 ------------
@@ -18,7 +18,7 @@ Installation
 For help installing Python 3.9 or above please see their respective
 instructions:
 
-* `Python 3.9 or above <https://www.python.org/downloads/>`
+* `Python 3.9 or above <https://www.python.org/downloads/>`_
 
 You can install `porchlight` directly using `pip`:
 
@@ -40,6 +40,7 @@ Creating a `Neighborhood` object
 The `Door` class acts as an interface (an "open door") to the internals of a
 python function object. To create one, we just need to import porchlight
 and provide the function we want.
+
 .. code-block:: python
 
     def my_function(x: int, z: int = 0) -> int:
@@ -79,7 +80,7 @@ fully-fledged, if tiny, model. Let's set our variables and run it!
     print(neighborhood)
     # Neighborhood(doors={'my_function': Door(name=my_function, base_function=<function my_function at 0x1...f>, arguments={'x': <class 'int'>, 'z': <class 'int'>}, return_vals=[['y']])}, params={'x': Param(name=x, value=2, constant=False, type=<class 'int'>), 'z': Param(name=z, value=0, constant=False, type=<class 'int'>), 'y': Param(name=y, value=4, constant=False, type=<class 'int'>)}, call_order=['my_function'])
 
-:function:`~porchlight.neighborhood.Neighborhood.run_step` executes all
+:method:`~porchlight.neighborhood.Neighborhood.run_step` executes all
 functions that have been added to our `neighborhood` object. The object passes
 the parameters with names matching the arguments in `my_function`, and stores
 `my_function`'s output in the parameter for `y`.
@@ -88,7 +89,7 @@ All of this could be accomplished in a few lines of code without any imports,
 obviously. We could manage our own `x`, `y`, and `z` in a heartbeat, and all
 `porchlight` *really* did was what we could do with something as simple as
 `y = my_function(2, 0)`. Let's add another function to our neighborhood and
-call :function:`~porchlight.neighborhood.Neighborhood.run_step`
+call `~porchlight.neighborhood.Neighborhood.run_step`
 
 .. code-block:: python
     def my_new_function(y, z):

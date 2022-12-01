@@ -134,8 +134,8 @@ directly.
 Behind the scenes, our |Neighborhood| object has generated a number of |Door|
 objects and |Param| objects
 
-.. |porchlight| `|porchlight|`
+.. |porchlight| replace:: ``porchlight``
 .. _Python: https://www.python.org/downloads/
-.. |Neighborhood| :py:class:`porchlight.neighborhood.Neighborhood`
-.. |Door| :py:class:`porchlight.door.Door`
-.. |Param| :py:class:`porchlight.param.Param`
+.. |Neighborhood| replace:: :py:class:`porchlight.neighborhood.Neighborhood`
+.. |Door| replace:: :py:class:`porchlight.door.Door`
+.. |Param| replace:: :py:class:`porchlight.param.Param`

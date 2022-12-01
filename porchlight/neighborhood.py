@@ -219,6 +219,17 @@ class Neighborhood:
 
         del self._doors[name]
 
+    def get_value(self, parameter_name: str) -> Any:
+        """Retrieves the value of a parameter by name. Does not return a Param
+        object; it returns whatever data is stored in Param.value.
+
+        Arguments
+        ---------
+        parameter_name : `str`
+            The name of the parameter to retrieve the current value for.
+        """
+        return self._params[parameter_name].value
+
     def set_param(
         self,
         parameter_name: str,

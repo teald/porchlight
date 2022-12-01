@@ -32,17 +32,19 @@ class TestNeighborhood(TestCase):
 
         neighborhood.add_door(test1)
 
-        expected = (
-            "Neighborhood(doors={'test1': Door(name=test1, "
-            "base_function=<function test1 at 0x7f247d8c48b0>, "
-            "arguments={'x': <class 'int'>}, return_vals=[['y']])}, "
-            "params={'x': Param(name=x, value=<porchlight.param."
-            "Empty object at 0x7f247e1bd060>, constant=False, type=<class "
-            "'porchlight.param.Empty'>), 'y': Param(name="
-            "y, value=<porchlight.param.Empty object at 0x7f247d8c9660>, "
-            "constant=False, type=<class 'porchlight.param "
-            ".Empty'>)}, call_order=['test1'])"
-        )
+        # Keeping the below as an example of what the string looks like. Update
+        # this to match the actual implementation as changes occur below.
+        # expected = (
+        #     "Neighborhood(doors={'test1': Door(name=test1, "
+        #     "base_function=<function test1 at 0x7f247d8c48b0>, "
+        #     "arguments={'x': <class 'int'>}, return_vals=[['y']])}, "
+        #     "params={'x': Param(name=x, value=<porchlight.param."
+        #     "Empty object at 0x7f247e1bd060>, constant=False, type=<class "
+        #     "'porchlight.param.Empty'>), 'y': Param(name="
+        #     "y, value=<porchlight.param.Empty object at 0x7f247d8c9660>, "
+        #     "constant=False, type=<class 'porchlight.param "
+        #     ".Empty'>)}, call_order=['test1'])"
+        # )
 
         params = neighborhood.params
 
@@ -644,6 +646,26 @@ class TestNeighborhood(TestCase):
 
         with self.assertRaises(porchlight.neighborhood.NeighborhoodError):
             neighborhood.add_door(test1, dynamic_door=True)
+
+    def test_get_value(self):
+        def test1(x, y=1):
+            z = x + y
+            return z
+
+        neighborhood = Neighborhood()
+
+        neighborhood.add_function(test1)
+        neighborhood.set_param("x", 1)
+        neighborhood.run_step()
+
+        expected = {
+            "x": 1,
+            "y": 1,
+            "z": 2,
+        }
+
+        for pname, val in expected.items():
+            self.assertEqual(val, neighborhood.get_value(pname))
 
 
 if __name__ == "__main__":

@@ -97,3 +97,20 @@ call :function:`~porchlight.neighborhood.Neighborhood.run_step`
     # evolves by printing out the parameters.
     for i in range(5):
         neighborhood.run_step()
+
+        x = neighborhood.get_value('x')
+        y = neighborhood.get_value('y')
+        z = neighborhood.get_value('z')
+
+        print(f"{i}) {x = }, {y = }, {z = }")
+
+    # >>> 0) x = 2, y = 4, z = 2
+    # >>> 1) x = 2, y = 6, z = 5
+    # >>> 2) x = 2, y = 9, z = 9
+    # >>> 3) x = 2, y = 13, z = 15
+    # >>> 4) x = 2, y = 19, z = 24
+
+As we see, instead of having to write our own script and manage variables, we
+are now running a system of two functions that share variables. As we step
+forward, the functions are called sequentially and the parameters are updated
+directly.

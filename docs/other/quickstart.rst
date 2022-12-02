@@ -1,3 +1,6 @@
+.. role:: python(code)
+   :language: python
+
 Quickstart
 ==========
 
@@ -20,7 +23,7 @@ instructions:
 
 * `Python 3.9 or above <https://www.python.org/downloads/>`_
 
-You can install |porchlight| directly using ``pip``:
+You can install |porchlight| directly using :code:`pip`:
 
 .. code-block:: console
 
@@ -102,14 +105,15 @@ fully-fledged, if tiny, model. Let's set our variables and run it!
 
 :py:meth:`~porchlight.neighborhood.Neighborhood.run_step` executes all
 functions that have been added to our |Neighborhood| object. The object passes
-the parameters with names matching the arguments in ``my_function``, and stores
-``my_function``'s output in the parameter for ``y``.
+the parameters with names matching the arguments in :code:`my_function`, and
+stores :code:`my_function`'s output in the parameter for :code:`y`.
 
 All of this could be accomplished in a few lines of code without any imports,
-obviously. We could manage our own ``x``, ``y``, and ``z`` in a heartbeat, and
-all |porchlight| *really* did was what we could do with something as simple as
-``y = my_function(2, 0)``. Let's add another function to our neighborhood and
-call :meth:`~porchlight.neighborhood.Neighborhood.run_step`
+obviously. We could manage our own :code:`x`, :code:`y`, and :code:`z` in a
+heartbeat, and all |porchlight| *really* did was what we could do with
+something as simple as :python:`y = my_function(2, 0)`. Let's add another
+function to our neighborhood and call
+:meth:`~porchlight.neighborhood.Neighborhood.run_step`
 
 .. code-block:: python
 
@@ -138,15 +142,100 @@ call :meth:`~porchlight.neighborhood.Neighborhood.run_step`
     3) x = 2, y = 13, z = 15
     4) x = 2, y = 19, z = 24
 
-As we see, instead of having to write our own script and manage variables, we
-are now running a system of two functions that share variables. As we step
-forward, the functions are called sequentially and the parameters are updated
-directly.
+As we see, we are now running a system of two functions that share variables.
+As we step forward, the functions are called sequentially and the parameters
+are updated directly.
 
 Behind the scenes, our |Neighborhood| object has generated a number of |Door|
-objects and |Param| objects
+objects and |Param| objects that hold onto metadata our |Neighborhood| can use
+to know when and what to run, check, and modify. To really leverage
+|porchlight|, we'll need to get to know these objects a bit better on their
+own.
 
-.. |porchlight| replace:: ``porchlight``
+|Param| objects
+---------------
+
+|Param| objects manage the memory being passed between functions in our
+|Neighborhood| object.
+
+These are pretty simple objects, and making them is also simple:
+
+.. code-block:: python
+
+   pm = porchlight.Param("x", "hello")
+
+::
+
+    Param(name=x, value=hello, constant=False, type=<class 'str'>)
+
+To access the data of a |Param|, you need to get its :python:`.value`
+attribute. To change the value, we can update the value directly using
+something like
+
+.. code-block:: python
+
+   pm.value = "world"
+   print(pm)
+
+::
+
+    Param(name=x, value=world, constant=False, type=<class 'str'>)
+
+We can also specify that parameters should be constant, or change parameters to
+become constant.
+
+.. code-block:: python
+
+    my_constant = porchlight.Param("y", 42.0, constant=True)
+    pm.constant = True
+
+    try:
+        pm.value = 10
+
+    except Exception as e:
+        # Writing out the error and its message.
+        print(f"Got {type(e)}: {e}")
+
+::
+
+    Got <class 'porchlight.param.ParameterError'>: Parameter x is not mutable.
+
+This is great for keeping parameters that should stay constant for a specific
+scenario constant. Keep in mind that |Param| implemented like this is not a
+true constant, like ``const`` in other programming languages. The data could
+*still be modified as a side effect of functions*.
+
+Within our |Neighborhood|, we've aleady seen param basics. We can add our own
+params or modify the existing ones in a few different ways, the safest of which
+is to use :py:meth:`~porchlight.neighborhood.Neighborhood.set_param`, which we
+used above.
+
+Now, let's turn to how our |Neighborhood| re-interprets our function
+definitions to know what to pass to them.
+
+|Door| objects
+--------------
+
+A |Door| is an object that contains metadata about how to call a function and
+what it might return.
+
+Because we can return quite a few things, including evaluated expressions in
+the return statement, |Door| objects will not consider outputs that are not
+valid Python variable names.
+
+.. code-block:: python
+
+    my_door = porchlight.Door(my_door_to_be)
+    print(my_door)
+
+::
+
+    Door(name=my_door_to_be, base_function=<function my_door_to_be at 0x1...h>, arguments={'x': <class'porchlight.param.Empty'>}, return_vals=[['z']])
+
+Of course, most of the functions we're working with would be pre-defined. And
+not necessarily defined in an easy way, either. Let's take an external package
+
+.. |porchlight| replace:: :code:`porchlight`
 .. _Python: https://www.python.org/downloads/
 .. |Neighborhood| replace:: :py:class:`~porchlight.neighborhood.Neighborhood`
 .. |Door| replace:: :py:class:`~porchlight.door.Door`

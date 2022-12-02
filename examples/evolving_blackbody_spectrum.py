@@ -43,7 +43,7 @@ def temp_evolution(time: u.Quantity) -> u.Quantity:
     """Evolve the temperature over time as a logarithmic curve."""
     k = 2e-5 * u.s ** -1
     t_inflect = 2e5 * u.s
-    t_start = 1000.0 * u.K
+    t_start = 5000.0 * u.K
 
     temperature = t_start / (1 + np.exp(k * (time - t_inflect))) + 500.0 * u.K
 
@@ -121,12 +121,21 @@ def main():
             f"|| Time: {cur_time.value:.3e} seconds"
         )
 
+    ######################################
+    #                                    #
+    # EVERYTHING BELOW HERE IS PLOTTING! #
+    #                                    #
+    ######################################
+
     # We now have our coupled blackbody/temperature evolution model ready, and
     # we can use it as we'd like. Let's plot it to see if it worked out.
-    fig, ax = plt.subplots()
+    fig, axes = plt.subplots(2, 1)
+
+    ax = axes[0]
 
     ax.set(
         xscale="log",
+        # yscale="log",
         xlabel="Wavelength (micron)",
         ylabel="Flux (W/m^2/m)",
     )
@@ -153,7 +162,7 @@ def main():
         ax.plot(wl, spectrum, color=colors[i])
 
     # Plot the temperature evolution with time for the run.
-    fig, ax = plt.subplots()
+    ax = axes[1]
 
     ax.set(xlabel="Time (seconds)", ylabel="Temperature (Kelvin)")
 

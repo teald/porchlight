@@ -168,6 +168,33 @@ class BaseDoor:
 
             self.return_types = None
 
+        except TypeError as e:
+            # This may be a real function that just doesn't have return types.
+            logger.info(
+                f"Function proceeding without return types due to "
+                f"a TypeError raised while attempting to inspect the "
+                f"source: {e}"
+            )
+
+            if isinstance(function, Callable):
+                # This is still a function, and has otherwise worked.
+                pass
+
+        # Ensure the function can be inspected. If not, raise
+        # NotImplementedError
+        if not self._can_inspect(function):
+            msg = (
+                f"Function {self.name} could not be inspected and is not "
+                f"yet supported. You should wrap the function within a "
+                f"user-defined function, something like:\n\n"
+                f"    def new_func(arg1, arg2, ..., kwarg1, kwarg2, ... ): \n"
+                f"        output1, output2, ... = YOUR_FUNC(...)\n"
+                f"        return output1, output2, ...\n\n"
+            )
+
+            logger.error(msg)
+            raise NotImplementedError(msg)
+
         # Use function signature to introspect properties about the parameters.
         for name, param in inspect.signature(function).parameters.items():
             self.arguments[name] = param.annotation
@@ -252,6 +279,22 @@ class BaseDoor:
                 return_val = BaseDoor(return_val)
 
         return return_val
+
+    @staticmethod
+    def _can_inspect(f: Callable) -> bool:
+        """Returns True if f can be used with :py:func:`inspect.signature`."""
+        try:
+            inspect.signature(f)
+
+        except ValueError as e:
+            logger.info(
+                f"Function {f.__name__} is not inspectable! "
+                f"{type(e).__name__}: {e}."
+            )
+
+            return False
+
+        return True
 
     @staticmethod
     def _get_return_vals(function: Callable) -> List[str]:

@@ -1,5 +1,5 @@
 import porchlight
-from porchlight import Neighborhood, Door, Param
+from porchlight import Neighborhood, Door, Param, door
 
 import unittest
 from unittest import TestCase
@@ -13,12 +13,25 @@ logging.basicConfig(filename=f"{os.getcwd()}/porchlight_unittest.log")
 
 class TestNeighborhood(TestCase):
     def test___init___(self):
-        # Initialization should not do anything beyond defining the empty
+        # Plain initialization should not do anything beyond defining the empty
         # Neighborhood._doors and Neighborhood._params attrs
         neighborhood = Neighborhood()
 
         self.assertEqual(neighborhood._doors, {})
         self.assertEqual(neighborhood._params, {})
+
+    def test___init___with_list(self):
+        def test1(x):
+            pass
+
+        @door.Door
+        def test2(y: int) -> int:
+            z = y + 10
+            return z
+
+        neighborhood = Neighborhood([test1, test2])
+
+        self.assertEqual(list(neighborhood.params.keys()), ['x', 'y', 'z'])
 
     def test___repr__(self):
         neighborhood = Neighborhood()

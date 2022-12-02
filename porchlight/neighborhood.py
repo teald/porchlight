@@ -40,11 +40,19 @@ class Neighborhood:
     _params: Dict[str, param.Param]
     _call_order: List[str]
 
-    def __init__(self):
+    def __init__(self, initial_doors: List[Callable] = []):
         """Initializes the Neighborhood object."""
         self._doors = {}
         self._params = {}
         self._call_order = []
+
+        for d in initial_doors:
+            if isinstance(d, door.BaseDoor):
+                self.add_door(d)
+
+            else:
+                self.add_function(d)
+
 
     def __repr__(self):
         """Must communicate teh following:

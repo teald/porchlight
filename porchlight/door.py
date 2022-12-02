@@ -185,7 +185,11 @@ class BaseDoor:
         if not self._can_inspect(function):
             msg = (
                 f"Function {self.name} could not be inspected and is not "
-                f"yet supported."
+                f"yet supported. You should wrap the function within a "
+                f"user-defined function, something like:\n\n"
+                f"    def new_func(arg1, arg2, ..., kwarg1, kwarg2, ... ): \n"
+                f"        output1, output2, ... = YOUR_FUNC(...)\n"
+                f"        return output1, output2, ...\n\n"
             )
 
             logger.error(msg)
@@ -285,7 +289,7 @@ class BaseDoor:
         except ValueError as e:
             logger.info(
                 f"Function {f.__name__} is not inspectable! "
-                f"{type(e).name}: {e}."
+                f"{type(e).__name__}: {e}."
             )
 
             return False

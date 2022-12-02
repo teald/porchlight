@@ -26,7 +26,7 @@ You can install |porchlight| directly using ``pip``:
 
     pip install porchlight
 
-Once porchlight has installed, you're ready to start writing code. If you'd
+Once |porchlight| has installed, you're ready to start writing code. If you'd
 like, this guide can be followed line-for-line in an interactive python
 environment! To get started, just import the library:
 
@@ -78,7 +78,7 @@ it. The `str` representation of Neighborhood contains most of the data:
 A few things are now kept track of by the |Neighborhood| automatically:
 
 1. The function arguments, now tracked as a |param| object. The default values
-   found were sazed (in our case, it found `z = 0`), and any parameters not yet
+   found were saved (in our case, it found `z = 0`), and any parameters not yet
    assigned a value have been given the :py:class:`~porchlight.param.Empty`
    value.
 2. Function return variables. We'll explore this in more detail later, but one
@@ -132,7 +132,11 @@ call :meth:`~porchlight.neighborhood.Neighborhood.run_step`
 
 ::
 
-    Neighborhood(doors={'my_function': Door(name=my_function, base_function=<function my_function at 0x1...f>, arguments={'x': <class 'int'>, 'z': <class 'int'>}, return_vals=[['y']])}, params={'x': Param(name=x, value=2, constant=False, type=<class 'int'>), 'z': Param(name=z, value=0, constant=False, type=<class 'int'>), 'y': Param(name=y, value=4, constant=False, type=<class 'int'>)}, call_order=['my_function'])
+    0) x = 2, y = 4, z = 2
+    1) x = 2, y = 6, z = 5
+    2) x = 2, y = 9, z = 9
+    3) x = 2, y = 13, z = 15
+    4) x = 2, y = 19, z = 24
 
 As we see, instead of having to write our own script and manage variables, we
 are now running a system of two functions that share variables. As we step

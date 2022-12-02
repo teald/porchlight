@@ -87,6 +87,34 @@ class TestBaseDoor(TestCase):
 
         self.assertEqual(result, 10)
 
+    def test_numpy_ufunc(self):
+        try:
+            import numpy as np
+
+        except ModuleNotFoundError as e:
+            # Printing a message and returning
+            print(
+                f"NOTICE: Could not run test {self.id()}, got "
+                f"ModuleNotFoundError: {e}."
+            )
+
+            return
+
+        # Test a subset of the available ufuncs.
+        tests = {
+            "log10": np.log10,
+            "log": np.log,
+            "sin": np.sin,
+            "greater": np.greater,
+        }
+
+        # Right now, this should throw NotImplementedErrors
+        expected = {n: NotImplementedError for n in tests}
+
+        for test, ufunc in tests.items():
+            with self.assertRaises(expected[test]):
+                BaseDoor(ufunc)
+
     def test___call__(self):
         def test_fxn(x: int) -> int:
             y = 2 * x

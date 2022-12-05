@@ -233,10 +233,10 @@ valid Python variable names.
     Door(name=my_door_to_be, base_function=<function my_door_to_be at 0x1...h>, arguments={'x': <class'porchlight.param.Empty'>}, return_vals=[['z']])
 
 Of course, most of the functions we're working with would be pre-defined. And
-not necessarily defined in an easy way, either. Let's try adding an external
-function to our code.
+not necessarily defined in an easy way, either. Let's try making doors with
+external functions.
 
-.. |porchlight| replace:: :code:`porchlight`
+.. |porchlight| replace:: **porchlight**
 .. _Python: https://www.python.org/downloads/
 .. |Neighborhood| replace:: :py:class:`~porchlight.neighborhood.Neighborhood`
 .. |Door| replace:: :py:class:`~porchlight.door.Door`

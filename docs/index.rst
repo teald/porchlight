@@ -1,7 +1,7 @@
-Welcome to porchlight's documentation!
-======================================
+Welcome to |porchlight|'s documentation!
+========================================
 
-`porchlight` is an open-source function management package designed for
+|porchlight| is an open-source function management package designed for
 coupling Python functions and managing shared data.
 
 .. toctree::
@@ -25,3 +25,5 @@ Indices and tables
 
     This project is under active development. Please report any bugs you
     encounter to https://github.com/teald/porchlight/issues!
+
+.. |porchlight| replace:: **porchlight**

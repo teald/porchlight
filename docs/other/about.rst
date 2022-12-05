@@ -56,4 +56,4 @@ FAQ
       -  Static or partially-static typing schemes (use `mypy` or another strict
          typing checker).
 
-.. |porchlight| replace:: ``porchlight``
+.. |porchlight| replace:: **porchlight**

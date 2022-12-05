@@ -232,9 +232,56 @@ valid Python variable names.
 
     Door(name=my_door_to_be, base_function=<function my_door_to_be at 0x1...h>, arguments={'x': <class'porchlight.param.Empty'>}, return_vals=[['z']])
 
-Of course, most of the functions we're working with would be pre-defined. And
-not necessarily defined in an easy way, either. Let's try making doors with
-external functions.
+Thusfar we've defined the functions we'll be working with ourselves, but what
+if we want to include a function from a library or source with incompatible
+definitions? With our |Door| we can map function argument/return value names to
+match our needs. In our example, say we are given the following function from a
+coworker that they want integrated into the model we already have:
+
+.. code-block:: python
+
+   def coworker_function(a, b=0):
+       b = b + a // b
+       a = a + 1
+       return a, b
+
+We would need to write our own function that converts our ``x`` and ``y`` into
+``a`` and ``b`` if we wanted to pass a representation of this function to
+|Door| like we have been. We can pass the keyword argument
+:code:`argument_mapping` when we initialize our door, though, to signal that
+these variables should be treated like they have different names.
+
+.. code-block:: python
+
+   my_coworker_door = porchlight.Door(
+       coworker_function, argument_mapping={'x': 'a', 'y': 'b'}
+   )
+
+Now, our |Door| :code:`my_coworker_door` will take ``x`` and ``y`` as
+arguments, and |Neighborhood| objects can recognize this. Let's add our new
+door to our :code:`neighborhood`.
+
+.. code-block:: python
+
+   neighborhood.add_door(my_coworker_door)
+
+   for i in range(5, 10):
+       neighborhood.run_step()
+
+       x = neighborhood.get_value("x")
+       y = neighborhood.get_value("y")
+       z = neighborhood.get_value("z")
+
+       print(f"{i}) {x = }, {y = }, {z = }")
+
+::
+
+   5) x = 3, y = 29, z = 38
+   6) x = 4, y = 48, z = 61
+   7) x = 5, y = 78, z = 99
+   8) x = 6, y = 125, z = 161
+   9) x = 7, y = 198, z = 259
+
 
 .. |porchlight| replace:: **porchlight**
 .. _Python: https://www.python.org/downloads/

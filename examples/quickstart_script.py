@@ -87,3 +87,25 @@ print(my_door)
 # Out: Door(name=my_door_to_be, base_function=<function my_door_to_be at
 #      0x1...h>, arguments={'x': <class'porchlight.param.Empty'>},
 #      return_vals=[['z']])
+
+
+def coworker_function(a, b=0):
+    b = b + a // b + 1
+    a = a + 1
+    return a, b
+
+
+my_coworker_door = porchlight.Door(
+    coworker_function, argument_mapping={"x": "a", "y": "b"}
+)
+
+neighborhood.add_door(my_coworker_door)
+
+for i in range(5, 10):
+    neighborhood.run_step()
+
+    x = neighborhood.get_value("x")
+    y = neighborhood.get_value("y")
+    z = neighborhood.get_value("z")
+
+    print(f"{i}) {x = }, {y = }, {z = }")

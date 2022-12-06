@@ -137,3 +137,6 @@ dmypy.json
 # coverage files
 htmlcov/
 git_filter.py
+
+# Misc
+_experiments/

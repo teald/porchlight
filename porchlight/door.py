@@ -1,3 +1,6 @@
+"""
+.. |Basedoor| replace:: :py:class:`~porchlight.door.BaseDoor`
+"""
 import functools
 import inspect
 import itertools
@@ -22,8 +25,8 @@ class DoorError(Exception):
 
 
 class BaseDoor:
-    """Contains the basic information of a Door object, as well as base
-    functions.
+    """Contains the basic information about a function such as expected
+    arguments, type annotations, and named return values.
 
     Attributes
     ----------
@@ -140,7 +143,7 @@ class BaseDoor:
 
         This checks for type annotations, return statements, and all
         information accessible to :py:obj:`inspect.Signature` relevant to
-        `BaseDoor`.
+        |BaseDoor|.
         """
         # Need to find the un-wrapped function that actually takes the
         # arguments in the end.
@@ -238,7 +241,7 @@ class BaseDoor:
     @property
     def __closure__(self):
         """Since BaseDoor is a wrapper, and we use utils.get_all_source to
-        retrieve source, I'm mimicking the type a function wrapper would have
+        retrieve source, this mimicks the type a function wrapper would have
         here.
         """
         return (types.CellType(self._base_function),)
@@ -642,12 +645,13 @@ class Door(BaseDoor):
 class DynamicDoor(Door):
     """A dynamic door takes a door-generating function as its initializer.
 
-    Unlike `~porchlight.door.BaseDoor`s and `~porchlight.door.Door`s, dynamic
-    doors will only parse the definition's source once it is generated.
+    Unlike :py:class:`~porchlight.door.BaseDoor` and
+    :py:class:`~porchlight.door.Door`, dynamic doors will only parse the
+    definition's source once it is generated.
 
-    These objects a function that returns a Door. The `DynamicDoor` then
-    contains identical attributes to the generated door. Once called again, all
-    attributes update to match the most recent call.
+    These objects a function that returns a :py:class:`~porchlight.door.Door`.
+    The `DynamicDoor` then contains identical attributes to the generated door.
+    Once called again, all attributes update to match the most recent call.
 
     Attributes
     ----------

@@ -27,6 +27,7 @@ halls of science.
 Example use cases
 -----------------
 
+
 -  Pseudo-control external access to shared data.
 -  Automate coupling models with shared, evolving parameter sets.
 -  Set parameter limits to catch unique error cases, such as unphysical
@@ -36,8 +37,10 @@ Example use cases
 -  Provides a basic API for making development and research more accessible to
    early developers.
 
+
 FAQ
 ---
+
 
 1. Why is it called |porchlight|?
 

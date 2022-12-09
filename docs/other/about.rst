@@ -1,7 +1,28 @@
 About |porchlight|
 ==================
 
-|porchlight| is an open-sourcee function
+|porchlight| is an open-source function management library designed to aid in
+implementing programs with multiple, distinct dependencies.
+
+
+Background
+----------
+
+Originally designed as a part of an unreleased physical and chemical model,
+|porchlight| is written primarily from the perspective of a scientific use
+case. Well-defined APIs are rare when working with small teams of scientists
+and researchers, resulting from a range of factors. This leads to time wasted
+in training, implementing, and expanding models with complicated needs.
+
+Instead of outright refactoring, a costly luxury for most research groups,
+|porchlight| reframes the problem as one of systems design. Instead of
+haphazardly cobbling together a single-use solution involving python scripts,
+|porchlight| produces a straightforward interface and automatically manages data
+passed between functions as they are executed.
+
+The scope of |porchlight| has expanded considerably since these initial ideas.
+While still in active development, it already has solid use cases outside the
+halls of science.
 
 Example use cases
 -----------------

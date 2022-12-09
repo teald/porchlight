@@ -60,7 +60,7 @@ exclude_patterns = ["test"]
 html_theme = "sphinx_rtd_theme"
 
 # Logo
-html_logo = "porchlight_logo.gif"
+html_logo = "source/porchlight_logo.gif"
 html_theme_options = {"display_version": False}
 
 # Add any paths that contain custom static files (such as style sheets) here,

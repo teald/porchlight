@@ -27,16 +27,14 @@ halls of science.
 Example use cases
 -----------------
 
-
 -  Pseudo-control external access to shared data.
 -  Automate coupling models with shared, evolving parameter sets.
 -  Set parameter limits to catch unique error cases, such as unphysical
-   conditions or numerical instabilities.
+   conditions, numerical instabilities, or failure conditions.
 -  Couple models in a single, short script, without hand-managing input files or
-   writing long single-use automation scripts.
--  Provides a basic API for making development and research more accessible to
-   early developers.
-
+   writing complicated single-use automation scripts.
+-  Easy-to-maintain API, making your programs accessible to developers and
+   researchers of any programming level.
 
 FAQ
 ---

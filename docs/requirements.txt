@@ -2,6 +2,7 @@
 # sphinx/readthedocs.io
 m2r2
 sphinx_rtd_theme>=0.5.1
+sphinx>=4.3.0
 poetry
 pre-commit
 sphinx-autorun

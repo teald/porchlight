@@ -205,7 +205,7 @@ scenario constant. Keep in mind that |Param| implemented like this is not a
 true constant, like ``const`` in other programming languages. The data could
 *still be modified as a side effect of functions*.
 
-Within our |Neighborhood|, we've aleady seen param basics. We can add our own
+Within our |Neighborhood|, we've already seen param basics. We can add our own
 params or modify the existing ones in a few different ways, the safest of which
 is to use :py:meth:`~porchlight.neighborhood.Neighborhood.set_param`, which we
 used above.
@@ -232,7 +232,7 @@ valid Python variable names.
 
     Door(name=my_door_to_be, base_function=<function my_door_to_be at 0x1...h>, arguments={'x': <class'porchlight.param.Empty'>}, return_vals=[['z']])
 
-Thusfar we've defined the functions we'll be working with ourselves, but what
+So far, we've defined the functions we'll be working with ourselves, but what
 if we want to include a function from a library or source with incompatible
 definitions? With our |Door| we can map function argument/return value names to
 match our needs. In our example, say we are given the following function from a
@@ -282,6 +282,43 @@ door to our :code:`neighborhood`.
    8) x = 6, y = 125, z = 161
    9) x = 7, y = 198, z = 259
 
+And now, with just 2 lines of code, we've fully integrated our coworker's code
+into our own! You could keep doing this with as many functions as you'd like;
+as long as they're convertible to a |Door|, our |Neighborhood| will keep
+accepting new functions.
+
+This is the end of the interactive portion of the Quickstart Guide. With the
+knowledge you have now, you are more than capable of doing some pretty exciting
+things with |porchlight|! That said, keep in mind there *is* more to the
+package, as well as some nuances.
+
+Closing Nuances
+---------------
+
+-  |Neighborhood| objects will execute their functions sequentially, in the
+   order they are added. if you'd like to re-order the functions before
+   execution, see :py:meth:`~porchlight.neighborhood.Neighborhood.order_doors`.
+-  As of v0.4.0, there are a number of `known bugs
+   <https://github.com/teald/porchlight/issues?q=is%3Aissue+is%3Aopen+label%3Abug>`_.
+   In particular, there is an issue with some special functions being imported.
+   You can readily circumvent this by writing a basic wrapper:
+
+.. code-block:: python
+
+   from numpy import cos  # ufuncs aren't supported
+   from porchlight import Door
+
+   @Door
+   def my_cos(x):
+       '''Replace x and y with whatever variables you need.'''
+       y = cos(x)
+       return y
+
+- |porchlight| is under active development. The current development strategy
+  will not include a dedicated stable branch until v1.0.0. That means that you
+  need to be cautious with versions before v1.0.0, and some changes may break
+  your code. You can generally assume that increments of 0.0.1 are non-breaking.
+  0.1.0 increments may be breaking.
 
 .. |porchlight| replace:: **porchlight**
 .. _Python: https://www.python.org/downloads/

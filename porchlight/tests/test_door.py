@@ -10,6 +10,8 @@ from porchlight.param import Empty, Param, ParameterError
 import typing
 import logging
 import os
+import math
+import random
 
 logging.basicConfig(filename=f"{os.getcwd()}/porchlight_unittest.log")
 
@@ -59,11 +61,19 @@ class TestDoor(TestCase):
             y = 2 * x
             return y
 
-        door = Door(test_fxn)
+        door = Door(test_fxn, typecheck=True)
 
         # Call the Door with erroneous types based on annotations.
         with self.assertRaises(ParameterError):
             door(x="6")
+
+        # Typechecking off
+        door = Door(test_fxn, typecheck=False)
+        door(x="6")
+
+        # Default functionality should be typechecking off
+        door = Door(test_fxn)
+        door(x=[6])
 
     def test_required_arguments(self):
         # This property is critical for the functioning of the Neighborhood
@@ -314,6 +324,60 @@ class TestDoor(TestCase):
 
         # Changing the argument mapping with the setter.
         test1.argument_mapping = {"hello_again": "x", "world_two": "z"}
+
+    def test_auto_wrapping(self):
+        # Should work for any type of callable.
+        def my_func(x: int) -> int:
+            y = x + 1
+            return y
+
+        tests = [
+            (
+                my_func,
+                {"arguments": {"hello": int}, "return_vals": ["world"]},
+            ),
+            (
+                lambda x: x + 1,
+                {"arguments": {"x": int}, "return_vals": ["y"]},
+            ),
+            (
+                math.cos,
+                {
+                    "arguments": {"theta": int},
+                    "return_vals": ["cos_theta"],
+                },
+            ),
+        ]
+
+        for fxn, kwargs in tests:
+            my_door = Door(fxn, wrapped=True, **kwargs)
+
+            for arg, value in kwargs.items():
+                self.assertEqual(getattr(my_door, arg), value)
+
+        # Actually run the Door
+        my_door = Door(my_func, wrapped=True, **tests[0][1])
+        expected_output = [my_func(x) for x in range(10)]
+        output = [my_door(x) for x in range(10)]
+
+        self.assertEqual(expected_output, output)
+
+        # Test a slightly more complicated door.
+        def test1(x: int, *, y=0) -> int:
+            z = x ** y
+            return z
+
+        kwargs = {
+            "arguments": {"x": int},
+            "keyword_args": {"y": 0},
+            "return_vals": ["z"],
+        }
+
+        normal_door = Door(test1)
+        wrapped_door = Door(test1, wrapped=True, **kwargs)
+
+        self.assertEqual(normal_door(5), wrapped_door(5))
+        self.assertEqual(normal_door(-500, y=2), wrapped_door(-500, y=2))
 
 
 if __name__ == "__main__":

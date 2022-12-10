@@ -23,7 +23,7 @@ copyright = "2022, D J Teal"
 author = "D J Teal"
 
 # The full version, including alpha/beta/rc tags
-release = "0.3.1"
+release = "0.4.0"
 
 
 # -- General configuration ---------------------------------------------------
@@ -68,3 +68,17 @@ html_theme_options = {"display_version": False}
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["source/_static"]
 # html_css_files = ["porchlight.css"]
+
+
+# Include initialization and call special methods to be documented. From
+# https://stackoverflow.com/questions/5599254/how-to-use-sphinxs-autodoc
+# -to-document-a-classs-init-self-method
+def skip(app, what, name, obj, would_skip, options):
+    if name in ["__init__", "__call__"]:
+        return False
+
+    return would_skip
+
+
+def setup(app):
+    app.connect("autodoc-skip-member", skip)

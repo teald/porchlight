@@ -5,7 +5,7 @@ Welcome to |porchlight|'s documentation!
 coupling Python functions and managing shared data.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
    other/about
@@ -13,6 +13,7 @@ coupling Python functions and managing shared data.
    source/neighborhood
    source/door
    source/param
+   source/utils
 
 Indices and tables
 ==================

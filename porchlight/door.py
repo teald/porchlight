@@ -421,15 +421,120 @@ class Door(BaseDoor):
     """Inherits from and extends :class:`~porchlight.door.BaseDoor`"""
 
     def __init__(
-        self, function: Callable = None, *, argument_mapping: dict = {}
+        self,
+        function: Callable = None,
+        *,
+        argument_mapping: dict = {},
+        wrapped: bool = False,
+        arguments: dict = {},
+        keyword_args: dict = {},
+        return_vals: List = [],
+        name: str = "",
+        typecheck: bool = False,
     ):
+        """Initializes the :py:class:`~porchlight.door.Door` object using a
+        callable.
+
+        Arguments
+        ---------
+
+        function : Callable
+            A callable object to be parsed by :py:class:`~BaseDoor`.
+
+        argument_mapping : dict, keyword-only, optional
+            Maps parameters automatically by name. For example, to have a Door
+            accept "a" and "b" ans arguments instead of "x" and "y", one could
+            use
+
+            .. code-block:: python
+
+                def fxn(x):
+                    y = 2 * x
+                    return y
+
+                my_door = Door(fxn, argument_mapping={'x': 'a', 'y': 'b'})
+
+            to accomplish what would otherwise require wrapping the function
+            yourself.
+
+        wrapped : bool, keyword-only, optional
+            If `True`, will not parse the function using
+            :py:class:`~porchlight.door.BaseDoor`. Instead, it will take user
+            arguments and generate a function wrapper using the following
+            keyword-only arguments:
+
+                - arguments
+                - keyword_args
+                - return_vals
+
+            And this wrapper will be used to initialize the
+            :py:class:`~porchlight.door.BaseDoor` properties.
+
+        arguments : dict, keyword-only, optional
+            Arguments to be passed to the function if it is wrapped. Does not
+            override :py:class:`~porchlight.door.BaseDoor` if ``wrapped`` is
+            ``False``.
+
+        keyword_args : dict, keyword-only, optional
+            Corresponds to keyword arguments that may be passed positionally.
+            Only used when ``wrapped`` is ``True``.
+
+        name : str, keyword-only, optional
+            Overrides the default name for the Door if provided.
+
+        typecheck : :py:obj:`bool`, optional
+            If `True`, the `Door` object will assert that arguments passed
+            to `__call__` (when the `Door` itself is called like a
+            function) have the type expected by type annotations and any user
+            specifications. By default, this is `True`.
+        """
         self.argmap = argument_mapping
+        self.name = name
+        self.wrapped = wrapped
+        self.typecheck = typecheck
+
+        if name:
+            self.__name__ = name
+
+        # For wrapped functions, circumvent normal initialization.
+        if self.wrapped:
+            self._initialize_wrapped_function(
+                arguments, keyword_args, return_vals
+            )
+
+            # In these cases, there's no reason to use a decorator.
+            if function is None:
+                msg = "Auto-wrapped functions must be passed directly."
+
+                logger.error(msg)
+                raise DoorError(msg)
+
+            self._base_function = function
+
+            return
 
         self.function_initialized = False
         if function is None:
             return
 
         self.__call__(function)
+
+    def _initialize_wrapped_function(
+        self, arguments, keyword_args, return_vals
+    ):
+        """Initializes a function that is auto-wrapped by
+        :py:class:`~porchlight.door.Door` instead of being passed to
+        :py:class:`~porchlight.door.BaseDoor`
+        """
+        if not self.name:
+            self.name = "AutoWrappedFunctionDoor"
+            self.__name__ = self.name
+
+        self.arguments = arguments
+        self.keyword_args = keyword_args
+        self.return_vals = return_vals
+
+        self.function_initialized = True
 
     def __call__(self, *args, **kwargs):
         if not self.function_initialized:
@@ -449,13 +554,19 @@ class Door(BaseDoor):
                 raise TypeError(msg)
 
             function = args[0]
-            super().__init__(function)
+
+            super().__init__(function, typecheck=self.typecheck)
+
             self.function_initialized = True
 
             # Perform any necessary argument mapping.
             self.map_arguments()
 
             return self
+
+        if self.wrapped:
+            result = self._base_function(*args, **kwargs)
+            return result
 
         # Check argument mappings.
         if not self.argmap:
@@ -508,13 +619,16 @@ class Door(BaseDoor):
                     logger.error(msg)
                     raise DoorError(msg)
 
-                if old_name not in self.arguments:
+                if old_name not in self.arguments and not any(
+                    old_name in retvals for retvals in self.return_vals
+                ):
                     msg = f"{old_name} is not a valid argument for {self.name}"
                     logger.error(msg)
                     raise DoorError(msg)
 
-                self.arguments[mapped_name] = self.arguments[old_name]
-                del self.arguments[old_name]
+                if old_name in self.arguments:
+                    self.arguments[mapped_name] = self.arguments[old_name]
+                    del self.arguments[old_name]
 
                 # Change keyword arguments as well.
                 if old_name in self.keyword_args:

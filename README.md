@@ -1,3 +1,5 @@
+<img src="docs/source/porchlight_logo.gif" width="200" height="200" alt="porchlight logo. A snake's head erupts from the bottom of a porchlight casing, reaching towards a spinning triangular pyramid. The pyramid radiates bright, saturated, multicolored light." style="float:left" />
+
 [porchlight](https://porchlight.readthedocs.io/en/latest/)
 ==========
 
@@ -46,9 +48,6 @@ neighborhood.add_function(increase_x)
 # parameters.
 print(neighborhood)
 ```
-
-Although this is the current extent of documentation, there should be some more
-complete documentation within the next couple weeks/months.
 
 Documentation
 -----------

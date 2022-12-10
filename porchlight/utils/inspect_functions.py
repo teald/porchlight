@@ -1,4 +1,4 @@
-"""Tools for introspection of functions extending what :py:module:`inspect` can
+"""Tools for introspection of functions extending what :py:mod:`inspect` can
 do.
 """
 import inspect

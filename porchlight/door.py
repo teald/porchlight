@@ -111,15 +111,6 @@ class BaseDoor:
             Note, this is not the same as a DynamicDoor, and internal
             variables/updating is not handled as with a DynamicDoor. This just
             calls Door's initializer on the output of the base function.
-
-        source : `str`, optional
-            If a non-empty string is provided, it will be parsed as source.
-            This is used to avoid using :py:meth:`inspect.getsourcelines()`.
-            This is primarily used by :py:class:`~porchlight.door.Door` for
-            wrapping special functions. Writing source directly is always
-            preferable.
-
-            Any str passed to this is safe; the source will never be executed.
         """
         self._returned_def_to_door = returned_def_to_door
         self._base_function = function

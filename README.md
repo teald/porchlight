@@ -47,9 +47,6 @@ neighborhood.add_function(increase_x)
 print(neighborhood)
 ```
 
-Although this is the current extent of documentation, there should be some more
-complete documentation within the next couple weeks/months.
-
 Documentation
 -----------
 

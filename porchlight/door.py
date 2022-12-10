@@ -619,13 +619,16 @@ class Door(BaseDoor):
                     logger.error(msg)
                     raise DoorError(msg)
 
-                if old_name not in self.arguments:
+                if old_name not in self.arguments and not any(
+                    old_name in retvals for retvals in self.return_vals
+                ):
                     msg = f"{old_name} is not a valid argument for {self.name}"
                     logger.error(msg)
                     raise DoorError(msg)
 
-                self.arguments[mapped_name] = self.arguments[old_name]
-                del self.arguments[old_name]
+                if old_name in self.arguments:
+                    self.arguments[mapped_name] = self.arguments[old_name]
+                    del self.arguments[old_name]
 
                 # Change keyword arguments as well.
                 if old_name in self.keyword_args:

@@ -325,6 +325,28 @@ class TestDoor(TestCase):
         # Changing the argument mapping with the setter.
         test1.argument_mapping = {"hello_again": "x", "world_two": "z"}
 
+    def test_argument_mapping_return_values(self):
+        # Below works as expected. The return value is visible as 'why'.
+        @Door(argument_mapping={"ecks": "x", "why": "y"})
+        def test1(x, y):
+            y = x + 1
+            return y
+
+        # This raises a DoorError
+        @Door(argument_mapping={"ecks": "x", "why": "y"})
+        def test2(x):
+            y = x + 1
+            return y
+
+        # These tests should work exactly the same in terms of input/output.
+        def testval():
+            return random.randint(-10, 10)
+
+        tests = [[testval(), testval()] for _ in range(100)]
+
+        for x, y in tests:
+            self.assertEqual(test1(x, y), test2(x))
+
     def test_auto_wrapping(self):
         # Should work for any type of callable.
         def my_func(x: int) -> int:

@@ -55,11 +55,22 @@ class BaseDoor:
     name : :py:obj:`str`
         The name of the function as visible from the base function's __name__.
 
-    return_types : :py:obj:`list` of :py:obj:`list` of `~typing.Type`
+    return_types : :py:obj:`dict` of :py:obj:`str`, :py:obj:`Type` pairs.
         Values returned by any return statements in the base function.
 
-    return_vals : :py:obj:`list` of :py:obj:`list` of :py:obj:`str`
-        Values returned by any return statements in the base function.
+    return_vals : :py:obj:`list` of :py:obj:`str`
+        Names of parameters returned by the base function. Any return
+        statements in a Door much haveidentical return parameters. I.e., the
+        following would fail if imported as a Door.
+
+        .. code-block:: python
+
+           def fxn(x):
+               if x < 1:
+                   y = x + 1
+                   return x, y
+
+               return x
 
     typecheck : :py:obj:`bool`
         If True, when arguments are passed to the `BaseDoor`'s base function
@@ -78,7 +89,7 @@ class BaseDoor:
     min_n_return: int
     n_args: int
     name: str
-    return_types: List[List[Type]]
+    return_types: List[Type]
     return_vals: List[List[str]]
     typecheck: bool
 
@@ -156,6 +167,8 @@ class BaseDoor:
         self.keyword_args = {}
         self.keyword_only_args = {}
 
+        # Attempting to retrieve type hints for the return value. This *does
+        # not* fail if they aren't found.
         try:
             ret_type_annotation = typing.get_type_hints(function)["return"]
             self.return_types = decompose_type(

@@ -90,7 +90,7 @@ class BaseDoor:
     n_args: int
     name: str
     return_types: List[Type]
-    return_vals: List[List[str]]
+    return_vals: List[str]
     typecheck: bool
 
     def __init__(
@@ -247,7 +247,31 @@ class BaseDoor:
         self.n_args = len(self.arguments)
 
         # The return values require some more effort.
-        self.return_vals = self._get_return_vals(function)
+        return_vals = self._get_return_vals(function)
+
+        # porchlight >=v0.5.0 requires that return_vals be a single, non-nested
+        # list of return values that are uniform across return statements.
+        for i, ret_list in enumerate(return_vals):
+            if any(ret_list != rl for rl in return_vals):
+                msg = (
+                    f"Door objects do not allow for multiple return sets "
+                    f"within the same function. That is, a function must "
+                    f"always return the same set of parameters. But, "
+                    f"{function.__name__} has return values:\n"
+                )
+
+                for i, rl in enumerate(return_vals):
+                    msg += f"  {i}) {', '.join(rl)}"
+
+                logging.error(msg)
+
+                raise DoorError(msg)
+
+        if return_vals:
+            self.return_vals = return_vals[0]
+
+        else:
+            self.return_vals = return_vals
 
         logger.debug(f"Found {self.n_args} arguments in {self.name}.")
 

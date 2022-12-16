@@ -163,17 +163,16 @@ class Neighborhood:
 
         # Add all return values as parameters.
         if not dynamic_door:
-            for pname in [p for rvs in new_door.return_vals for p in rvs]:
+            for pname in new_door.return_vals:
                 if pname not in self._params:
                     self._params[pname] = param.Param(pname, param.Empty())
 
             return
 
         # Dynamic doors must be specified separately. They get initialized when
-        # first modified.
+        # first called/explicitly generated.
         #
-        # Dynamic doors must also be type-annotated. If they are not raise an
-        # error.
+        # Dynamic doors must also be type-annotated.
         if (
             "return_types" not in new_door.__dict__
             or not new_door.return_types
@@ -190,7 +189,7 @@ class Neighborhood:
 
         for i, rt in enumerate(return_types):
             if isinstance(rt, door.Door) or rt is door.Door:
-                ret_val = new_door.return_vals[0][i]
+                ret_val = new_door.return_vals[i]
                 if ret_val not in self.doors:
                     # Can define a function that just pulls out the attr
                     # independent of its current reference.
@@ -391,19 +390,13 @@ class Neighborhood:
             if not cur_door.return_vals:
                 continue
 
-            elif len(cur_door.return_vals[0]) > 1:
-                # This only works for functions with one possible output. This,
-                # frankly, should probably be the case nearly all of the time.
-                # Still need to make a call on if there's support in a subset
-                # of cases. See issue #19 for updates.
+            elif len(cur_door.return_vals) > 1:
                 update_params = {
-                    v: x for v, x in zip(cur_door.return_vals[0], output)
+                    v: x for v, x in zip(cur_door.return_vals, output)
                 }
 
             else:
-                assertmsg = "Mismatched output/return."
-                assert len(cur_door.return_vals) == 1, assertmsg
-                update_params = {cur_door.return_vals[0][0]: output}
+                update_params = {cur_door.return_vals[0]: output}
 
             for pname, new_value in update_params.items():
                 # If the parameter is currently empty, just reassign and
@@ -421,9 +414,7 @@ class Neighborhood:
                     logger.error(msg)
                     raise param.ParameterError(msg)
 
-                # Editing the _value directly here... but I'm not sure if
-                # that's the best idea.
-                self._params[pname]._value = new_value
+                self._params[pname].value = new_value
 
     def run_step(self):
         """Runs a single step forward for all functions, in specified order,

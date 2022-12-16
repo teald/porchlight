@@ -53,7 +53,6 @@ class Neighborhood:
             else:
                 self.add_function(d)
 
-
     def __repr__(self):
         """Must communicate teh following:
         + A unique identifier.
@@ -115,9 +114,9 @@ class Neighborhood:
             :class:`~porchlight.door.DynamicDoor`, or :py:obj:`list` of
             :class:`~porchlight.door.Door` objects.
 
-            Either a single initialized
-            `door.Door` object or a list of them.  If a list is provided, this
-            function is called for each item in the list.
+            Either a single initialized `door.Door` object or a list of them.
+            If a list is provided, this function is called for each item in the
+            list.
 
         overwrite_defaults : bool, optional
             If `True`, will overwrite any parameters shared between the

@@ -24,7 +24,7 @@ class TestBaseDoor(TestCase):
         # Must contain both input and output parameter.
         arguments = ["x"]
         keyword_args = ["x"]
-        return_vals = [["y"]]
+        return_vals = ["y"]
 
         # Not comparing any values during this test.
         for arg in arguments:
@@ -70,7 +70,7 @@ class TestBaseDoor(TestCase):
         # Must contain both input and output parameter.
         arguments = ["x"]
         keyword_args = ["x"]
-        return_vals = [["y"]]
+        return_vals = ["y"]
 
         # Not comparing any values during this test.
         for arg in arguments:
@@ -79,8 +79,7 @@ class TestBaseDoor(TestCase):
         for kwarg in keyword_args:
             self.assertIn(kwarg, door.keyword_args)
 
-        for retval in return_vals:
-            self.assertIn(retval, door.return_vals)
+        self.assertEqual(return_vals, door.return_vals)
 
         # Call the BaseDoor
         result = door(x=5)
@@ -93,7 +92,7 @@ class TestBaseDoor(TestCase):
 
         except ModuleNotFoundError as e:
             # Printing a message and returning
-            print(
+            logging.error(
                 f"NOTICE: Could not run test {self.id()}, got "
                 f"ModuleNotFoundError: {e}."
             )
@@ -311,7 +310,7 @@ class TestBaseDoor(TestCase):
         expected_repr = (
             f"BaseDoor(name=test, base_function={str(test)}, "
             f"arguments={{'x': <class 'int'>}}, "
-            f"return_vals=[['y']])"
+            f"return_vals=['y'])"
         )
 
         test_door = BaseDoor(test)

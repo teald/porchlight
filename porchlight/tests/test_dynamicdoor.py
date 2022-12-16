@@ -95,7 +95,7 @@ class TestDynamicDoor(unittest.TestCase):
 
         self.assertEqual(doorgen1(2, 5), 2 ** 5)
         self.assertEqual(doorgen1.arguments, {"hello": int, "y": int})
-        self.assertEqual(doorgen1.return_vals, [["z"]])
+        self.assertEqual(doorgen1.return_vals, ["z"])
 
         @door.Door(argument_mapping={"hello": "x"})
         def doorgen2(x: int, y: int = 1) -> door.Door:

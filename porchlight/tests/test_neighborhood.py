@@ -31,7 +31,7 @@ class TestNeighborhood(TestCase):
 
         neighborhood = Neighborhood([test1, test2])
 
-        self.assertEqual(list(neighborhood.params.keys()), ['x', 'y', 'z'])
+        self.assertEqual(list(neighborhood.params.keys()), ["x", "y", "z"])
 
     def test___repr__(self):
         neighborhood = Neighborhood()
@@ -175,6 +175,10 @@ class TestNeighborhood(TestCase):
         neighborhood = Neighborhood()
 
         neighborhood.add_door([test1, test2, test3, test4])
+
+        import pytest
+
+        pytest.set_trace()
 
         self.assertEqual(len(neighborhood._doors), 4)
         self.assertEqual(len(neighborhood._params), 4)

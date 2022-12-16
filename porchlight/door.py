@@ -679,10 +679,10 @@ class Door(BaseDoor):
                     del self.keyword_args[old_name]
 
                 # Also change outputs that contain the same name.
-                for i, ret_tuple in enumerate(self.return_vals):
-                    for j, ret_val in enumerate(ret_tuple):
-                        if old_name == ret_val:
-                            self.return_vals[i][j] = mapped_name
+                ret_tuple = self.return_vals
+                for i, ret_val in enumerate(ret_tuple):
+                    if old_name == ret_val:
+                        self.return_vals[i] = mapped_name
 
             # Place back in the original order.
             rev_argmap = {v: k for k, v in self.argmap.items()}
@@ -747,10 +747,9 @@ class Door(BaseDoor):
         return_vals = copy.copy(self.return_vals)
 
         # Also change outputs that contain the same name.
-        for i, ret_tuple in enumerate(self.return_vals):
-            for j, ret_val in enumerate(ret_tuple):
-                if ret_val in self.argmap:
-                    return_vals[i][j] = self.argmap[ret_val]
+        for i, ret_val in enumerate(return_vals):
+            if ret_val in self.argmap:
+                return_vals[i] = self.argmap[ret_val]
 
         return return_vals
 
@@ -775,9 +774,8 @@ class Door(BaseDoor):
                 all_vars.append(arg)
 
         for ret in self.return_vals:
-            for r in ret:
-                if r not in all_vars:
-                    all_vars.append(r)
+            if ret not in all_vars:
+                all_vars.append(ret)
 
         return all_vars
 

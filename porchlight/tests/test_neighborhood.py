@@ -31,7 +31,7 @@ class TestNeighborhood(TestCase):
 
         neighborhood = Neighborhood([test1, test2])
 
-        self.assertEqual(list(neighborhood.params.keys()), ['x', 'y', 'z'])
+        self.assertEqual(list(neighborhood.params.keys()), ["x", "y", "z"])
 
     def test___repr__(self):
         neighborhood = Neighborhood()

@@ -365,6 +365,7 @@ class BaseDoor:
         # definition.
         defmatch_str = r"^(\ )+def\s+"
         retmatch_str = r".*\s+return\s(.*)"
+        retmatch_str = r"^\s+(?:return|yield)\s(.*)"
         indentmatch_str = r"^(\s)*"
 
         for i, line in enumerate(lines):

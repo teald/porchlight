@@ -391,6 +391,23 @@ class TestBaseDoor(TestCase):
 
         self.assertEqual(test_prop.kwargs, expected_val)
 
+    def test_generator(self):
+        # Tests generator functions with porchlight.
+        @BaseDoor
+        def testgen1(x):
+            y = 0
+
+            while y <= x:
+                yield y
+                y = y + 1
+
+            return y
+
+        expected = {"arguments": {"x": Empty()}, "return_vals": ["y"]}
+
+        for attr, val in expected.items():
+            self.assertEqual(getattr(testgen1, attr), val)
+
 
 if __name__ == "__main__":
     import unittest

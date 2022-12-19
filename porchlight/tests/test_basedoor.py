@@ -408,6 +408,30 @@ class TestBaseDoor(TestCase):
         for attr, val in expected.items():
             self.assertEqual(getattr(testgen1, attr), val)
 
+        # Should be identical to something with return instead of yield (for
+        # porchlight specifically).
+        @BaseDoor
+        def test1(x):
+            y = 0
+
+            while y <= x:
+                return y
+                y = y + 1
+
+            return y
+
+        test_attrs = [
+            "arguments",
+            "positional_only",
+            "keyword_args",
+            "n_args",
+            "return_types",
+            "return_vals",
+        ]
+
+        for attr in test_attrs:
+            self.assertEqual(getattr(test1, attr), getattr(testgen1, attr))
+
 
 if __name__ == "__main__":
     import unittest

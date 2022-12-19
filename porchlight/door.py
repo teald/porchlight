@@ -43,12 +43,6 @@ class BaseDoor:
         arguments without a default value are assigned a
         :class:~porchlight.param.Empty` value instead of their default value.
 
-    max_n_return : :py:obj:`int`
-        Maximum number of returned values.
-
-    min_n_return : :py:obj:`int`
-        Minimum number of returned values.
-
     n_args : :py:obj:`int`
         Number of arguments accepted by this `BaseDoor`
 
@@ -85,8 +79,6 @@ class BaseDoor:
     _base_function: Callable
     arguments: Dict[str, Type]
     keyword_args: Dict[str, Any]
-    max_n_return: int
-    min_n_return: int
     n_args: int
     name: str
     return_types: List[Type]

@@ -55,7 +55,7 @@ class ParamTest(TestCase):
     def test___repr__(self):
         param1 = param.Param("x", 1)
         expected_string = (
-            "Param(name=x, value=1, constant=False, " "type=<class 'int'>)"
+            "Param(name='x', value=1, constant=False, " "type=<class 'int'>)"
         )
 
         self.assertEqual(repr(param1), expected_string)

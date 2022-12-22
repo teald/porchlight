@@ -105,7 +105,7 @@ class Param:
             "type": self.type,
         }
 
-        infostrings = [f"{key}={value}" for key, value in info.items()]
+        infostrings = [f"{key}={repr(value)}" for key, value in info.items()]
 
         outstr = f"Param({', '.join(infostrings)})"
 

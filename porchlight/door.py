@@ -296,9 +296,6 @@ class BaseDoor:
         # Type checking.
         if self.typecheck:
             for k, v in input_kwargs.items():
-                if self.arguments[k] == Empty():
-                    continue
-
                 if not isinstance(v, self.arguments[k]):
                     msg = (
                         f"Type checking is on, and the type for input "

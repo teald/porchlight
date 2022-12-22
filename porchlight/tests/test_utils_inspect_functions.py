@@ -154,6 +154,16 @@ class TestInspectFunctions(unittest.TestCase):
 
         self.assertEqual(result[0], expected_result)
 
+    def test_non_callable(self):
+        tests = [1, "2", {3: 4}]
+
+        for test in tests:
+            with self.assertRaises(TypeError):
+                inspect_functions.get_all_source(test)
+
+            with self.assertRaises(TypeError):
+                inspect_functions.get_wrapped_function(test)
+
 
 if __name__ == "__main__":
     unittest.main()

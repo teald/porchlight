@@ -461,14 +461,14 @@ class Neighborhood:
             a key in `Neighborhood._doors`.
         """
         # The order list must:
-        #  + Contain all doors at least once.
+        #  + Contain all doors once.
         #  + All doors must already exist and be known.
         if not order:
             msg = f"Empty or invalid input: {order}."
             logger.error(msg)
             raise ValueError(msg)
 
-        elif len(set(order)) > len(self._doors):
+        elif len(order) > len(self._doors):
             msg = (
                 f"More labels provided than doors "
                 f"({len(order)} labels vs {len(self._doors)} doors)."

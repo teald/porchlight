@@ -234,7 +234,7 @@ class BaseDoor:
 
         for name, _type in self.arguments.items():
             if _type == inspect._empty:
-                self.arguments[name] = Empty
+                self.arguments[name] = Empty()
 
         self.n_args = len(self.arguments)
 
@@ -291,7 +291,7 @@ class BaseDoor:
         # Type checking.
         if self.typecheck:
             for k, v in input_kwargs.items():
-                if self.arguments[k] == Empty:
+                if self.arguments[k] == Empty():
                     continue
 
                 if not isinstance(v, self.arguments[k]):
@@ -778,7 +778,7 @@ class Door(BaseDoor):
         required = []
 
         for x in self.arguments:
-            if isinstance(self.keyword_args[x].value, Empty):
+            if self.keyword_args[x].value == Empty():
                 required.append(x)
 
         return required

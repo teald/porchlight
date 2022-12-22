@@ -103,8 +103,7 @@ class TestEmpty(TestCase):
     def test___eq__(self):
         empty = param.Empty()
 
-        self.assertTrue(empty, param.Empty)
-        self.assertTrue(empty, param.Empty())
+        self.assertEqual(empty, param.Empty())
         self.assertNotEqual(empty, 1)
 
 

@@ -4,7 +4,7 @@ relevant helper functions or objects.
 from unittest import TestCase
 import unittest
 
-from porchlight.door import Door, DoorError
+from porchlight.door import Door, DoorError, DoorWarning
 from porchlight.param import Empty, Param, ParameterError
 
 import typing
@@ -309,6 +309,19 @@ class TestDoor(TestCase):
             @Door(argument_mapping={"x": "y"})
             def test1(x, y):
                 pass
+
+    def test_builtin_mapping_name_warning(self):
+        with self.assertWarns(DoorWarning):
+
+            @Door(argument_mapping={"type": "x"})
+            def test1(x):
+                pass
+
+        with self.assertWarns(DoorWarning):
+
+            @Door(argument_mapping={"hola": "type"})
+            def test2(type):
+                return
 
     def test_argument_mapping_property(self):
         @Door(argument_mapping={"hello": "x", "world": "z"})

@@ -163,6 +163,9 @@ class BaseDoor:
             self.name = function.__name__
             self.__name__ = function.__name__
 
+        else:
+            logging.debug(f"Ignoring name assignment for {self.name}")
+
         self.arguments = {}
         self.positional_only = []
         self.keyword_args = {}
@@ -719,7 +722,7 @@ class Door(BaseDoor):
         exception if it is invalid. Will also raise warnings for certain
         non-fatal actions.
         """
-        builtin_list = dir(__builtins__)
+        builtin_set = set(bi for bi in __builtins__.keys())
 
         for key, value in argmap.items():
             # Argument map should contain valid python variable names.
@@ -728,8 +731,13 @@ class Door(BaseDoor):
                 logging.error(msg)
                 raise DoorError(msg)
 
-            if key in builtin_list:
+            if key in builtin_set:
                 msg = f"Key {key} matches built-in name."
+                logger.warning(msg)
+                warnings.warn(msg, DoorWarning)
+
+            if value in builtin_set:
+                msg = f"Mapping arg {value} matches global name."
                 logger.warning(msg)
                 warnings.warn(msg, DoorWarning)
 

@@ -125,6 +125,8 @@ class BaseDoor:
         self.typecheck = typecheck
         self._inspect_base_callable()
 
+        logging.debug(f"Door {self.name} initialized.")
+
     def __eq__(self, other) -> bool:
         """Equality is defined as referencing the same base function."""
         if isinstance(other, BaseDoor) and self.name is other.name:

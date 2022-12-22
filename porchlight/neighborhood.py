@@ -389,10 +389,12 @@ class Neighborhood:
                 input_params[pname] = self._params[pname].value
 
             # Run the cur_door object and catch its output.
+            logging.debug(f"Calling door {cur_door.name}.")
             output = cur_door(**input_params)
 
             # Check if the cur_door has a known return value.
             if not cur_door.return_vals:
+                logging.debug("No return value found.")
                 continue
 
             elif len(cur_door.return_vals) > 1:
@@ -403,6 +405,9 @@ class Neighborhood:
             else:
                 update_params = {cur_door.return_vals[0]: output}
 
+            logging.debug(f"Updating parameters: {list(update_params.keys())}")
+
+            # Update all parameters to reflect the next values.
             for pname, new_value in update_params.items():
                 # If the parameter is currently empty, just reassign and
                 # continue. This refreshes the type value of the parameter
@@ -455,12 +460,15 @@ class Neighborhood:
             The order for doors to be called in. Each `str` must correspond to
             a key in `Neighborhood._doors`.
         """
+        # The order list must:
+        #  + Contain all doors at least once.
+        #  + All doors must already exist and be known.
         if not order:
             msg = f"Empty or invalid input: {order}."
             logger.error(msg)
             raise ValueError(msg)
 
-        elif len(order) > len(self._doors):
+        elif len(set(order)) > len(self._doors):
             msg = (
                 f"More labels provided than doors "
                 f"({len(order)} labels vs {len(self._doors)} doors)."
@@ -474,6 +482,8 @@ class Neighborhood:
             msg = f"Could not find door with label: {order[i]}"
             logger.error(msg)
             raise KeyError(msg)
+
+        logging.debug(f"Adjusting call order: {self._call_order} -> {order}")
 
         self._call_order = order
 

@@ -54,7 +54,7 @@ class TestDoor(TestCase):
 
         self.assertEqual(fxn_use_decorator.name, "fxn_use_decorator")
 
-        self.assertEqual(fxn_use_decorator.arguments, {"x": Empty})
+        self.assertEqual(fxn_use_decorator.arguments, {"x": Empty()})
 
     def test___call__(self):
         def test_fxn(x: int) -> int:
@@ -281,7 +281,9 @@ class TestDoor(TestCase):
 
         test2 = Door(test1)
 
-        self.assertEqual(test2.arguments, {"x": Empty, "y": int, "z": Empty})
+        self.assertEqual(
+            test2.arguments, {"x": Empty(), "y": int, "z": Empty()}
+        )
 
     def test_bad_mapping_bad_functions(self):
         # A bad argument

@@ -51,7 +51,7 @@ class TestBaseDoor(TestCase):
 
         self.assertEqual(fxn_use_decorator.name, "fxn_use_decorator")
 
-        self.assertEqual(fxn_use_decorator.arguments, {"x": Empty})
+        self.assertEqual(fxn_use_decorator.arguments, {"x": Empty()})
 
         # Test on a decorated function.
         def test_decorator(fxn):
@@ -339,7 +339,7 @@ class TestBaseDoor(TestCase):
             "pos2": Empty(),
             "kwpos": Empty(),
             "kwposdef": Empty(),
-            "kwonly": Empty,
+            "kwonly": Empty(),
         }
 
         self.assertEqual(new_door.arguments, expected_arguments)

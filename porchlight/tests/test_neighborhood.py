@@ -31,7 +31,7 @@ class TestNeighborhood(TestCase):
 
         neighborhood = Neighborhood([test1, test2])
 
-        self.assertEqual(list(neighborhood.params.keys()), ['x', 'y', 'z'])
+        self.assertEqual(list(neighborhood.params.keys()), ["x", "y", "z"])
 
     def test___repr__(self):
         neighborhood = Neighborhood()
@@ -48,15 +48,15 @@ class TestNeighborhood(TestCase):
         # Keeping the below as an example of what the string looks like. Update
         # this to match the actual implementation as changes occur below.
         # expected = (
-        #     "Neighborhood(doors={'test1': Door(name=test1, "
-        #     "base_function=<function test1 at 0x7f247d8c48b0>, "
-        #     "arguments={'x': <class 'int'>}, return_vals=[['y']])}, "
-        #     "params={'x': Param(name=x, value=<porchlight.param."
-        #     "Empty object at 0x7f247e1bd060>, constant=False, type=<class "
-        #     "'porchlight.param.Empty'>), 'y': Param(name="
-        #     "y, value=<porchlight.param.Empty object at 0x7f247d8c9660>, "
-        #     "constant=False, type=<class 'porchlight.param "
-        #     ".Empty'>)}, call_order=['test1'])"
+        #     Neighborhood(doors={'test1': Door(name=test1,
+        #     base_function=<function TestNeighborhood.test___repr__.<lo
+        #     cals>.test1 at 0x7fdcf1333640>, arguments={'x': <class 'int'>},
+        #     return_vals=[['y']])}, params={'x': Para m(name=x,
+        #     value=<porchlight.param.Empty object at 0x7fdcf127f1f0>,
+        #     constant=False, type=<class 'porchlig ht.param.Empty'>), 'y':
+        #     Param(name=y, value=<porchlight.param.Empty object at
+        #     0x7fdcf127f1f0>, constant= False, type=<class
+        #     'porchlight.param.Empty'>)}, call_order=['test1'])
         # )
 
         params = neighborhood.params

@@ -53,7 +53,6 @@ class Neighborhood:
             else:
                 self.add_function(d)
 
-
     def __repr__(self):
         """Must communicate teh following:
         + A unique identifier.
@@ -206,7 +205,7 @@ class Neighborhood:
                     template_ddoor.generator_kwargs = {"param_name": ret_val}
 
                     self.add_door(template_ddoor)
-                    self.add_param(ret_val, param.Empty)
+                    self.add_param(ret_val, param.Empty())
 
     def remove_door(self, name: str):
         """Removes a :class:`~porchlight.door.Door` from :attr:`_doors`.

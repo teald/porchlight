@@ -467,7 +467,9 @@ class TestNeighborhood(TestCase):
         neighborhood = Neighborhood()
 
         neighborhood.add_function(fxn_one)
-        neighborhood.add_function(fxn_two)
+
+        with self.assertWarns(door.DoorWarning):
+            neighborhood.add_function(fxn_two)
 
         # Provide the required first arg, x
         neighborhood.set_param("x", 0)

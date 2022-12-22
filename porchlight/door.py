@@ -15,12 +15,17 @@ import copy
 import typing
 from typing import Any, Callable, Dict, List, Type
 
+import warnings
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class DoorError(Exception):
+    pass
+
+
+class DoorWarning(Warning):
     pass
 
 
@@ -414,13 +419,25 @@ class BaseDoor:
 
                 vals = [v.strip() for v in vals]
 
+                # Checks to ensure it's not just a bunch of/one empty string,
+                # which just implies that the line is:
+                #    return
+                #
+                # While this could be applied to vals, it could obfuscate the
+                # error that *must* occur in those cases, which is a
+                # SyntaxError. Trusting the parser here.
+                if not [v for v in vals if v != ""]:
+                    # This is empty.
+                    vals = []
+
                 for val in vals:
                     if not re.match(r"\w+$", val):
                         # This is undefined, not an error. So assign return
                         # value 'undefined' for this return statement and issue
                         # a warning.
                         source_file = inspect.getfile(function)
-                        logger.warning(
+
+                        msg = (
                             f"Could not define any set of return variable "
                             f"names for the following return line: \n"
                             f"{source_file}: {start_line+i}) "
@@ -429,6 +446,10 @@ class BaseDoor:
                             f"return value will be modified by this "
                             f"callable."
                         )
+
+                        logger.warning(msg)
+
+                        warnings.warn(msg, DoorWarning)
 
                         vals = []
                         break
@@ -697,12 +718,19 @@ class Door(BaseDoor):
         exception if it is invalid. Will also raise warnings for certain
         non-fatal actions.
         """
+        builtin_list = dir(__builtins__)
+
         for key, value in argmap.items():
             # Argument map should contain valid python variable names.
             if not re.match(r"^[a-zA-Z_]([a-zA-Z0-9_])*$", key):
                 msg = f"Not a valid map name: {key}"
                 logging.error(msg)
                 raise DoorError(msg)
+
+            if key in builtin_list:
+                msg = f"Key {key} matches built-in name."
+                logger.warning(msg)
+                warnings.warn(msg, DoorWarning)
 
     def __repr__(self):
         return super().__repr__().replace("BaseDoor", "Door")

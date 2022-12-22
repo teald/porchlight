@@ -55,6 +55,14 @@ class TestDoor(TestCase):
 
         self.assertEqual(fxn_use_decorator.arguments, {"x": Empty()})
 
+        # Try manually naming the door.
+        @Door(name="testname")
+        def test1():
+            pass
+
+        self.assertEqual(test1.__name__, "testname")
+        self.assertEqual(test1.name, "testname")
+
     def test___call__(self):
         def test_fxn(x: int) -> int:
             y = 2 * x

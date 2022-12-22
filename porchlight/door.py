@@ -157,8 +157,12 @@ class BaseDoor:
         # arguments in the end.
         function = get_wrapped_function(self._base_function)
 
-        self.name = function.__name__
-        self.__name__ = function.__name__
+        # Name may be otherwise assigned, this is a safe way to ensure that
+        # does not get overwritten.
+        if not hasattr(self, "name") or not self.name:
+            self.name = function.__name__
+            self.__name__ = function.__name__
+
         self.arguments = {}
         self.positional_only = []
         self.keyword_args = {}

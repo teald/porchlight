@@ -66,7 +66,6 @@ class TestNeighborhood(TestCase):
             f"params={params}, call_order=['test1'])"
         )
 
-        print(repr(neighborhood))
         self.assertEqual(repr(neighborhood), expected)
 
     def test_add_function(self):

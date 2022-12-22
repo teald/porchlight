@@ -397,6 +397,14 @@ class TestDoor(TestCase):
         self.assertEqual(normal_door(5), wrapped_door(5))
         self.assertEqual(normal_door(-500, y=2), wrapped_door(-500, y=2))
 
+        # Auto-wrapping cannot be used with decorators.
+        with self.assertRaises(DoorError):
+
+            @Door(wrapped=True, **kwargs)
+            def test2(x: int, *, y=0) -> int:
+                z = x ** y
+                return z
+
 
 if __name__ == "__main__":
     unittest.main()

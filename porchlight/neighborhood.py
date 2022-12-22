@@ -36,12 +36,10 @@ class Neighborhood:
     """
 
     _doors: Dict[str, door.Door]
-    _dynamic_doors: set[str]
     _params: Dict[str, param.Param]
     _call_order: List[str]
 
     def __init__(self, initial_doors: List[Callable] = []):
-        """Initializes the Neighborhood object."""
         self._doors = {}
         self._params = {}
         self._call_order = []
@@ -53,12 +51,18 @@ class Neighborhood:
             else:
                 self.add_function(d)
 
+        # Logging
+        msg = (
+            f"Neighborhood initialized with {len(self._doors)} "
+            f"doors/functions."
+        )
+        logger.debug(msg)
+
     def __repr__(self):
-        """Must communicate teh following:
-        + A unique identifier.
-        + List of doors
-        + list of tracked parameters and their values.
-        """
+        # Must communicate the following:
+        # + A unique identifier.
+        # + List of doors
+        # + list of tracked parameters and their values.
         info = {
             "doors": self.doors,
             "params": self.params,
@@ -97,6 +101,7 @@ class Neighborhood:
             object.
         """
         new_door = door.Door(function)
+        logging.debug(f"Adding new function to neighborhood: {new_door.name}")
 
         self.add_door(new_door, overwrite_defaults, dynamic_door)
 

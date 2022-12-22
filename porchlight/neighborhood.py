@@ -36,12 +36,10 @@ class Neighborhood:
     """
 
     _doors: Dict[str, door.Door]
-    _dynamic_doors: set[str]
     _params: Dict[str, param.Param]
     _call_order: List[str]
 
     def __init__(self, initial_doors: List[Callable] = []):
-        """Initializes the Neighborhood object."""
         self._doors = {}
         self._params = {}
         self._call_order = []
@@ -53,12 +51,18 @@ class Neighborhood:
             else:
                 self.add_function(d)
 
+        # Logging
+        msg = (
+            f"Neighborhood initialized with {len(self._doors)} "
+            f"doors/functions."
+        )
+        logger.debug(msg)
+
     def __repr__(self):
-        """Must communicate teh following:
-        + A unique identifier.
-        + List of doors
-        + list of tracked parameters and their values.
-        """
+        # Must communicate the following:
+        # + A unique identifier.
+        # + List of doors
+        # + list of tracked parameters and their values.
         info = {
             "doors": self.doors,
             "params": self.params,
@@ -97,6 +101,7 @@ class Neighborhood:
             object.
         """
         new_door = door.Door(function)
+        logging.debug(f"Adding new function to neighborhood: {new_door.name}")
 
         self.add_door(new_door, overwrite_defaults, dynamic_door)
 
@@ -384,10 +389,12 @@ class Neighborhood:
                 input_params[pname] = self._params[pname].value
 
             # Run the cur_door object and catch its output.
+            logging.debug(f"Calling door {cur_door.name}.")
             output = cur_door(**input_params)
 
             # Check if the cur_door has a known return value.
             if not cur_door.return_vals:
+                logging.debug("No return value found.")
                 continue
 
             elif len(cur_door.return_vals) > 1:
@@ -398,6 +405,9 @@ class Neighborhood:
             else:
                 update_params = {cur_door.return_vals[0]: output}
 
+            logging.debug(f"Updating parameters: {list(update_params.keys())}")
+
+            # Update all parameters to reflect the next values.
             for pname, new_value in update_params.items():
                 # If the parameter is currently empty, just reassign and
                 # continue. This refreshes the type value of the parameter
@@ -450,6 +460,9 @@ class Neighborhood:
             The order for doors to be called in. Each `str` must correspond to
             a key in `Neighborhood._doors`.
         """
+        # The order list must:
+        #  + Contain all doors once.
+        #  + All doors must already exist and be known.
         if not order:
             msg = f"Empty or invalid input: {order}."
             logger.error(msg)
@@ -469,6 +482,8 @@ class Neighborhood:
             msg = f"Could not find door with label: {order[i]}"
             logger.error(msg)
             raise KeyError(msg)
+
+        logging.debug(f"Adjusting call order: {self._call_order} -> {order}")
 
         self._call_order = order
 

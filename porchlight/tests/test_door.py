@@ -4,7 +4,7 @@ relevant helper functions or objects.
 from unittest import TestCase
 import unittest
 
-from porchlight.door import Door, DoorError
+from porchlight.door import Door, DoorError, DoorWarning
 from porchlight.param import Empty, Param, ParameterError
 
 import typing
@@ -54,6 +54,14 @@ class TestDoor(TestCase):
         self.assertEqual(fxn_use_decorator.name, "fxn_use_decorator")
 
         self.assertEqual(fxn_use_decorator.arguments, {"x": Empty()})
+
+        # Try manually naming the door.
+        @Door(name="testname")
+        def test1():
+            pass
+
+        self.assertEqual(test1.__name__, "testname")
+        self.assertEqual(test1.name, "testname")
 
     def test___call__(self):
         def test_fxn(x: int) -> int:
@@ -302,6 +310,19 @@ class TestDoor(TestCase):
             def test1(x, y):
                 pass
 
+    def test_builtin_mapping_name_warning(self):
+        with self.assertWarns(DoorWarning):
+
+            @Door(argument_mapping={"type": "x"})
+            def test1(x):
+                pass
+
+        with self.assertWarns(DoorWarning):
+
+            @Door(argument_mapping={"hola": "type"})
+            def test2(type):
+                return
+
     def test_argument_mapping_property(self):
         @Door(argument_mapping={"hello": "x", "world": "z"})
         def test1(x, y: int, z=1) -> int:
@@ -388,6 +409,14 @@ class TestDoor(TestCase):
 
         self.assertEqual(normal_door(5), wrapped_door(5))
         self.assertEqual(normal_door(-500, y=2), wrapped_door(-500, y=2))
+
+        # Auto-wrapping cannot be used with decorators.
+        with self.assertRaises(DoorError):
+
+            @Door(wrapped=True, **kwargs)
+            def test2(x: int, *, y=0) -> int:
+                z = x ** y
+                return z
 
 
 if __name__ == "__main__":

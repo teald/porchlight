@@ -189,7 +189,8 @@ class TestBaseDoor(TestCase):
         def test_oneline_bad(x):
             return x * 2
 
-        result = BaseDoor._get_return_vals(test_oneline_bad)
+        with self.assertWarns(door.DoorWarning):
+            result = BaseDoor._get_return_vals(test_oneline_bad)
 
         self.assertEqual(result, [])
 

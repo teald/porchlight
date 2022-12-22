@@ -66,7 +66,6 @@ class TestNeighborhood(TestCase):
             f"params={params}, call_order=['test1'])"
         )
 
-        print(repr(neighborhood))
         self.assertEqual(repr(neighborhood), expected)
 
     def test_add_function(self):
@@ -468,7 +467,9 @@ class TestNeighborhood(TestCase):
         neighborhood = Neighborhood()
 
         neighborhood.add_function(fxn_one)
-        neighborhood.add_function(fxn_two)
+
+        with self.assertWarns(door.DoorWarning):
+            neighborhood.add_function(fxn_two)
 
         # Provide the required first arg, x
         neighborhood.set_param("x", 0)

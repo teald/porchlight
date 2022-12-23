@@ -12,16 +12,21 @@ class ParameterError(Exception):
 
 
 class Empty:
-    """An empty class representing missing parameters values."""
+    """An empty class representing missing parameters values.
 
-    def __init__(self):
-        pass
+    At initializtion, if an instance does not already exist it is created.
+    """
+
+    def __new__(cls):
+        # Return the singleton instance if it exists already, otherwise become
+        # the singleton instance.
+        if not hasattr(cls, "_singleton_instance"):
+            cls._singleton_instance = super(Empty, cls).__new__(cls)
+
+        return cls._singleton_instance
 
     def __eq__(self, other):
-        """Force Equality of this special value regardless of whether it is
-        initialized or not.
-        """
-        if isinstance(other, Empty) or other == Empty:
+        if other is self:
             return True
 
         else:
@@ -100,7 +105,7 @@ class Param:
             "type": self.type,
         }
 
-        infostrings = [f"{key}={value}" for key, value in info.items()]
+        infostrings = [f"{key}={repr(value)}" for key, value in info.items()]
 
         outstr = f"Param({', '.join(infostrings)})"
 

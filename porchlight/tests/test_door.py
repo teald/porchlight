@@ -4,7 +4,7 @@ relevant helper functions or objects.
 from unittest import TestCase
 import unittest
 
-from porchlight.door import Door, DoorError
+from porchlight.door import Door, DoorError, DoorWarning
 from porchlight.param import Empty, Param, ParameterError
 
 import typing
@@ -27,7 +27,7 @@ class TestDoor(TestCase):
         # Must contain both input and output parameter.
         arguments = ["x"]
         keyword_args = ["x"]
-        return_vals = [["y"]]
+        return_vals = ["y"]
 
         # Not comparing any values during this test.
         for arg in arguments:
@@ -36,8 +36,7 @@ class TestDoor(TestCase):
         for kwarg in keyword_args:
             self.assertIn(kwarg, door.keyword_args)
 
-        for retval in return_vals:
-            self.assertIn(retval, door.return_vals)
+        self.assertEqual(return_vals, door.return_vals)
 
         # Call the Door
         result = door(x=5)
@@ -54,7 +53,15 @@ class TestDoor(TestCase):
 
         self.assertEqual(fxn_use_decorator.name, "fxn_use_decorator")
 
-        self.assertEqual(fxn_use_decorator.arguments, {"x": Empty})
+        self.assertEqual(fxn_use_decorator.arguments, {"x": Empty()})
+
+        # Try manually naming the door.
+        @Door(name="testname")
+        def test1():
+            pass
+
+        self.assertEqual(test1.__name__, "testname")
+        self.assertEqual(test1.name, "testname")
 
     def test___call__(self):
         def test_fxn(x: int) -> int:
@@ -158,7 +165,7 @@ class TestDoor(TestCase):
         expected_repr = (
             f"Door(name=test, base_function={str(test)}, "
             f"arguments={{'x': <class 'int'>}}, "
-            f"return_vals=[['y']])"
+            f"return_vals=['y'])"
         )
 
         test_door = Door(test)
@@ -178,7 +185,7 @@ class TestDoor(TestCase):
             return z, x
 
         self.assertEqual(my_func.variables, ["hello", "world", "z"])
-        self.assertEqual(my_func.return_vals, [["z", "hello"]])
+        self.assertEqual(my_func.return_vals, ["z", "hello"])
         self.assertEqual(my_func.required_arguments, ["hello"])
         self.assertEqual(my_func.original_arguments, orig_func.arguments)
         self.assertEqual(my_func.original_return_vals, orig_func.return_vals)
@@ -206,7 +213,7 @@ class TestDoor(TestCase):
             test2_mapped.variables,
             ["temperature", "pressure", "k_B", "density"],
         )
-        self.assertEqual(test2_mapped.return_vals, [["density"]])
+        self.assertEqual(test2_mapped.return_vals, ["density"])
         self.assertEqual(test2_mapped.required_arguments, [])
         self.assertEqual(
             test2_mapped.original_arguments, test2_unmapped.arguments
@@ -231,30 +238,17 @@ class TestDoor(TestCase):
         self.assertEqual(list(test4.arguments.keys()), ["x"])
 
     def test_mapping_multiple_returns(self):
-        @Door(argument_mapping={"hello": "x", "bing": "z"})
-        def test1(x, y: int, z=1) -> typing.Tuple[int]:
-            result = True if x < y else False
+        with self.assertRaises(DoorError):
 
-            if result:
-                return result, x, z
+            @Door(argument_mapping={"hello": "x", "bing": "z"})
+            def test1(x, y: int, z=1) -> typing.Tuple[int]:
+                result = True if x < y else False
 
-            else:
-                return result, y, z
+                if result:
+                    return result, x, z
 
-        self.maxDiff = None
-        self.assertEqual(
-            test1.return_vals,
-            [["result", "hello", "bing"], ["result", "y", "bing"]],
-        )
-        self.assertEqual(list(test1.arguments.keys()), ["hello", "y", "bing"])
-        self.assertEqual(
-            test1.keyword_arguments,
-            {
-                "hello": Param("hello"),
-                "y": Param("y"),
-                "bing": Param("bing", 1),
-            },
-        )
+                else:
+                    return result, y, z
 
     def test_bad_mapping_variable_names(self):
         bad_names = ("0fign_", " bonk", "this is a sentence...", "there.dot")
@@ -281,7 +275,9 @@ class TestDoor(TestCase):
 
         test2 = Door(test1)
 
-        self.assertEqual(test2.arguments, {"x": Empty, "y": int, "z": Empty})
+        self.assertEqual(
+            test2.arguments, {"x": Empty(), "y": int, "z": Empty()}
+        )
 
     def test_bad_mapping_bad_functions(self):
         # A bad argument
@@ -313,6 +309,19 @@ class TestDoor(TestCase):
             @Door(argument_mapping={"x": "y"})
             def test1(x, y):
                 pass
+
+    def test_builtin_mapping_name_warning(self):
+        with self.assertWarns(DoorWarning):
+
+            @Door(argument_mapping={"type": "x"})
+            def test1(x):
+                pass
+
+        with self.assertWarns(DoorWarning):
+
+            @Door(argument_mapping={"hola": "type"})
+            def test2(type):
+                return
 
     def test_argument_mapping_property(self):
         @Door(argument_mapping={"hello": "x", "world": "z"})
@@ -400,6 +409,14 @@ class TestDoor(TestCase):
 
         self.assertEqual(normal_door(5), wrapped_door(5))
         self.assertEqual(normal_door(-500, y=2), wrapped_door(-500, y=2))
+
+        # Auto-wrapping cannot be used with decorators.
+        with self.assertRaises(DoorError):
+
+            @Door(wrapped=True, **kwargs)
+            def test2(x: int, *, y=0) -> int:
+                z = x ** y
+                return z
 
 
 if __name__ == "__main__":

@@ -1,9 +1,7 @@
 """
 .. |Basedoor| replace:: :py:class:`~porchlight.door.BaseDoor`
 """
-import functools
 import inspect
-import itertools
 import re
 import types
 
@@ -15,12 +13,17 @@ import copy
 import typing
 from typing import Any, Callable, Dict, List, Type
 
+import warnings
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class DoorError(Exception):
+    pass
+
+
+class DoorWarning(Warning):
     pass
 
 
@@ -43,23 +46,28 @@ class BaseDoor:
         arguments without a default value are assigned a
         :class:~porchlight.param.Empty` value instead of their default value.
 
-    max_n_return : :py:obj:`int`
-        Maximum number of returned values.
-
-    min_n_return : :py:obj:`int`
-        Minimum number of returned values.
-
     n_args : :py:obj:`int`
         Number of arguments accepted by this `BaseDoor`
 
     name : :py:obj:`str`
         The name of the function as visible from the base function's __name__.
 
-    return_types : :py:obj:`list` of :py:obj:`list` of `~typing.Type`
+    return_types : :py:obj:`dict` of :py:obj:`str`, :py:obj:`Type` pairs.
         Values returned by any return statements in the base function.
 
-    return_vals : :py:obj:`list` of :py:obj:`list` of :py:obj:`str`
-        Values returned by any return statements in the base function.
+    return_vals : :py:obj:`list` of :py:obj:`str`
+        Names of parameters returned by the base function. Any return
+        statements in a Door much haveidentical return parameters. I.e., the
+        following would fail if imported as a Door.
+
+        .. code-block:: python
+
+           def fxn(x):
+               if x < 1:
+                   y = x + 1
+                   return x, y
+
+               return x
 
     typecheck : :py:obj:`bool`
         If True, when arguments are passed to the `BaseDoor`'s base function
@@ -74,12 +82,10 @@ class BaseDoor:
     _base_function: Callable
     arguments: Dict[str, Type]
     keyword_args: Dict[str, Any]
-    max_n_return: int
-    min_n_return: int
     n_args: int
     name: str
-    return_types: List[List[Type]]
-    return_vals: List[List[str]]
+    return_types: List[Type]
+    return_vals: List[str]
     typecheck: bool
 
     def __init__(
@@ -117,6 +123,8 @@ class BaseDoor:
         self.typecheck = typecheck
         self._inspect_base_callable()
 
+        logging.debug(f"Door {self.name} initialized.")
+
     def __eq__(self, other) -> bool:
         """Equality is defined as referencing the same base function."""
         if isinstance(other, BaseDoor) and self.name is other.name:
@@ -149,13 +157,22 @@ class BaseDoor:
         # arguments in the end.
         function = get_wrapped_function(self._base_function)
 
-        self.name = function.__name__
-        self.__name__ = function.__name__
+        # Name may be otherwise assigned, this is a safe way to ensure that
+        # does not get overwritten.
+        if not hasattr(self, "name") or not self.name:
+            self.name = function.__name__
+            self.__name__ = function.__name__
+
+        else:
+            logging.debug(f"Ignoring name assignment for {self.name}")
+
         self.arguments = {}
         self.positional_only = []
         self.keyword_args = {}
         self.keyword_only_args = {}
 
+        # Attempting to retrieve type hints for the return value. This *does
+        # not* fail if they aren't found.
         try:
             ret_type_annotation = typing.get_type_hints(function)["return"]
             self.return_types = decompose_type(
@@ -229,12 +246,36 @@ class BaseDoor:
 
         for name, _type in self.arguments.items():
             if _type == inspect._empty:
-                self.arguments[name] = Empty
+                self.arguments[name] = Empty()
 
         self.n_args = len(self.arguments)
 
         # The return values require some more effort.
-        self.return_vals = self._get_return_vals(function)
+        return_vals = self._get_return_vals(function)
+
+        # porchlight >=v0.5.0 requires that return_vals be a single, non-nested
+        # list of return values that are uniform across return statements.
+        for i, ret_list in enumerate(return_vals):
+            if any(ret_list != rl for rl in return_vals):
+                msg = (
+                    f"Door objects do not allow for multiple return sets "
+                    f"within the same function. That is, a function must "
+                    f"always return the same set of parameters. But, "
+                    f"{function.__name__} has return values:\n"
+                )
+
+                for i, rl in enumerate(return_vals):
+                    msg += f"  {i}) {', '.join(rl)}"
+
+                logging.error(msg)
+
+                raise DoorError(msg)
+
+        if return_vals:
+            self.return_vals = return_vals[0]
+
+        else:
+            self.return_vals = return_vals
 
         logger.debug(f"Found {self.n_args} arguments in {self.name}.")
 
@@ -262,9 +303,6 @@ class BaseDoor:
         # Type checking.
         if self.typecheck:
             for k, v in input_kwargs.items():
-                if self.arguments[k] == Empty:
-                    continue
-
                 if not isinstance(v, self.arguments[k]):
                     msg = (
                         f"Type checking is on, and the type for input "
@@ -328,6 +366,7 @@ class BaseDoor:
         # definition.
         defmatch_str = r"^(\ )+def\s+"
         retmatch_str = r".*\s+return\s(.*)"
+        retmatch_str = r"^\s+(?:return|yield)\s(.*)"
         indentmatch_str = r"^(\s)*"
 
         for i, line in enumerate(lines):
@@ -384,13 +423,25 @@ class BaseDoor:
 
                 vals = [v.strip() for v in vals]
 
+                # Checks to ensure it's not just a bunch of/one empty string,
+                # which just implies that the line is:
+                #    return
+                #
+                # While this could be applied to vals, it could obfuscate the
+                # error that *must* occur in those cases, which is a
+                # SyntaxError. Trusting the parser here.
+                if not [v for v in vals if v != ""]:
+                    # This is empty.
+                    vals = []
+
                 for val in vals:
                     if not re.match(r"\w+$", val):
                         # This is undefined, not an error. So assign return
                         # value 'undefined' for this return statement and issue
                         # a warning.
                         source_file = inspect.getfile(function)
-                        logger.warning(
+
+                        msg = (
                             f"Could not define any set of return variable "
                             f"names for the following return line: \n"
                             f"{source_file}: {start_line+i}) "
@@ -399,6 +450,10 @@ class BaseDoor:
                             f"return value will be modified by this "
                             f"callable."
                         )
+
+                        logger.warning(msg)
+
+                        warnings.warn(msg, DoorWarning)
 
                         vals = []
                         break
@@ -642,10 +697,10 @@ class Door(BaseDoor):
                     del self.keyword_args[old_name]
 
                 # Also change outputs that contain the same name.
-                for i, ret_tuple in enumerate(self.return_vals):
-                    for j, ret_val in enumerate(ret_tuple):
-                        if old_name == ret_val:
-                            self.return_vals[i][j] = mapped_name
+                ret_tuple = self.return_vals
+                for i, ret_val in enumerate(ret_tuple):
+                    if old_name == ret_val:
+                        self.return_vals[i] = mapped_name
 
             # Place back in the original order.
             rev_argmap = {v: k for k, v in self.argmap.items()}
@@ -667,12 +722,24 @@ class Door(BaseDoor):
         exception if it is invalid. Will also raise warnings for certain
         non-fatal actions.
         """
+        builtin_set = set(bi for bi in __builtins__.keys())
+
         for key, value in argmap.items():
             # Argument map should contain valid python variable names.
             if not re.match(r"^[a-zA-Z_]([a-zA-Z0-9_])*$", key):
                 msg = f"Not a valid map name: {key}"
                 logging.error(msg)
                 raise DoorError(msg)
+
+            if key in builtin_set:
+                msg = f"Key {key} matches built-in name."
+                logger.warning(msg)
+                warnings.warn(msg, DoorWarning)
+
+            if value in builtin_set:
+                msg = f"Mapping arg {value} matches global name."
+                logger.warning(msg)
+                warnings.warn(msg, DoorWarning)
 
     def __repr__(self):
         return super().__repr__().replace("BaseDoor", "Door")
@@ -710,10 +777,9 @@ class Door(BaseDoor):
         return_vals = copy.copy(self.return_vals)
 
         # Also change outputs that contain the same name.
-        for i, ret_tuple in enumerate(self.return_vals):
-            for j, ret_val in enumerate(ret_tuple):
-                if ret_val in self.argmap:
-                    return_vals[i][j] = self.argmap[ret_val]
+        for i, ret_val in enumerate(return_vals):
+            if ret_val in self.argmap:
+                return_vals[i] = self.argmap[ret_val]
 
         return return_vals
 
@@ -738,9 +804,8 @@ class Door(BaseDoor):
                 all_vars.append(arg)
 
         for ret in self.return_vals:
-            for r in ret:
-                if r not in all_vars:
-                    all_vars.append(r)
+            if ret not in all_vars:
+                all_vars.append(ret)
 
         return all_vars
 
@@ -750,7 +815,7 @@ class Door(BaseDoor):
         required = []
 
         for x in self.arguments:
-            if isinstance(self.keyword_args[x].value, Empty):
+            if self.keyword_args[x].value == Empty():
                 required.append(x)
 
         return required

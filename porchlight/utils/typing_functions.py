@@ -28,7 +28,6 @@ def decompose_type(
         are ignored. These are only for *resolvable* types at return, such as
         Tuples, Lists, and Iterables. Callables are excluded by default.
     """
-
     all_types = []
 
     # Check that typevar is not one of interest to any of the types in

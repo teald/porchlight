@@ -298,21 +298,6 @@ Closing Nuances
 -  |Neighborhood| objects will execute their functions sequentially, in the
    order they are added. if you'd like to re-order the functions before
    execution, see :py:meth:`~porchlight.neighborhood.Neighborhood.order_doors`.
--  As of v0.4.0, there are a number of `known bugs
-   <https://github.com/teald/porchlight/issues?q=is%3Aissue+is%3Aopen+label%3Abug>`_.
-   In particular, there is an issue with some special functions being imported.
-   You can readily circumvent this by writing a basic wrapper:
-
-.. code-block:: python
-
-   from numpy import cos  # ufuncs aren't supported
-   from porchlight import Door
-
-   @Door
-   def my_cos(x):
-       '''Replace x and y with whatever variables you need.'''
-       y = cos(x)
-       return y
 
 - |porchlight| is under active development. The current development strategy
   will not include a dedicated stable branch until v1.0.0. That means that you

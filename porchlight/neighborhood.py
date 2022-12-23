@@ -36,12 +36,10 @@ class Neighborhood:
     """
 
     _doors: Dict[str, door.Door]
-    _dynamic_doors: set[str]
     _params: Dict[str, param.Param]
     _call_order: List[str]
 
     def __init__(self, initial_doors: List[Callable] = []):
-        """Initializes the Neighborhood object."""
         self._doors = {}
         self._params = {}
         self._call_order = []
@@ -53,13 +51,18 @@ class Neighborhood:
             else:
                 self.add_function(d)
 
+        # Logging
+        msg = (
+            f"Neighborhood initialized with {len(self._doors)} "
+            f"doors/functions."
+        )
+        logger.debug(msg)
 
     def __repr__(self):
-        """Must communicate teh following:
-        + A unique identifier.
-        + List of doors
-        + list of tracked parameters and their values.
-        """
+        # Must communicate the following:
+        # + A unique identifier.
+        # + List of doors
+        # + list of tracked parameters and their values.
         info = {
             "doors": self.doors,
             "params": self.params,
@@ -98,6 +101,7 @@ class Neighborhood:
             object.
         """
         new_door = door.Door(function)
+        logging.debug(f"Adding new function to neighborhood: {new_door.name}")
 
         self.add_door(new_door, overwrite_defaults, dynamic_door)
 
@@ -115,9 +119,9 @@ class Neighborhood:
             :class:`~porchlight.door.DynamicDoor`, or :py:obj:`list` of
             :class:`~porchlight.door.Door` objects.
 
-            Either a single initialized
-            `door.Door` object or a list of them.  If a list is provided, this
-            function is called for each item in the list.
+            Either a single initialized `door.Door` object or a list of them.
+            If a list is provided, this function is called for each item in the
+            list.
 
         overwrite_defaults : bool, optional
             If `True`, will overwrite any parameters shared between the
@@ -164,17 +168,16 @@ class Neighborhood:
 
         # Add all return values as parameters.
         if not dynamic_door:
-            for pname in [p for rvs in new_door.return_vals for p in rvs]:
+            for pname in new_door.return_vals:
                 if pname not in self._params:
                     self._params[pname] = param.Param(pname, param.Empty())
 
             return
 
         # Dynamic doors must be specified separately. They get initialized when
-        # first modified.
+        # first called/explicitly generated.
         #
-        # Dynamic doors must also be type-annotated. If they are not raise an
-        # error.
+        # Dynamic doors must also be type-annotated.
         if (
             "return_types" not in new_door.__dict__
             or not new_door.return_types
@@ -191,7 +194,7 @@ class Neighborhood:
 
         for i, rt in enumerate(return_types):
             if isinstance(rt, door.Door) or rt is door.Door:
-                ret_val = new_door.return_vals[0][i]
+                ret_val = new_door.return_vals[i]
                 if ret_val not in self.doors:
                     # Can define a function that just pulls out the attr
                     # independent of its current reference.
@@ -206,7 +209,7 @@ class Neighborhood:
                     template_ddoor.generator_kwargs = {"param_name": ret_val}
 
                     self.add_door(template_ddoor)
-                    self.add_param(ret_val, param.Empty)
+                    self.add_param(ret_val, param.Empty())
 
     def remove_door(self, name: str):
         """Removes a :class:`~porchlight.door.Door` from :attr:`_doors`.
@@ -386,26 +389,25 @@ class Neighborhood:
                 input_params[pname] = self._params[pname].value
 
             # Run the cur_door object and catch its output.
+            logging.debug(f"Calling door {cur_door.name}.")
             output = cur_door(**input_params)
 
             # Check if the cur_door has a known return value.
             if not cur_door.return_vals:
+                logging.debug("No return value found.")
                 continue
 
-            elif len(cur_door.return_vals[0]) > 1:
-                # This only works for functions with one possible output. This,
-                # frankly, should probably be the case nearly all of the time.
-                # Still need to make a call on if there's support in a subset
-                # of cases. See issue #19 for updates.
+            elif len(cur_door.return_vals) > 1:
                 update_params = {
-                    v: x for v, x in zip(cur_door.return_vals[0], output)
+                    v: x for v, x in zip(cur_door.return_vals, output)
                 }
 
             else:
-                assertmsg = "Mismatched output/return."
-                assert len(cur_door.return_vals) == 1, assertmsg
-                update_params = {cur_door.return_vals[0][0]: output}
+                update_params = {cur_door.return_vals[0]: output}
 
+            logging.debug(f"Updating parameters: {list(update_params.keys())}")
+
+            # Update all parameters to reflect the next values.
             for pname, new_value in update_params.items():
                 # If the parameter is currently empty, just reassign and
                 # continue. This refreshes the type value of the parameter
@@ -422,9 +424,7 @@ class Neighborhood:
                     logger.error(msg)
                     raise param.ParameterError(msg)
 
-                # Editing the _value directly here... but I'm not sure if
-                # that's the best idea.
-                self._params[pname]._value = new_value
+                self._params[pname].value = new_value
 
     def run_step(self):
         """Runs a single step forward for all functions, in specified order,
@@ -460,6 +460,9 @@ class Neighborhood:
             The order for doors to be called in. Each `str` must correspond to
             a key in `Neighborhood._doors`.
         """
+        # The order list must:
+        #  + Contain all doors once.
+        #  + All doors must already exist and be known.
         if not order:
             msg = f"Empty or invalid input: {order}."
             logger.error(msg)
@@ -479,6 +482,8 @@ class Neighborhood:
             msg = f"Could not find door with label: {order[i]}"
             logger.error(msg)
             raise KeyError(msg)
+
+        logging.debug(f"Adjusting call order: {self._call_order} -> {order}")
 
         self._call_order = order
 

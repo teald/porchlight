@@ -24,7 +24,7 @@ class TestBaseDoor(TestCase):
         # Must contain both input and output parameter.
         arguments = ["x"]
         keyword_args = ["x"]
-        return_vals = [["y"]]
+        return_vals = ["y"]
 
         # Not comparing any values during this test.
         for arg in arguments:
@@ -51,7 +51,7 @@ class TestBaseDoor(TestCase):
 
         self.assertEqual(fxn_use_decorator.name, "fxn_use_decorator")
 
-        self.assertEqual(fxn_use_decorator.arguments, {"x": Empty})
+        self.assertEqual(fxn_use_decorator.arguments, {"x": Empty()})
 
         # Test on a decorated function.
         def test_decorator(fxn):
@@ -70,7 +70,7 @@ class TestBaseDoor(TestCase):
         # Must contain both input and output parameter.
         arguments = ["x"]
         keyword_args = ["x"]
-        return_vals = [["y"]]
+        return_vals = ["y"]
 
         # Not comparing any values during this test.
         for arg in arguments:
@@ -79,8 +79,7 @@ class TestBaseDoor(TestCase):
         for kwarg in keyword_args:
             self.assertIn(kwarg, door.keyword_args)
 
-        for retval in return_vals:
-            self.assertIn(retval, door.return_vals)
+        self.assertEqual(return_vals, door.return_vals)
 
         # Call the BaseDoor
         result = door(x=5)
@@ -93,7 +92,7 @@ class TestBaseDoor(TestCase):
 
         except ModuleNotFoundError as e:
             # Printing a message and returning
-            print(
+            logging.error(
                 f"NOTICE: Could not run test {self.id()}, got "
                 f"ModuleNotFoundError: {e}."
             )
@@ -190,7 +189,8 @@ class TestBaseDoor(TestCase):
         def test_oneline_bad(x):
             return x * 2
 
-        result = BaseDoor._get_return_vals(test_oneline_bad)
+        with self.assertWarns(door.DoorWarning):
+            result = BaseDoor._get_return_vals(test_oneline_bad)
 
         self.assertEqual(result, [])
 
@@ -311,7 +311,7 @@ class TestBaseDoor(TestCase):
         expected_repr = (
             f"BaseDoor(name=test, base_function={str(test)}, "
             f"arguments={{'x': <class 'int'>}}, "
-            f"return_vals=[['y']])"
+            f"return_vals=['y'])"
         )
 
         test_door = BaseDoor(test)
@@ -339,7 +339,7 @@ class TestBaseDoor(TestCase):
             "pos2": Empty(),
             "kwpos": Empty(),
             "kwposdef": Empty(),
-            "kwonly": Empty,
+            "kwonly": Empty(),
         }
 
         self.assertEqual(new_door.arguments, expected_arguments)
@@ -391,6 +391,47 @@ class TestBaseDoor(TestCase):
         }
 
         self.assertEqual(test_prop.kwargs, expected_val)
+
+    def test_generator(self):
+        # Tests generator functions with porchlight.
+        @BaseDoor
+        def testgen1(x):
+            y = 0
+
+            while y <= x:
+                yield y
+                y = y + 1
+
+            return y
+
+        expected = {"arguments": {"x": Empty()}, "return_vals": ["y"]}
+
+        for attr, val in expected.items():
+            self.assertEqual(getattr(testgen1, attr), val)
+
+        # Should be identical to something with return instead of yield (for
+        # porchlight specifically).
+        @BaseDoor
+        def test1(x):
+            y = 0
+
+            while y <= x:
+                return y
+                y = y + 1
+
+            return y
+
+        test_attrs = [
+            "arguments",
+            "positional_only",
+            "keyword_args",
+            "n_args",
+            "return_types",
+            "return_vals",
+        ]
+
+        for attr in test_attrs:
+            self.assertEqual(getattr(test1, attr), getattr(testgen1, attr))
 
 
 if __name__ == "__main__":

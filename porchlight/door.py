@@ -1,9 +1,7 @@
 """
 .. |Basedoor| replace:: :py:class:`~porchlight.door.BaseDoor`
 """
-import functools
 import inspect
-import itertools
 import re
 import types
 

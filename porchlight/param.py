@@ -144,8 +144,8 @@ class Param:
 
         self._value = new_value
 
-        # TK REFACTORING this should be typecheck upon request/by default in a
-        # future update.
+        # TODO: REFACTORING this should be typecheck upon request/by default in
+        # a future update.
         self._type = type(self._value)
 
     @property

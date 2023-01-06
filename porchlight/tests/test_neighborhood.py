@@ -583,7 +583,7 @@ class TestNeighborhood(TestCase):
         ) -> typing.Tuple[porchlight.Door, porchlight.Door]:
             @porchlight.Door
             def test1(y: float) -> float:
-                z = y ** x + 1
+                z = y**x + 1
                 return z
 
             @porchlight.Door
@@ -680,6 +680,28 @@ class TestNeighborhood(TestCase):
 
         for pname, val in expected.items():
             self.assertEqual(val, neighborhood.get_value(pname))
+
+    def test_initialization(self):
+        def inittest1():
+            x = 5
+            return x
+
+        def test1(x):
+            y = x**2
+            return y
+
+        neighborhood = Neighborhood([test1], initialization=inittest1)
+
+        # try to run a step
+        neighborhood.run_step()
+
+        # Check the parameters for expected values.
+        self.assertEqual(neighborhood.get_value("x"), 5)
+        self.assertEqual(neighborhood.get_value("y"), 25)
+
+    @unittest.skip("Not implemented yet.")
+    def test_finalization(self):
+        pass
 
 
 if __name__ == "__main__":

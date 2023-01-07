@@ -699,9 +699,39 @@ class TestNeighborhood(TestCase):
         self.assertEqual(neighborhood.get_value("x"), 5)
         self.assertEqual(neighborhood.get_value("y"), 25)
 
-    @unittest.skip("Not implemented yet.")
     def test_finalization(self):
-        pass
+        def inittest1():
+            x = 5
+            return x
+
+        def test1(x):
+            y = x**2
+            return y
+
+        def fintest1(x, y):
+            x += 1
+            y *= 2
+            z = x + y
+            print("Testing finalization and values are:")
+            print(f"\t{x = }")
+            print(f"\t{y = }")
+            print(f"\t{z = }")
+
+            return x, y, z
+
+        neighborhood = Neighborhood(
+            [test1], initialization=inittest1, finalization=fintest1
+        )
+
+        # try to run a step
+        neighborhood.run_step()
+
+        neighborhood.finalize()
+
+        # Check the parameters for expected values.
+        self.assertEqual(neighborhood.get_value("x"), 6)
+        self.assertEqual(neighborhood.get_value("y"), 50)
+        self.assertEqual(neighborhood.get_value("z"), 56)
 
 
 if __name__ == "__main__":

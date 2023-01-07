@@ -52,11 +52,13 @@ class Neighborhood:
         initial_doors: List[Callable] = [],
         *,
         initialization: List[Union[Callable, door.Door]] = None,
+        finalization: List[Union[Callable, door.Door]] = None,
     ):
         self._doors = {}
         self._params = {}
         self._call_order = []
         self.initialization = initialization
+        self.finalization = finalization
 
         self.has_initialized = False
 
@@ -508,7 +510,7 @@ class Neighborhood:
         args = []
         kwargs = {}
 
-        for p, value in input_params:
+        for p, value in input_params.items():
             if p in input_door.positional_only:
                 args.append(value)
 
@@ -570,6 +572,48 @@ class Neighborhood:
             for retval, value in zip(return_values, result):
                 if retval in neighborhood_params:
                     self.set_param(retval, value)
+
+    def finalize(self):
+        """Finalization executes doors/callables found in
+        ``Neighborhood.finalization``. It must be invoked directly by the user.
+
+        Unlike initialization, finalization will add new constant
+        :py:class:`~porchlight.param.Param`s to the ``Neighborhood`` object.
+        """
+        # Ensure finalization is iterable, if not
+        if not hasattr(self.finalization, "__iter__"):
+            self.finalization = [self.finalization]
+
+            # Log this any time finalization happens, because this is
+            # important.
+            logging.info(
+                f"Could not iterate through object: "
+                f"{type(self.finalization)}, will now attempt to call "
+                f"the object."
+            )
+
+        # Call each of the callables in the finalization function. If they
+        # are doors, save their parameter states.
+        for fxn in self.finalization:
+            if not isinstance(fxn, door.Door):
+                fxn = door.Door(fxn)
+
+            return_values = fxn.return_vals
+            arguments, keyword_arguments = self.gather_door_arguments(fxn)
+
+            result = fxn(*arguments, **keyword_arguments)
+
+            if len(return_values) == 1:
+                result = [result]
+
+            for retval, value in zip(return_values, result):
+                if retval in self.params.keys():
+                    self.set_param(retval, value)
+
+                else:
+                    # Making new parameters here constant, since they should
+                    # not be modified after finalization is run.
+                    self.add_param(retval, value, constant=True)
 
     def run_step(self):
         """Runs a single step forward for all functions, in specified order,

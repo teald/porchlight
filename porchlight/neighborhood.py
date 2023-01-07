@@ -49,7 +49,7 @@ class Neighborhood:
 
     def __init__(
         self,
-        initial_doors: List[Callable] = [],
+        initial_doors: Union[List[Callable], None] = [],
         *,
         initialization: List[Union[Callable, door.Door]] = None,
         finalization: List[Union[Callable, door.Door]] = None,
@@ -62,12 +62,28 @@ class Neighborhood:
 
         self.has_initialized = False
 
-        for d in initial_doors:
-            if isinstance(d, door.BaseDoor):
-                self.add_door(d)
+        # Ensuring this is a list in case a single door is passed.
+        try:
+            initial_doors = list(initial_doors)
+
+        except TypeError as e:
+            # Only want to catch applicable type error, which has to do with
+            # being not iterable.
+            if "iterable" not in str(e):
+                raise e
+
+            initial_doors = [initial_doors]
+
+        for init_door in initial_doors:
+            if isinstance(init_door, door.BaseDoor):
+                self.add_door(init_door)
+
+            elif isinstance(init_door, door.BaseDoor):
+                fxn = init_door.function
+                self.add_function(fxn)
 
             else:
-                self.add_function(d)
+                self.add_function(init_door)
 
         # Logging
         msg = (
@@ -463,6 +479,10 @@ class Neighborhood:
 
         output = cur_door(**input_params)
 
+        # Ensure that output is iterable if it needs to be.
+        if len(cur_door.return_vals) == 1:
+            output = (output,)
+
         update_params = {v: x for v, x in zip(cur_door.return_vals, output)}
 
         # Don't update if there are no return parameters.
@@ -476,7 +496,7 @@ class Neighborhood:
                 self._params[param_name] = param.Param(param_name, new_value)
                 continue
 
-            self._params[param_name] = new_value
+            self._params[param_name].value = new_value
 
     def gather_door_arguments(self, input_door: door.Door) -> Tuple[List, Dict]:
         """This retrieves all parameters required by a

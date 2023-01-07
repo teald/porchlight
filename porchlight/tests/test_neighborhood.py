@@ -733,6 +733,42 @@ class TestNeighborhood(TestCase):
         self.assertEqual(neighborhood.get_value("y"), 50)
         self.assertEqual(neighborhood.get_value("z"), 56)
 
+    def test_call(self):
+        @door.Door
+        def test1(x: int = 1) -> str:
+            status_string = "large" if x >= 10 else "small"
+
+            return status_string
+
+        @door.Door
+        def test2(x: int, y: int = 14) -> str:
+            test_sum = x + y
+            status_string = "large" if test_sum >= 10 else "small"
+
+            return status_string
+
+        neighborhood = Neighborhood([test1, test2])
+
+        # 'x' not required for test 1, and will be propogated to test2 when
+        # called subsequently.
+        neighborhood.call("test1")
+        self.assertEqual(neighborhood.get_value("status_string"), "small")
+
+        neighborhood.call("test2")
+        self.assertEqual(neighborhood.get_value("status_string"), "large")
+
+    def test_call_bad_door_name(self):
+        def test1():
+            pass
+
+        neighborhood = Neighborhood(test1)
+
+        call_tests = ("bing_bong", "Enclkjd dksjfh e", "####", "ch31 3 42")
+
+        for test_str in call_tests:
+            with self.assertRaises(porchlight.neighborhood.NeighborhoodError):
+                neighborhood.call(test_str)
+
 
 if __name__ == "__main__":
     import unittest

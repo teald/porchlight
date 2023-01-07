@@ -392,7 +392,7 @@ class BaseDoor:
             retmatch = re.match(retmatch_str, line)
 
             # Ignore decorators
-            if re.match(r"\s*@\w+.*", line):
+            if re.match(r"^\s*@\w+.*", line):
                 continue
 
             # Catch in-function definitions and ignore them.
@@ -687,9 +687,7 @@ class Door(BaseDoor):
 
                 # Change keyword arguments as well.
                 if old_name in self.keyword_args:
-                    self.keyword_args[mapped_name] = self.keyword_args[
-                        old_name
-                    ]
+                    self.keyword_args[mapped_name] = self.keyword_args[old_name]
 
                     # Need to change the parameter name to reflect the mapping.
                     self.keyword_args[mapped_name]._name = mapped_name
@@ -710,8 +708,7 @@ class Door(BaseDoor):
             )
 
             kwarg_order = (
-                k if k not in rev_argmap else rev_argmap[k]
-                for k in kwarg_order
+                k if k not in rev_argmap else rev_argmap[k] for k in kwarg_order
             )
 
             self.arguments = {a: self.arguments[a] for a in arg_order}

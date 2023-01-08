@@ -699,6 +699,26 @@ class TestNeighborhood(TestCase):
         self.assertEqual(neighborhood.get_value("x"), 5)
         self.assertEqual(neighborhood.get_value("y"), 25)
 
+        @door.BaseDoor
+        def inittest2(x):
+            z = 5 * x
+            return z
+
+        def test1(x):
+            y = x**2
+            return y
+
+        neighborhood = Neighborhood(
+            [test1], initialization=[inittest1, inittest2]
+        )
+
+        # try to run a step
+        neighborhood.run_step()
+
+        # Check the parameters for expected values.
+        self.assertEqual(neighborhood.get_value("x"), 5)
+        self.assertEqual(neighborhood.get_value("y"), 25)
+
     def test_finalization(self):
         def inittest1():
             x = 5
@@ -719,8 +739,29 @@ class TestNeighborhood(TestCase):
 
             return x, y, z
 
+        # This tests returns that are not tuples
+        @door.BaseDoor
+        def fintest2(x):
+            x_string = f"x has value: {x}"
+            return x_string
+
         neighborhood = Neighborhood(
             [test1], initialization=inittest1, finalization=fintest1
+        )
+
+        # try to run a step
+        neighborhood.run_step()
+
+        neighborhood.finalize()
+
+        # Check the parameters for expected values.
+        self.assertEqual(neighborhood.get_value("x"), 6)
+        self.assertEqual(neighborhood.get_value("y"), 50)
+        self.assertEqual(neighborhood.get_value("z"), 56)
+
+        # Testing with a finalization list
+        neighborhood = Neighborhood(
+            [test1], initialization=inittest1, finalization=[fintest1, fintest2]
         )
 
         # try to run a step
@@ -747,7 +788,12 @@ class TestNeighborhood(TestCase):
 
             return status_string
 
-        neighborhood = Neighborhood([test1, test2])
+        # This example tests functions with no return value.
+        @door.Door
+        def test3(y, /):
+            pass
+
+        neighborhood = Neighborhood([test1, test2, test3])
 
         # 'x' not required for test 1, and will be propogated to test2 when
         # called subsequently.
@@ -756,6 +802,10 @@ class TestNeighborhood(TestCase):
 
         neighborhood.call("test2")
         self.assertEqual(neighborhood.get_value("status_string"), "large")
+
+        neighborhood.call("test3")
+        self.assertEqual(neighborhood.get_value("status_string"), "large")
+        self.assertEqual(neighborhood.get_value("y"), 14)
 
     def test_call_bad_door_name(self):
         def test1():
@@ -768,6 +818,31 @@ class TestNeighborhood(TestCase):
         for test_str in call_tests:
             with self.assertRaises(porchlight.neighborhood.NeighborhoodError):
                 neighborhood.call(test_str)
+
+    def test_call_basedoor(self):
+        @door.BaseDoor
+        def test1():
+            pass
+
+        neighborhood = Neighborhood(test1)
+
+        neighborhood.call("test1")
+
+    def test_initialize_dynamicdoor(self):
+        # Since this is not implemented/supported, need to eensure it throws an
+        # error for now.
+        @door.DynamicDoor
+        def test_dynamicdoor() -> door.Door:
+            @door.Door
+            def test_door_gen():
+                return
+
+            return test_door_gen
+
+        neighborhood = Neighborhood(initialization=[test_dynamicdoor])
+
+        with self.assertRaises(NotImplementedError):
+            neighborhood.initialize()
 
 
 if __name__ == "__main__":

@@ -75,11 +75,11 @@ class Neighborhood:
             initial_doors = [initial_doors]
 
         for init_door in initial_doors:
-            if isinstance(init_door, door.BaseDoor):
+            if isinstance(init_door, door.Door):
                 self.add_door(init_door)
 
             elif isinstance(init_door, door.BaseDoor):
-                fxn = init_door.function
+                fxn = init_door._base_function
                 self.add_function(fxn)
 
             else:
@@ -472,15 +472,14 @@ class Neighborhood:
         cur_door = self.doors[door_name]
 
         # Gather the arguments needed by the door.
-        req_params = cur_door.arguments
-        input_params = {p: self._params[p].value for p in req_params}
+        args, kwargs = self.gather_door_arguments(cur_door)
 
         logging.debug(f"Calling door {cur_door.name}")
 
-        output = cur_door(**input_params)
+        output = cur_door(*args, **kwargs)
 
         # Ensure that output is iterable if it needs to be.
-        if len(cur_door.return_vals) == 1:
+        if len(cur_door.return_vals) < 2:
             output = (output,)
 
         update_params = {v: x for v, x in zip(cur_door.return_vals, output)}

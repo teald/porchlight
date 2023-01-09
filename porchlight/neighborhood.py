@@ -629,7 +629,9 @@ class Neighborhood:
         Unlike initialization, finalization will add new constant
         :py:class:`~porchlight.param.Param`s to the ``Neighborhood`` object.
         """
-        # Ensure finalization is iterable, if not
+        # Ensure finalization is iterable, if not raise either a ValueError
+        # (because it is not a valid object) or TypeError (because it is not a
+        # string nor a door.Door).
         if not hasattr(self.finalization, "__iter__"):
             self.finalization = [self.finalization]
 

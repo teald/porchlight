@@ -892,9 +892,7 @@ class TestNeighborhood(TestCase):
             1,
             1.0,
             [],
-            [
-                1,
-            ],
+            [1],
             (1,),
             lambda x: x,
         )

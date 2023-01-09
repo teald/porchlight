@@ -457,8 +457,34 @@ class Neighborhood:
 
                 self._params[pname].value = new_value
 
-    def call(self, door_name: str):
+    def call(self, door_name: Union[str, door.Door]) -> Any:
         """Executes a call for a single door."""
+        # Check if ids need to be checked.
+        if not isinstance(door_name, str) and isinstance(door_name, door.Door):
+            if not any(door_name is d for d in self._doors.values()) or not any(
+                door_name.name == d for d in self._doors
+            ):
+                msg = (
+                    f"Could not find door {door_name.name} in Neighborhood."
+                    f" The following doors are present:\n"
+                )
+
+                msg += "; ".join(d for d in self.doors)
+
+                logging.error(msg)
+                raise ValueError(msg)
+
+            door_name = door_name.name
+
+        elif not isinstance(door_name, str):
+            msg = (
+                f"Expected a string or door as input, got {door_name} "
+                f"({type(door_name)})"
+            )
+
+            logging.error(msg)
+            raise TypeError(msg)
+
         # TODO: I think this needs to have a way to not add any new paramaters
         # to the neighborhood. Right now in call_all_doors it always adds new
         # parameters it finds.
@@ -496,6 +522,10 @@ class Neighborhood:
                 continue
 
             self._params[param_name].value = new_value
+
+        # Return the output, since this is reasonably expected behavior for a
+        # call.
+        return output
 
     def gather_door_arguments(self, input_door: door.Door) -> Tuple[List, Dict]:
         """This retrieves all parameters required by a

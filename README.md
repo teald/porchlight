@@ -3,7 +3,7 @@
 [porchlight](https://porchlight.readthedocs.io/en/latest/)
 ==========
 
-`porchlight` is a function management suite that handles common inputs and
+`porchlight` is a function management suite that handles shared inputs and
 outputs of methods and/or functions which evolve over the lifetime of a program.
 
 This package's original intent was to be a part of a modular scientific package

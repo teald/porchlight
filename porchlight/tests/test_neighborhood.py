@@ -844,6 +844,41 @@ class TestNeighborhood(TestCase):
         with self.assertRaises(NotImplementedError):
             neighborhood.initialize()
 
+    def test_call_door_by_reference(self):
+        @door.Door
+        def test_1():
+            pass
+
+        @door.Door
+        def test_2():
+            return
+
+        @door.Door
+        def test_3(x, y, z):
+            total = sum((x, y, z))
+            return total
+
+        neighborhood = Neighborhood((test_1, test_2, test_3))
+
+        init_params = {"x": 1, "y": 2, "z": 3.0}
+
+        for param, value in init_params.items():
+            neighborhood.add_param(param, value)
+
+        # Test calling these doors via reference
+        neighborhood.call(test_1)
+        neighborhood.call(test_2)
+        neighborhood.call(test_3)
+
+        cur_state = {
+            p: v.value
+            for p, v in neighborhood.params.items()
+            if p in init_params
+        }
+
+        for param, value in cur_state.items():
+            self.assertEqual(value, init_params[param])
+
 
 if __name__ == "__main__":
     import unittest

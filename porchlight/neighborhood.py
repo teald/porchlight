@@ -666,6 +666,13 @@ class Neighborhood:
                     # not be modified after finalization is run.
                     self.add_param(retval, value, constant=True)
 
+    def run_steps(self, number_of_steps: int):
+        if not isinstance(number_of_steps, int):
+            number_of_steps = int(number_of_steps)
+
+        for _ in range(number_of_steps):
+            self.run_step()
+
     def run_step(self):
         """Runs a single step forward for all functions, in specified order,
         based on the current parameter state of the Neighborhood object.

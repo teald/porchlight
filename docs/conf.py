@@ -23,7 +23,7 @@ copyright = "2022, D J Teal"
 author = "D J Teal"
 
 # The full version, including alpha/beta/rc tags
-release = "0.5.0"
+release = "1.0.0"
 
 
 # -- General configuration ---------------------------------------------------

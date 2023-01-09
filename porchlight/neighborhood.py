@@ -2,7 +2,7 @@
 from . import door
 from . import param
 from .utils.typing_functions import decompose_type
-from typing import Any, Callable, Dict, List, Union
+from typing import Any, Callable, Dict, List, Tuple, Union
 
 import logging
 
@@ -33,23 +33,57 @@ class Neighborhood:
         The order in which the :class:`~porchlight.door.Door` objects in
         `_doors` are called. By default, this is the order in which
         :class:`~porchlight.door.Door`s are added to the `Neighborhood`.
+
+    _initialization : :py:obj:`list` of ``Callable``, `keyword-only`
+        These will be called once the
+        :class:`~porchlight.neighborhood.Neighborhood` object begins any
+        execution (e.g., via
+        :py:meth:`~porchlight.neighborhood.Neighborhood.run_step`) will
+        run these callables. This will only execute again if
+        ``Neighborhood.has_initialized`` is set to ``False``.
     """
 
     _doors: Dict[str, door.Door]
     _params: Dict[str, param.Param]
     _call_order: List[str]
 
-    def __init__(self, initial_doors: List[Callable] = []):
+    def __init__(
+        self,
+        initial_doors: Union[List[Callable], None] = [],
+        *,
+        initialization: List[Union[Callable, door.Door]] = None,
+        finalization: List[Union[Callable, door.Door]] = None,
+    ):
         self._doors = {}
         self._params = {}
         self._call_order = []
+        self.initialization = initialization
+        self.finalization = finalization
 
-        for d in initial_doors:
-            if isinstance(d, door.BaseDoor):
-                self.add_door(d)
+        self.has_initialized = False
+
+        # Ensuring this is a list in case a single door is passed.
+        try:
+            initial_doors = list(initial_doors)
+
+        except TypeError as e:
+            # Only want to catch applicable type error, which has to do with
+            # being not iterable.
+            if "iterable" not in str(e):
+                raise e
+
+            initial_doors = [initial_doors]
+
+        for init_door in initial_doors:
+            if isinstance(init_door, door.Door):
+                self.add_door(init_door)
+
+            elif isinstance(init_door, door.BaseDoor):
+                fxn = init_door._base_function
+                self.add_function(fxn)
 
             else:
-                self.add_function(d)
+                self.add_function(init_door)
 
         # Logging
         msg = (
@@ -178,10 +212,7 @@ class Neighborhood:
         # first called/explicitly generated.
         #
         # Dynamic doors must also be type-annotated.
-        if (
-            "return_types" not in new_door.__dict__
-            or not new_door.return_types
-        ):
+        if "return_types" not in new_door.__dict__ or not new_door.return_types:
             msg = (
                 "DynamicDoor requires a type annotation for the "
                 "function generator."
@@ -426,6 +457,215 @@ class Neighborhood:
 
                 self._params[pname].value = new_value
 
+    def call(self, door_name: Union[str, door.Door]) -> Any:
+        """Executes a call for a single door."""
+        # Check if ids need to be checked.
+        if not isinstance(door_name, str) and isinstance(door_name, door.Door):
+            if not any(door_name is d for d in self._doors.values()) or not any(
+                door_name.name == d for d in self._doors
+            ):
+                msg = (
+                    f"Could not find door {door_name.name} in Neighborhood."
+                    f" The following doors are present:\n"
+                )
+
+                msg += "; ".join(d for d in self.doors)
+
+                logging.error(msg)
+                raise ValueError(msg)
+
+            door_name = door_name.name
+
+        elif not isinstance(door_name, str):
+            msg = (
+                f"Expected a string or door as input, got {door_name} "
+                f"({type(door_name)})"
+            )
+
+            logging.error(msg)
+            raise TypeError(msg)
+
+        # TODO: I think this needs to have a way to not add any new paramaters
+        # to the neighborhood. Right now in call_all_doors it always adds new
+        # parameters it finds.
+        # Search for the door.
+        if door_name not in self._doors:
+            msg = f"Could not find door: {door_name}"
+
+            logging.error(msg)
+            raise NeighborhoodError(msg)
+
+        cur_door = self.doors[door_name]
+
+        # Gather the arguments needed by the door.
+        args, kwargs = self.gather_door_arguments(cur_door)
+
+        logging.debug(f"Calling door {cur_door.name}")
+
+        output = cur_door(*args, **kwargs)
+
+        # Ensure that output is iterable if it needs to be.
+        if len(cur_door.return_vals) < 2:
+            output = (output,)
+
+        update_params = {v: x for v, x in zip(cur_door.return_vals, output)}
+
+        # Don't update if there are no return parameters.
+        if not update_params:
+            return
+
+        # Update the neighborhood parameters
+        for param_name, new_value in update_params.items():
+            # If the parameter is param.Empty, then generate parameter object.
+            if isinstance(self._params[param_name].value, param.Empty):
+                self._params[param_name] = param.Param(param_name, new_value)
+                continue
+
+            self._params[param_name].value = new_value
+
+        # Return the output, since this is reasonably expected behavior for a
+        # call.
+        return output
+
+    def gather_door_arguments(self, input_door: door.Door) -> Tuple[List, Dict]:
+        """This retrieves all parameters required by a
+        :py:class:`~porchlight.door.Door`, returning them as a list (positional
+        arguments) and a dictionary (keyword arguments). If there are no
+        positional-only arguments and/or no no keyword arguments, then empty
+        objects are returned.
+
+        Arguments
+        ---------
+        input_door : :py:class:`~porchlight.door.Door`
+            The door to gather necessary parameters for.
+
+        Returns
+        -------
+        args : list
+            Positional-only arguments required by door.
+
+        kwargs : dict[str, Any]
+            Keyword arguments for the door.
+
+        Notes
+        -----
+        The return values must be unpacked before being used to call the
+        :py:class:`~porchlight.door.Door`.
+        """
+        # Gather the arguments needed by the door.
+        req_params = input_door.arguments
+        input_params = {p: self._params[p].value for p in req_params}
+
+        args = []
+        kwargs = {}
+
+        for p, value in input_params.items():
+            if p in input_door.positional_only:
+                args.append(value)
+
+            else:
+                kwargs[p] = value
+
+        return args, kwargs
+
+    def initialize(self):
+        """Runs initialization functions present in
+        :py:attr:`~porchlight.neighborhood.Neighborhood.initialization` if
+        ``has_initialized`` is ``False`` for this
+        :py:class:`~porchlight.neighborhood.Neighborhood`.
+        """
+        # Do nothing if initialization has already happened.
+        if self.has_initialized or not self.initialization:
+            return
+
+        # Ensure initialization is iterable, if not
+        if not hasattr(self.initialization, "__iter__"):
+            self.initialization = [self.initialization]
+
+            # Log this any time initialization happens, because this is
+            # important.
+            logging.info(
+                f"Could not iterate through object: "
+                f"{type(self.initialization)}, will now attempt to call "
+                f"the object."
+            )
+
+        # Ensure that none of the doors are DynamicDoors, as this can cause
+        # unexpected behaviour.
+        if any(isinstance(f, door.DynamicDoor) for f in self.initialization):
+            msg = "DynamicDoors are not yet supported for initialization."
+
+            logging.error(msg)
+            raise NotImplementedError(msg)
+
+        # Call each of the callables in the initialization function. If they
+        # are doors, save their parameter states.
+        for fxn in self.initialization:
+            if not isinstance(fxn, door.Door):
+                fxn = door.Door(fxn)
+
+            return_values = fxn.return_vals
+            arguments, keyword_arguments = self.gather_door_arguments(fxn)
+
+            result = fxn(*arguments, **keyword_arguments)
+
+            # Update any parameters already present. For initialization, only
+            # recognized return values are updated (that is, parameters that
+            # porchlight knows to expect from other provided functions/doors or
+            # via Neighborhood.add_param.
+            neighborhood_params = tuple(self.params.keys())
+
+            if len(return_values) == 1:
+                result = [result]
+
+            for retval, value in zip(return_values, result):
+                if retval in neighborhood_params:
+                    self.set_param(retval, value)
+
+    def finalize(self):
+        """Finalization executes doors/callables found in
+        ``Neighborhood.finalization``. It must be invoked directly by the user.
+
+        Unlike initialization, finalization will add new constant
+        :py:class:`~porchlight.param.Param`s to the ``Neighborhood`` object.
+        """
+        # Ensure finalization is iterable, if not raise either a ValueError
+        # (because it is not a valid object) or TypeError (because it is not a
+        # string nor a door.Door).
+        if not hasattr(self.finalization, "__iter__"):
+            self.finalization = [self.finalization]
+
+            # Log this any time finalization happens, because this is
+            # important.
+            logging.info(
+                f"Could not iterate through object: "
+                f"{type(self.finalization)}, will now attempt to call "
+                f"the object."
+            )
+
+        # Call each of the callables in the finalization function. If they
+        # are doors, save their parameter states.
+        for fxn in self.finalization:
+            if not isinstance(fxn, door.Door):
+                fxn = door.Door(fxn)
+
+            return_values = fxn.return_vals
+            arguments, keyword_arguments = self.gather_door_arguments(fxn)
+
+            result = fxn(*arguments, **keyword_arguments)
+
+            if len(return_values) == 1:
+                result = [result]
+
+            for retval, value in zip(return_values, result):
+                if retval in self.params.keys():
+                    self.set_param(retval, value)
+
+                else:
+                    # Making new parameters here constant, since they should
+                    # not be modified after finalization is run.
+                    self.add_param(retval, value, constant=True)
+
     def run_step(self):
         """Runs a single step forward for all functions, in specified order,
         based on the current parameter state of the Neighborhood object.
@@ -434,6 +674,10 @@ class Neighborhood:
         arguments. That is, if an input cannot be passed using its variable
         name, this will break.
         """
+        # Initialization. This will only execute if self.has_initialized is
+        # False.
+        self.initialize()
+
         # Ensure that all required parameters are defined.
         empty_params = self.empty_parameters
         req_args = self.required_parameters

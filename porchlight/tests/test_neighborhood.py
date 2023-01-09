@@ -583,7 +583,7 @@ class TestNeighborhood(TestCase):
         ) -> typing.Tuple[porchlight.Door, porchlight.Door]:
             @porchlight.Door
             def test1(y: float) -> float:
-                z = y ** x + 1
+                z = y**x + 1
                 return z
 
             @porchlight.Door
@@ -680,6 +680,226 @@ class TestNeighborhood(TestCase):
 
         for pname, val in expected.items():
             self.assertEqual(val, neighborhood.get_value(pname))
+
+    def test_initialization(self):
+        def inittest1():
+            x = 5
+            return x
+
+        def test1(x):
+            y = x**2
+            return y
+
+        neighborhood = Neighborhood([test1], initialization=inittest1)
+
+        # try to run a step
+        neighborhood.run_step()
+
+        # Check the parameters for expected values.
+        self.assertEqual(neighborhood.get_value("x"), 5)
+        self.assertEqual(neighborhood.get_value("y"), 25)
+
+        @door.BaseDoor
+        def inittest2(x):
+            z = 5 * x
+            return z
+
+        def test1(x):
+            y = x**2
+            return y
+
+        neighborhood = Neighborhood(
+            [test1], initialization=[inittest1, inittest2]
+        )
+
+        # try to run a step
+        neighborhood.run_step()
+
+        # Check the parameters for expected values.
+        self.assertEqual(neighborhood.get_value("x"), 5)
+        self.assertEqual(neighborhood.get_value("y"), 25)
+
+    def test_finalization(self):
+        def inittest1():
+            x = 5
+            return x
+
+        def test1(x):
+            y = x**2
+            return y
+
+        def fintest1(x, y):
+            x += 1
+            y *= 2
+            z = x + y
+            print("Testing finalization and values are:")
+            print(f"\t{x = }")
+            print(f"\t{y = }")
+            print(f"\t{z = }")
+
+            return x, y, z
+
+        # This tests returns that are not tuples
+        @door.BaseDoor
+        def fintest2(x):
+            x_string = f"x has value: {x}"
+            return x_string
+
+        neighborhood = Neighborhood(
+            [test1], initialization=inittest1, finalization=fintest1
+        )
+
+        # try to run a step
+        neighborhood.run_step()
+
+        neighborhood.finalize()
+
+        # Check the parameters for expected values.
+        self.assertEqual(neighborhood.get_value("x"), 6)
+        self.assertEqual(neighborhood.get_value("y"), 50)
+        self.assertEqual(neighborhood.get_value("z"), 56)
+
+        # Testing with a finalization list
+        neighborhood = Neighborhood(
+            [test1], initialization=inittest1, finalization=[fintest1, fintest2]
+        )
+
+        # try to run a step
+        neighborhood.run_step()
+
+        neighborhood.finalize()
+
+        # Check the parameters for expected values.
+        self.assertEqual(neighborhood.get_value("x"), 6)
+        self.assertEqual(neighborhood.get_value("y"), 50)
+        self.assertEqual(neighborhood.get_value("z"), 56)
+
+    def test_call(self):
+        @door.Door
+        def test1(x: int = 1) -> str:
+            status_string = "large" if x >= 10 else "small"
+
+            return status_string
+
+        @door.Door
+        def test2(x: int, y: int = 14) -> str:
+            test_sum = x + y
+            status_string = "large" if test_sum >= 10 else "small"
+
+            return status_string
+
+        # This example tests functions with no return value.
+        @door.Door
+        def test3(y, /):
+            pass
+
+        neighborhood = Neighborhood([test1, test2, test3])
+
+        # 'x' not required for test 1, and will be propogated to test2 when
+        # called subsequently.
+        neighborhood.call("test1")
+        self.assertEqual(neighborhood.get_value("status_string"), "small")
+
+        neighborhood.call("test2")
+        self.assertEqual(neighborhood.get_value("status_string"), "large")
+
+        neighborhood.call("test3")
+        self.assertEqual(neighborhood.get_value("status_string"), "large")
+        self.assertEqual(neighborhood.get_value("y"), 14)
+
+    def test_call_bad_door_name(self):
+        def test1():
+            pass
+
+        neighborhood = Neighborhood(test1)
+
+        call_tests = ("bing_bong", "Enclkjd dksjfh e", "####", "ch31 3 42")
+
+        for test_str in call_tests:
+            with self.assertRaises(porchlight.neighborhood.NeighborhoodError):
+                neighborhood.call(test_str)
+
+    def test_call_basedoor(self):
+        @door.BaseDoor
+        def test1():
+            pass
+
+        neighborhood = Neighborhood(test1)
+
+        neighborhood.call("test1")
+
+    def test_initialize_dynamicdoor(self):
+        # Since this is not implemented/supported, need to eensure it throws an
+        # error for now.
+        @door.DynamicDoor
+        def test_dynamicdoor() -> door.Door:
+            @door.Door
+            def test_door_gen():
+                return
+
+            return test_door_gen
+
+        neighborhood = Neighborhood(initialization=[test_dynamicdoor])
+
+        with self.assertRaises(NotImplementedError):
+            neighborhood.initialize()
+
+    def test_call_door_by_reference(self):
+        @door.Door
+        def test_1():
+            pass
+
+        @door.Door
+        def test_2():
+            return
+
+        @door.Door
+        def test_3(x, y, z):
+            total = sum((x, y, z))
+            return total
+
+        neighborhood = Neighborhood((test_1, test_2, test_3))
+
+        init_params = {"x": 1, "y": 2, "z": 3.0}
+
+        for param, value in init_params.items():
+            neighborhood.add_param(param, value)
+
+        # Test calling these doors via reference
+        neighborhood.call(test_1)
+        neighborhood.call(test_2)
+        neighborhood.call(test_3)
+
+        cur_state = {
+            p: v.value
+            for p, v in neighborhood.params.items()
+            if p in init_params
+        }
+
+        for param, value in cur_state.items():
+            self.assertEqual(value, init_params[param])
+
+        # Pass a bad reference
+        with self.assertRaises(ValueError):
+
+            @door.Door
+            def bad_door_1():
+                pass
+
+            neighborhood.call(bad_door_1)
+
+        tests = (
+            1,
+            1.0,
+            [],
+            [1],
+            (1,),
+            lambda x: x,
+        )
+
+        for test in tests:
+            with self.assertRaises(TypeError):
+                neighborhood.call(test)
 
 
 if __name__ == "__main__":

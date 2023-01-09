@@ -483,7 +483,7 @@ class Neighborhood:
             )
 
             logging.error(msg)
-            raise ValueError(msg)
+            raise TypeError(msg)
 
         # TODO: I think this needs to have a way to not add any new paramaters
         # to the neighborhood. Right now in call_all_doors it always adds new

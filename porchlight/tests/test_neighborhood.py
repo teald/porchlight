@@ -879,6 +879,30 @@ class TestNeighborhood(TestCase):
         for param, value in cur_state.items():
             self.assertEqual(value, init_params[param])
 
+        # Pass a bad reference
+        with self.assertRaises(ValueError):
+
+            @door.Door
+            def bad_door_1():
+                pass
+
+            neighborhood.call(bad_door_1)
+
+        tests = (
+            1,
+            1.0,
+            [],
+            [
+                1,
+            ],
+            (1,),
+            lambda x: x,
+        )
+
+        for test in tests:
+            with self.assertRaises(TypeError):
+                neighborhood.call(test)
+
 
 if __name__ == "__main__":
     import unittest

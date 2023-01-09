@@ -277,6 +277,10 @@ class TestNeighborhood(TestCase):
             neighborhood._params["rettest"].value, expected_param.value
         )
 
+        # Test running multiple steps
+        n = 5
+        neighborhood.run_steps(n)
+
         # Make one of the parameters constant.
         neighborhood.set_param("rettest", 1, constant=True)
 

@@ -610,9 +610,9 @@ class Neighborhood:
             result = fxn(*arguments, **keyword_arguments)
 
             # Update any parameters already present. For initialization, only
-            # recognized return values are updated.
-            #
-            # TODO: ^ This behaviour needs to be better documented.
+            # recognized return values are updated (that is, parameters that
+            # porchlight knows to expect from other provided functions/doors or
+            # via Neighborhood.add_param.
             neighborhood_params = tuple(self.params.keys())
 
             if len(return_values) == 1:

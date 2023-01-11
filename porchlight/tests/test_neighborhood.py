@@ -736,11 +736,6 @@ class TestNeighborhood(TestCase):
             x += 1
             y *= 2
             z = x + y
-            print("Testing finalization and values are:")
-            print(f"\t{x = }")
-            print(f"\t{y = }")
-            print(f"\t{z = }")
-
             return x, y, z
 
         # This tests returns that are not tuples

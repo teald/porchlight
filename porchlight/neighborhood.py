@@ -667,6 +667,11 @@ class Neighborhood:
                     self.add_param(retval, value, constant=True)
 
     def run_steps(self, number_of_steps: int):
+        """This function calls :py:meth:`~porchlight.Neighborhood.run_step`
+        repeatedly.
+
+        It is exactly equivalent to the following code:
+        """
         if not isinstance(number_of_steps, int):
             number_of_steps = int(number_of_steps)
 

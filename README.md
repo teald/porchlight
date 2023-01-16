@@ -17,9 +17,11 @@ may require external libraries such as `numpy` and `matplotlib`.
 Installation
 ------------
 
-You can install `porchlight` by cloning this repository to a local directory,
-opening a command line, and running:
-```pip install porchlight```
+You can install `porchlight` by cloning this repository to a local directory.
+Alternatively, you may use `pip` in the command line:
+```console
+pip install porchlight
+```
 
 Usage
 -----

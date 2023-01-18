@@ -72,3 +72,8 @@ Documentation
 -----------
 
 Documentation for `porchlight` can be found on Read the Docs here: https://porchlight.readthedocs.io/en/latest/
+
+Other info
+----------
+
++ You can find slides from presentations about porchlight within the `docs` folder, under [`docs/slides`](https://github.com/teald/porchlight/tree/main/docs/slides).

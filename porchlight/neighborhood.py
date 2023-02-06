@@ -615,7 +615,7 @@ class Neighborhood:
             # via Neighborhood.add_param.
             neighborhood_params = tuple(self.params.keys())
 
-            if len(return_values) == 1:
+            if len(return_values) <= 1:
                 result = [result]
 
             for retval, value in zip(return_values, result):
@@ -631,7 +631,7 @@ class Neighborhood:
         """
         # Ensure finalization is iterable, if not raise either a ValueError
         # (because it is not a valid object) or TypeError (because it is not a
-        # string nor a door.Door).
+        # list nor a door.Door).
         if not hasattr(self.finalization, "__iter__"):
             self.finalization = [self.finalization]
 
@@ -654,7 +654,7 @@ class Neighborhood:
 
             result = fxn(*arguments, **keyword_arguments)
 
-            if len(return_values) == 1:
+            if len(return_values) <= 1:
                 result = [result]
 
             for retval, value in zip(return_values, result):

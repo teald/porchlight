@@ -723,6 +723,31 @@ class TestNeighborhood(TestCase):
         self.assertEqual(neighborhood.get_value("x"), 5)
         self.assertEqual(neighborhood.get_value("y"), 25)
 
+    @unittest.skip(reason="Because")
+    def test_plain_initialization(self):
+        # Testing specifically a None-returning function.
+        def inittest1():
+            pass
+
+        neighborhood = Neighborhood([], initialization=inittest1)
+        neighborhood.run_step()
+
+        neighborhood_2 = Neighborhood([], initialization=[inittest1])
+        neighborhood_2.run_step()
+
+    def test_plain_finalization(self):
+        # Testing specifically a None-returning function.
+        def inittest1():
+            pass
+
+        neighborhood = Neighborhood([], finalization=inittest1)
+        neighborhood.run_step()
+        neighborhood.finalize()
+
+        neighborhood_2 = Neighborhood([], finalization=[inittest1])
+        neighborhood_2.run_step()
+        neighborhood_2.finalize()
+
     def test_finalization(self):
         def inittest1():
             x = 5

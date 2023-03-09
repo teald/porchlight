@@ -723,7 +723,6 @@ class TestNeighborhood(TestCase):
         self.assertEqual(neighborhood.get_value("x"), 5)
         self.assertEqual(neighborhood.get_value("y"), 25)
 
-    @unittest.skip(reason="Because")
     def test_plain_initialization(self):
         # Testing specifically a None-returning function.
         def inittest1():
@@ -734,6 +733,17 @@ class TestNeighborhood(TestCase):
 
         neighborhood_2 = Neighborhood([], initialization=[inittest1])
         neighborhood_2.run_step()
+
+        # Test keyword arguments --- test introduced in Issue #72 --
+        # Initialization with keyword argument not recognized as default value.
+        def inittest2(kwarg=10):
+            pass
+
+        neighborhood = Neighborhood(initialization=inittest2)
+
+        # This should be able to execute, using the default argument from
+        # inittest2.
+        neighborhood.run_step()
 
     def test_plain_finalization(self):
         # Testing specifically a None-returning function.

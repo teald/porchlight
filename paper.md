@@ -21,21 +21,62 @@ bibliography: paper.bib
 
 # Summary
 
-Scientific software has advanced significantly over the last few decades,
-with innumerable tools and resources openly available for use by
-researchers and the public alike. These software products all undergo
-unique development lifecycles tailored to the needs to specific developers.
-Although the scientific quality and usefulness of such products is unquestionable,
-they often have steep learning curves that make using and coupling these products
-difficult to manage. `porchlight` offers a solution to this problem in the form
-of a basic adapter/mediator framework---capable of parsing function metadata,
-tracking variable stats, and managing dynamically updating functions, it saves
-many lines of code otherwise required to create a simple API or couple to another
+Scientific software has advanced significantly over the last few decades, with
+innumerable tools and resources openly available for use by researchers and the
+public alike. These software products all undergo unique development lifecycles
+tailored to the needs to specific developers.  Although the scientific quality
+and usefulness of such products is unquestionable, they often have steep
+learning curves that make using and coupling these products difficult to
+manage. `porchlight` offers a solution to this problem in the form of a basic
+adapter/mediator framework---capable of parsing function metadata, tracking
+variable stats, and managing dynamically updating functions, it saves many
+lines of code otherwise required to create a simple API or couple to another
 disparate piece of software.
 
 # Statement of need
 
-# Mathematics
+## Outline for this section
+
+1. Base (OG) cases:
+    1. Coupling scientific models
+    2. Managing parameters/checking
+2. Cases that have arisen
+    1. Unified UI for individual models
+    2. Uses for model accessibility
+
+# Design Schematics
+
+`porchlight` is designed using a mediator class (`Neighborhood`) and an adapter
+class (`Door`). These objects together manage coupling and introspection to
+produce a basic API interface with some arbitrarily complex and inter-dependent
+set of functions.
+
+Given an arbitrary Python function, `f(x_1, x_2, ..., x_n)`, a `Door` will
+first use standard library inspection methods---via the `inspect` module---to
+determine the arguments types (keyword vs positional) and any default values.
+Then, source lines for the function are re-parsed to determine if any return
+values contain keywords. **FOOTNOTE: Need to explain this and its
+restrictions.**
+
+This door is then provided to a `Neighborhood` object, which tracks inputs and
+outputs to these functions, passing them between doors and to the user.
+
+The names of these classes are chosen to be distinct within a given script.
+Since "adapter" and "mediator" are common design patterns, it would be foolish
+and potentially headache-inducing to call them mroe generic names.
+
+
+
+## Outline for this section
+
+1. Describe mediator/adapter scheme
+    + What a `Neighborhood` is
+    + What a `Door` is
+    + Why they have weird names (especially compared to `Param`)
+2. Basic use case example?
+3. Computational overhead (can give the same response as as AAS I think)
+4. Need to mention lack of external dependencies at some point
+5. Primary Caveat: Side-effects and functional programming
 
 # Citations
 
@@ -43,13 +84,15 @@ Citations to entries in paper.bib should be in
 [rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
 format.
 
-If you want to cite a software repository URL (e.g. something on GitHub without a preferred
-citation) then you can do it with the example BibTeX entry below for @fidgit.
+If you want to cite a software repository URL (e.g. something on GitHub without
+a preferred citation) then you can do it with the example BibTeX entry below
+for @fidgit.
 
 For a quick reference, the following citation commands can be used:
 - `@author:2001`  ->  "Author et al. (2001)"
 - `[@author:2001]` -> "(Author et al., 2001)"
-- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
+- `[@author1:2001; @author2:2001]`
+    -> "(Author1 et al., 2001; Author2 et al., 2002)"
 
 # Figures
 

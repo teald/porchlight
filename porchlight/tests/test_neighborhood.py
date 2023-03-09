@@ -739,11 +739,35 @@ class TestNeighborhood(TestCase):
         def inittest2(kwarg=10):
             pass
 
-        neighborhood = Neighborhood(initialization=inittest2)
+        neighborhood_3 = Neighborhood(initialization=inittest2)
 
         # This should be able to execute, using the default argument from
         # inittest2.
-        neighborhood.run_step()
+        neighborhood_3.run_step()
+
+        # Test with a bad argument.
+        def inittest3(arg, kwarg=10):
+            # Arbitrary choice, just providing a return value that won't be
+            # picked up being the neighborhood.
+            return f"{arg}: {kwarg}"
+
+        def inittest4(arg, kwarg=12):
+            # Note: using a different kwarg default value here.
+            retval_needed = f"{kwarg}: {arg}"
+            return retval_needed
+
+        neighborhood_4 = Neighborhood(
+            initialization=[inittest1, inittest2, inittest3, inittest4]
+        )
+
+        neighborhood_4.add_param("retval_needed", None)
+
+        with self.assertRaises(KeyError):
+            neighborhood_4.run_step()
+
+        neighborhood_4.add_param("arg", "Hello world")
+
+        neighborhood_4.run_step()
 
     def test_plain_finalization(self):
         # Testing specifically a None-returning function.

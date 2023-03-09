@@ -614,7 +614,10 @@ class Neighborhood:
             if not isinstance(fxn, door.Door):
                 fxn = door.Door(fxn)
 
-            defaults = fxn.keyword_args
+            empty = param.Empty()
+            defaults = {
+                k: v for k, v in fxn.keyword_args.items() if v.value != empty
+            }
 
             return_values = fxn.return_vals
             arguments, keyword_arguments = self.gather_door_arguments(

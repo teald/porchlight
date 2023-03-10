@@ -32,6 +32,9 @@ class Empty:
         else:
             return False
 
+    def __neq__(self, other):
+        return not (self == other)
+
 
 class Param:
     """Parameter class. while not frozen, for most purposes it should not be

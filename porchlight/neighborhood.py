@@ -34,7 +34,7 @@ class Neighborhood:
         `_doors` are called. By default, this is the order in which
         :class:`~porchlight.door.Door`s are added to the `Neighborhood`.
 
-    _initialization : :py:obj:`list` of ``Callable``, `keyword-only`
+    initialization : :py:obj:`list` of ``Callable``, `keyword-only`
         These will be called once the
         :class:`~porchlight.neighborhood.Neighborhood` object begins any
         execution (e.g., via
@@ -527,7 +527,9 @@ class Neighborhood:
         # call.
         return output
 
-    def gather_door_arguments(self, input_door: door.Door) -> Tuple[List, Dict]:
+    def gather_door_arguments(
+        self, input_door: door.Door, defaults: Dict[str, Any] = {}
+    ) -> Tuple[List, Dict]:
         """This retrieves all parameters required by a
         :py:class:`~porchlight.door.Door`, returning them as a list (positional
         arguments) and a dictionary (keyword arguments). If there are no
@@ -538,6 +540,11 @@ class Neighborhood:
         ---------
         input_door : :py:class:`~porchlight.door.Door`
             The door to gather necessary parameters for.
+
+        defaults : dict[str, Any]
+            Default values for any arguments that may be missing from the
+            Neighborhood. Keys must correspond to an arg or kwarg present in
+            the input_door.
 
         Returns
         -------
@@ -552,9 +559,12 @@ class Neighborhood:
         The return values must be unpacked before being used to call the
         :py:class:`~porchlight.door.Door`.
         """
-        # Gather the arguments needed by the door.
+        # Gather the arguments needed by the door. Defaults are folded into a
+        # new dictionary to keep them temporary.
         req_params = input_door.arguments
-        input_params = {p: self._params[p].value for p in req_params}
+        known_params = defaults | self._params
+
+        input_params = {p: known_params[p].value for p in req_params}
 
         args = []
         kwargs = {}
@@ -604,8 +614,15 @@ class Neighborhood:
             if not isinstance(fxn, door.Door):
                 fxn = door.Door(fxn)
 
+            empty = param.Empty()
+            defaults = {
+                k: v for k, v in fxn.keyword_args.items() if v.value != empty
+            }
+
             return_values = fxn.return_vals
-            arguments, keyword_arguments = self.gather_door_arguments(fxn)
+            arguments, keyword_arguments = self.gather_door_arguments(
+                fxn, defaults=defaults
+            )
 
             result = fxn(*arguments, **keyword_arguments)
 
@@ -621,6 +638,9 @@ class Neighborhood:
             for retval, value in zip(return_values, result):
                 if retval in neighborhood_params:
                     self.set_param(retval, value)
+
+                else:
+                    self.add_param(retval, value)
 
     def finalize(self):
         """Finalization executes doors/callables found in

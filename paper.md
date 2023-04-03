@@ -21,6 +21,18 @@ bibliography: paper.bib
 
 # Summary
 
+`porchlight` is an Python function management and coordination package designed
+to make coupling disparate models straigthforward, portable, and end-user
+friendly. To accomplish this, `porchlight` uses CPython standard library to
+introspect callable objects for metadata such as variable names, possible
+return values, and expected types (using optional Python type hinting). It then
+manages the execution of any number of tracked callables, passing required and
+updated objects as appropriate. In doing so, it can also track physical
+restraints on data, initialize/finalize runs, and update functions defined
+dynamically or outside of Python.
+
+# Statement of need
+
 Scientific software has advanced significantly over the last few decades, with
 innumerable tools and resources openly available for use by researchers and the
 public alike. These software products all undergo unique development lifecycles
@@ -33,16 +45,30 @@ variable stats, and managing dynamically updating functions, it saves many
 lines of code otherwise required to create a simple API or couple to another
 disparate piece of software.
 
-# Statement of need
+## Scientific Modelling
 
-## Outline for this section
+There are an enormous number of scientific models, ranging in size and niche,
+and often coupling them together provides useful insight neither could provide
+alone. While the intricacies of coupling can be complex, `porchlight`
+identifies several typical patterns it seeks to manage:
++ **"I/O" Coupling**: Converting the output of one program to the input of
+  another, and vice-versa.
++ **Data Coupling**: Instances of data are modified by different programs.
++ **Evolutionary Coupling**: Functions modify their behavior over time to
+  accomodate the state of a previous result.
 
-1. Base (OG) cases:
-    1. Coupling scientific models
-    2. Managing parameters/checking
-2. Cases that have arisen
-    1. Unified UI for individual models
-    2. Uses for model accessibility
+## Interfacing with scientific models
+
+Another common pattern in the research software development lifecycle is
+re-development to create an application programming interface (API) for a
+useful codebase. Ideally, model development leads to a well-considered API.
+This is a challenging feat, though, without exceptional experience creating
+such software.
+
+`porchlight`'s management system acts as an out-of-the-box API for many
+use-cases, and can be tailored to as-specific a niche as needed with minimal
+effort. This is detailed in [[TKREFERENCESECTION]].
+
 
 # Design Schematics
 
@@ -104,6 +130,10 @@ Figure sizes can be customized by adding an optional second parameter:
 ![Caption for example figure.](figure.png){ width=20% }
 
 # Acknowledgements
+
+This work was partially funded by NSF [[TKGRANTINFO]]. Special thanks to Nathan
+LaPr&eacute; for extensive discussions on design and implementation.
+[[TKPEOPLEWHOPROOFREADTHIS]]
 
 
 # References

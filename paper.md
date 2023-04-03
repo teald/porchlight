@@ -48,9 +48,9 @@ disparate piece of software.
 ## Scientific Modelling
 
 There are an enormous number of scientific models, ranging in size and niche,
-and often coupling them together provides useful insight neither could provide
-alone. While the intricacies of coupling can be complex, `porchlight`
-identifies several typical patterns it seeks to manage:
+and coupling them together often provides useful insight neither could alone.
+While the intricacies of coupling can be complex, `porchlight` identifies
+several typical patterns it seeks to manage:
 + **"I/O" Coupling**: Converting the output of one program to the input of
   another, and vice-versa.
 + **Data Coupling**: Instances of data are modified by different programs.
@@ -87,22 +87,57 @@ restrictions.**
 This door is then provided to a `Neighborhood` object, which tracks inputs and
 outputs to these functions, passing them between doors and to the user.
 
-The names of these classes are chosen to be distinct within a given script.
-Since "adapter" and "mediator" are common design patterns, it would be foolish
-and potentially headache-inducing to call them mroe generic names.
+The names of these classes are chosen to be distinct within a given script. To
+provide descriptive names as well, `Neighborhood` is aliased to
+`PorchlightMediator`, and `Door` to `PorchlightAdapter`, including objects with
+those prefixes [[TKIMPLEMENTING]].
 
+## Dependencies and overhead
 
+The `porchlight` library, including its unit tests, to not require anything
+beyond the standard CPython library.
 
-## Outline for this section
+`porchlight` does not add considerable overhead to execution, assuming
+functional definitions are not disturbingly long. The frequency of tests being
+executed between model runs is something to consider when using `porchlight`
+with physical checks. For example, if I check `temperature` to ensure the value
+is always positive, that check will occur whenever `temperature` is modified by
+a function or returned. This is left to the users' needs and preferences.
 
-1. Describe mediator/adapter scheme
-    + What a `Neighborhood` is
-    + What a `Door` is
-    + Why they have weird names (especially compared to `Param`)
-2. Basic use case example?
-3. Computational overhead (can give the same response as as AAS I think)
-4. Need to mention lack of external dependencies at some point
-5. Primary Caveat: Side-effects and functional programming
+# Side Effects in coupling
+
+Python is an object-oriented programming language, and as such the modification
+of objects during code execution is a foundational design of the language and
+how it works. Side-effects, oversimplified here as any change to the state of
+any number of objects during the execution of a function. For example, the
+below function `upper_name` has 2 side-effects: the input argument `name` is
+given the token `is_cached`, and another external variable `name_cache` is
+updates.
+
+```python
+name_cache = dict()
+
+class Name:
+    def __init__(self, name: str):
+        self.is_cached = (name in name_cache)
+        self.str = name
+
+    def __str__(self):
+        return self.str
+
+def upper_name(name: Name):
+    if not name.is_cached:
+        name_cache[str(name)] = str(name).upper()
+
+    return name_cache[str(name)]
+
+name = Name("hi there")
+
+print(upper_name(name))
+```
+
+This is not a design flaw. It can, however, quickly produce problems when not
+well-understood. [[TKINDESIGNREVIEW]]
 
 # Citations
 

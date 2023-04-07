@@ -109,10 +109,10 @@ a function or returned. This is left to the users' needs and preferences.
 Python is an object-oriented programming language, and as such the modification
 of objects during code execution is a foundational design of the language and
 how it works. Side-effects, oversimplified here as any change to the state of
-any number of objects during the execution of a function. For example, the
-below function `upper_name` has 2 side-effects: the input argument `name` is
-given the token `is_cached`, and another external variable `name_cache` is
-updates.
+any number of objects during the execution of a function, is common across
+various implementations and use cases. For example, the below function
+`upper_name` has 2 side-effects: the input argument `name` is given the token
+`is_cached`, and another external variable `name_cache` is updates.
 
 ```python
 name_cache = dict()
@@ -137,7 +137,9 @@ print(upper_name(name))
 ```
 
 This is not a design flaw. It can, however, quickly produce problems when not
-well-understood. [[TKINDESIGNREVIEW]]
+well-understood by a novice user of a software suite. In the context of
+`porchlight`, especially when implemented as a part of software using
+side-effects during execution.
 
 # Citations
 

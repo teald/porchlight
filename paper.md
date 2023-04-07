@@ -104,7 +104,7 @@ with physical checks. For example, if I check `temperature` to ensure the value
 is always positive, that check will occur whenever `temperature` is modified by
 a function or returned. This is left to the users' needs and preferences.
 
-# Side Effects in coupling
+## Side Effects
 
 Python is an object-oriented programming language, and as such the modification
 of objects during code execution is a foundational design of the language and
@@ -139,7 +139,9 @@ print(upper_name(name))
 This is not a design flaw. It can, however, quickly produce problems when not
 well-understood by a novice user of a software suite. In the context of
 `porchlight`, especially when implemented as a part of software using
-side-effects during execution.
+side-effects during execution. `porchlight.Door` has utilizies to help in
+diagnosing instances where a side effect may result in unexpected behavior, by
+identifying the common Python patterns present in a given definition.
 
 # Citations
 

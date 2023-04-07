@@ -212,7 +212,10 @@ class Neighborhood:
         # first called/explicitly generated.
         #
         # Dynamic doors must also be type-annotated.
-        if "return_types" not in new_door.__dict__ or not new_door.return_types:
+        if (
+            "return_types" not in new_door.__dict__
+            or not new_door.return_types
+        ):
             msg = (
                 "DynamicDoor requires a type annotation for the "
                 "function generator."
@@ -461,9 +464,9 @@ class Neighborhood:
         """Executes a call for a single door."""
         # Check if ids need to be checked.
         if not isinstance(door_name, str) and isinstance(door_name, door.Door):
-            if not any(door_name is d for d in self._doors.values()) or not any(
-                door_name.name == d for d in self._doors
-            ):
+            if not any(
+                door_name is d for d in self._doors.values()
+            ) or not any(door_name.name == d for d in self._doors):
                 msg = (
                     f"Could not find door {door_name.name} in Neighborhood."
                     f" The following doors are present:\n"

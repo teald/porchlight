@@ -388,17 +388,19 @@ class BaseDoor:
 
         side_effect_patterns = {
             "assignment": r"^\s*\w+\.\w+\s*=\s*.*",
-            "method": r"\s*\w+\.\w+\(.*\).*",
+            "method": r"\s*\w+\.\w+\(",
         }
 
         side_effect_dict = {}
 
         for line_number, line in enumerate(lines, start=start_line):
-            if any(re.match(pattern, line) for pattern in side_effect_patterns.values()):
+            if any(
+                re.match(pattern, line)
+                for pattern in side_effect_patterns.values()
+            ):
                 side_effect_dict[line_number] = line
 
         return side_effect_dict
-
 
     @staticmethod
     def _get_return_vals(function: Callable) -> List[str]:
@@ -750,7 +752,9 @@ class Door(BaseDoor):
 
                 # Change keyword arguments as well.
                 if old_name in self.keyword_args:
-                    self.keyword_args[mapped_name] = self.keyword_args[old_name]
+                    self.keyword_args[mapped_name] = self.keyword_args[
+                        old_name
+                    ]
 
                     # Need to change the parameter name to reflect the mapping.
                     self.keyword_args[mapped_name]._name = mapped_name
@@ -771,7 +775,8 @@ class Door(BaseDoor):
             )
 
             kwarg_order = (
-                k if k not in rev_argmap else rev_argmap[k] for k in kwarg_order
+                k if k not in rev_argmap else rev_argmap[k]
+                for k in kwarg_order
             )
 
             self.arguments = {a: self.arguments[a] for a in arg_order}

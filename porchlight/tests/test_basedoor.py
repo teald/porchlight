@@ -137,7 +137,11 @@ class TestBaseDoor(TestCase):
 
         # Multiple return values, no inputs
         def fxn_no_inputs():
-            x, y, z, = (
+            (
+                x,
+                y,
+                z,
+            ) = (
                 0,
                 0,
                 0,
@@ -305,7 +309,7 @@ class TestBaseDoor(TestCase):
         """Test the BaseDoor"""
 
         def test(x: int) -> int:
-            y = x ** 2
+            y = x**2
             return y
 
         expected_repr = (

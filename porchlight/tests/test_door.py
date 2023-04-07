@@ -159,7 +159,7 @@ class TestDoor(TestCase):
 
     def test___repr___(self):
         def test(x: int) -> int:
-            y = x ** 2
+            y = x**2
             return y
 
         expected_repr = (
@@ -395,7 +395,7 @@ class TestDoor(TestCase):
 
         # Test a slightly more complicated door.
         def test1(x: int, *, y=0) -> int:
-            z = x ** y
+            z = x**y
             return z
 
         kwargs = {
@@ -415,8 +415,61 @@ class TestDoor(TestCase):
 
             @Door(wrapped=True, **kwargs)
             def test2(x: int, *, y=0) -> int:
-                z = x ** y
+                z = x**y
                 return z
+
+    def test_side_effect_detection(self):
+        class SimpleClass:
+            def add_attr(self, name: str, value):
+                setattr(self, name, value)
+
+        @Door
+        def get_and_assign_attr_count(c) -> int:
+            """Counts the number of attributes present in an object, c, and
+            assigns that count to a class attr.
+            """
+            attrlist = dir(c)
+            attr_count = len(attrlist)
+
+            # This should be detected
+            c.attr_count = attr_count
+
+            # This should also be detected.
+            c.add_attr("attr_count", attr_count + 1)
+
+            attr_count = c.attr_count
+
+            return attr_count
+
+        # Check that the function works as expected.
+        my_class = SimpleClass()
+        my_class.add_attr("hello", "world")
+
+        self.assertEqual(my_class.hello, "world")
+
+        expected_count = len(dir(my_class)) + 1
+
+        actual_count = get_and_assign_attr_count(my_class)
+
+        self.assertEqual(actual_count, expected_count)
+
+        # Check that expected side effects are caught. Only checking the
+        # relative line numbers.
+        side_effects_dict = get_and_assign_attr_count.side_effects_dict
+
+        expected_lines = {
+            "c.attr_count = attr_count",
+            "c.add_attr(\"attr_count\", attr_count + 1)",
+        }
+
+        found_lines = set()
+
+        for line in (l.strip() for l in side_effects_dict.values()):
+            self.assertIn(line, expected_lines)
+
+            found_lines.add(line)
+
+        self.assertSetEqual(expected_lines, found_lines)
 
 
 if __name__ == "__main__":

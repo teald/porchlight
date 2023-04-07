@@ -180,7 +180,7 @@ class BaseDoor:
             )
 
         except KeyError as e:
-            # No return types there.
+            # No return types available.
             logger.info(f"No return type hints found for {self.name}.")
             logger.debug(
                 f"KeyError message for missing return type hints: {str(e)}"
@@ -338,6 +338,67 @@ class BaseDoor:
             return False
 
         return True
+
+    @property
+    def side_effects_dict(self) -> dict[int, str]:
+        """
+        Returns
+        -------
+        side_effect_dict : `dict[int, str]`
+            A dictionary where keys are the line numbers (respective to the
+            source file for the function itself) and the values are the objects
+            (in the function) being modified.
+        """
+        return self._find_possible_side_effects(self._base_function)
+
+    @staticmethod
+    def _find_possible_side_effects(function: Callable) -> dict[int, str]:
+        """Finds situations in which there may be first-order side effects not
+        captured by input/output.
+
+        Arguments
+        ---------
+        function : :py:class:`typing.Callable`
+            The function to retrieve the return values for.
+
+        Returns
+        -------
+        side_effect_dict : `dict[int, str]`
+            A dictionary where keys are the line numbers (respective to the
+            source file for the function itself) and the values are the objects
+            (in the function) being modified.
+
+        Notes
+        -----
+        This is not meant to be a comprehensive parser for a given function;
+        instead, it can be useful for identifying side effects that may not be
+        well understood in a given door. Take the following code:
+
+        .. code-block:: python
+            @Door
+            def my_function(line: str):
+                line.strip()
+
+        Although this function does *not* modify `line`---strings are immutable,
+        and `line.strip()` just returns a new :py:obj:`str` instance. It is up
+        to the |porchlight| user to identify and investigate whether side
+        effects are actually occurring.
+        """
+        lines, start_line = get_all_source(function)
+
+        side_effect_patterns = {
+            "assignment": r"^\s*\w+\.\w+\s*=\s*.*",
+            "method": r"\s*\w+\.\w+\(.*\).*",
+        }
+
+        side_effect_dict = {}
+
+        for line_number, line in enumerate(lines, start=start_line):
+            if any(re.match(pattern, line) for pattern in side_effect_patterns.values()):
+                side_effect_dict[line_number] = line
+
+        return side_effect_dict
+
 
     @staticmethod
     def _get_return_vals(function: Callable) -> List[str]:

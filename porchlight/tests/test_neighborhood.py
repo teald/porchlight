@@ -819,7 +819,9 @@ class TestNeighborhood(TestCase):
 
         # Testing with a finalization list
         neighborhood = Neighborhood(
-            [test1], initialization=inittest1, finalization=[fintest1, fintest2]
+            [test1],
+            initialization=inittest1,
+            finalization=[fintest1, fintest2],
         )
 
         # try to run a step

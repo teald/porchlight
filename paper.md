@@ -23,13 +23,13 @@ bibliography: paper.bib
 
 `porchlight` is an Python function management and coordination package designed
 to make coupling disparate models straigthforward, portable, and end-user
-friendly. To accomplish this, `porchlight` uses CPython standard library to
-introspect callable objects for metadata such as variable names, possible
-return values, and expected types (using optional Python type hinting). It then
-manages the execution of any number of tracked callables, passing required and
-updated objects as appropriate. In doing so, it can also track physical
-restraints on data, initialize/finalize runs, and update functions defined
-dynamically or outside of Python.
+friendly. To accomplish this, `porchlight` uses CPython standard library
+introspection methods to introspect callable objects for metadata such as
+variable names, possible return values, and expected types (using optional
+Python type hinting). It then manages the execution of any number of tracked
+callables, passing required and updated objects as appropriate. In doing so, it
+can also track physical restraints on data, initialize/finalize runs, and
+update functions defined dynamically or outside of Python.
 
 # Statement of need
 
@@ -39,25 +39,38 @@ public alike. These software products all undergo unique development lifecycles
 tailored to the needs to specific developers.  Although the scientific quality
 and usefulness of such products is unquestionable, they often have steep
 learning curves that make using and coupling these products difficult to
-manage. `porchlight` offers a solution to this problem in the form of a basic
-adapter/mediator framework---capable of parsing function metadata, tracking
-variable stats, and managing dynamically updating functions, it saves many
-lines of code otherwise required to create a simple API or couple to another
-disparate piece of software.
+manage. `porchlight` offers a low-level solution to this problem in the form of
+a basic adapter/mediator framework---capable of parsing function metadata,
+tracking object states, and managing dynamically updating functions. It also
+results in a rudimentary API, usable by novice Python users without the need to
+interact with any component model(s).
 
 ## Scientific Modelling
 
 There are an enormous number of scientific models, ranging in size and niche,
 and coupling them together often provides useful insight neither could alone.
 While the intricacies of coupling can be complex, `porchlight` identifies
-several typical patterns it seeks to manage:
-+ **"I/O" Coupling**: Converting the output of one program to the input of
-  another, and vice-versa.
-+ **Data Coupling**: Instances of data are modified by different programs.
-+ **Evolutionary Coupling**: Functions modify their behavior over time to
-  accomodate the state of a previous result.
+several typical patterns it seeks to manage, defined in Table 1 below.
 
-## Interfacing with scientific models
+| **Term** | **Definition** |
+| :--- | :--------- |
+| **I/O Coupling** | Converting output of one program to the input of another. |
+| **Data Coupling** | Instances of data (objects) are modified by different programs during runtime |
+| **Evolutionary Coupling** | Functions modify their behavior and requirements to accomodate a changing model state |
+
+Too often, solutions to these coupling problems can be time-consuming and
+difficult to structure. In the worst cases, it may hamper the reproducibility
+of a result or understanding of model interactions. With `porchlight`, the
+coupled-model structure is pre-defined, and the user requirements are minimal:
+
+1. The model or effect being integrates can be defined as a Python function.
+2. These Python functions have unique names for unique variables, and shared
+   names for shared variables.
+3. The return values of these functions---if they exist---correspond to new
+   data to be stored by porchlight, or to extant data changed by the model
+   function.
+
+## Interfacing with scientific models and model accessibility
 
 Another common pattern in the research software development lifecycle is
 re-development to create an application programming interface (API) for a
@@ -139,9 +152,9 @@ print(upper_name(name))
 This is not a design flaw. It can, however, quickly produce problems when not
 well-understood by a novice user of a software suite. In the context of
 `porchlight`, especially when implemented as a part of software using
-side-effects during execution. `porchlight.Door` has utilizies to help in
-diagnosing instances where a side effect may result in unexpected behavior, by
-identifying the common Python patterns present in a given definition.
+side-effects during execution. Although tools to assist in identifying possible
+sources of undesirable side-effects are under development, they are
+experimental and not available in the current release of `porchlight`.
 
 # Citations
 

@@ -1,4 +1,4 @@
-<img src="docs/source/porchlight_logo.gif" width="200" height="200" alt="porchlight logo. A snake's head erupts from the bottom of a porchlight casing, reaching towards a spinning triangular pyramid. The pyramid radiates bright, saturated, multicolored light." style="float:left" />
+<img src="docs/source/porchlight_logo.gif" width="200" height="200" alt="porchlight logo. A snake's head erupts from the bottom of a Victorian-style porchlight casing, reaching towards a spinning triangular pyramid. The pyramid radiates bright, saturated, multicolored light." style="float:left" />
 
 [porchlight](https://porchlight.readthedocs.io/en/latest/)
 ==========
@@ -17,8 +17,7 @@ may require external libraries such as `numpy` and `matplotlib`.
 Installation
 ------------
 
-You can install `porchlight` by cloning this repository to a local directory.
-Alternatively, you may use `pip` in the command line:
+You can install `porchlight` using `pip`:
 ```console
 pip install porchlight
 ```

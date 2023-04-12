@@ -3,6 +3,10 @@
 This module contains definitions for BaseDoor, Door, and DynamicDoor. It also
 defines the DoorError exception and DoorWarning warning.
 
+These objects all take a python callable object in some form, extract metadata
+from the object (if possible), and provide a calling interface with optional
+checks and actions (see individual descriptions).
+
 .. |Basedoor| replace:: :py:class:`~porchlight.door.BaseDoor`
 """
 import inspect
@@ -32,7 +36,7 @@ class DoorWarning(Warning):
 
 
 class BaseDoor:
-    """Contains the basic information about a function such as expected
+    """Contains basic information about a function such as expected
     arguments, type annotations, and named return values.
 
     Attributes
@@ -85,8 +89,9 @@ class BaseDoor:
     Notes
     -----
     +   In version 2.0, this class will be permanently renamed or refactored. It
-        is strongly suggested you use |Door| or |PorchlightAdapter| unless
-        absolutely necessary, as that will remain compatible and unchanged.
+        is strongly suggested you use `Door` or `PorchlightAdapter` unless
+        absolutely necessary, as those will remain forward and backward
+        compatible across the 2.0 update.
     """
 
     _base_function: Callable
@@ -136,7 +141,9 @@ class BaseDoor:
         logging.debug(f"Door {self.name} initialized.")
 
     def __eq__(self, other) -> bool:
-        """Equality is defined as referencing the same base function."""
+        """BaseDoor equality is defined as referencing the same base
+        function.
+        """
         if isinstance(other, BaseDoor) and self.name is other.name:
             return True
 
@@ -384,11 +391,11 @@ class BaseDoor:
         for i, line in enumerate(lines):
             orig_line = line.strip()
 
-            # Remove comments
+            # Remove comments.
             if "#" in line:
                 line = line[: line.index("#")]
 
-            # Ignore empty lines
+            # Ignore empty lines.
             if not line.strip():
                 continue
 
@@ -398,12 +405,12 @@ class BaseDoor:
 
             # Ignore empty lines
             # Check for matches for both, in case there's something like
-            #   def wtf(): return 5
-            # Which is atrocious but possible.
+            #   def example(): return 5
+            # Which is atrocious but a valid definition.
             defmatch = re.match(defmatch_str, line)
             retmatch = re.match(retmatch_str, line)
 
-            # Ignore decorators
+            # Ignore decorators.
             if re.match(r"^\s*@\w+.*", line):
                 continue
 

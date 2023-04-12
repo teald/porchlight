@@ -1,4 +1,8 @@
-"""
+"""Function adapter classes for callable Python objects.
+
+This module contains definitions for BaseDoor, Door, and DynamicDoor. It also
+defines the DoorError exception and DoorWarning warning.
+
 .. |Basedoor| replace:: :py:class:`~porchlight.door.BaseDoor`
 """
 import inspect
@@ -58,7 +62,7 @@ class BaseDoor:
     return_vals : :py:obj:`list` of :py:obj:`str`
         Names of parameters returned by the base function. Any return
         statements in a Door much haveidentical return parameters. I.e., the
-        following would fail if imported as a Door.
+        following would fail if used to initialize a Door.
 
         .. code-block:: python
 
@@ -77,6 +81,12 @@ class BaseDoor:
     _base_function : :py:obj:`~typing.Callable`
         This holds a reference to the function being managed by the `BaseDoor`
         instance.
+
+    Notes
+    -----
+    +   In version 2.0, this class will be permanently renamed or refactored. It
+        is strongly suggested you use |Door| or |PorchlightAdapter| unless
+        absolutely necessary, as that will remain compatible and unchanged.
     """
 
     _base_function: Callable

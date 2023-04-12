@@ -82,7 +82,6 @@ such software.
 use-cases, and can be tailored to as-specific a niche as needed with minimal
 effort. This is detailed in [[TKREFERENCESECTION]].
 
-
 # Design Schematics
 
 `porchlight` is designed using a mediator class (`Neighborhood`) and an adapter
@@ -111,11 +110,18 @@ The `porchlight` library, including its unit tests, to not require anything
 beyond the standard CPython library.
 
 `porchlight` does not add considerable overhead to execution, assuming
-functional definitions are not disturbingly long. The frequency of tests being
-executed between model runs is something to consider when using `porchlight`
-with physical checks. For example, if I check `temperature` to ensure the value
-is always positive, that check will occur whenever `temperature` is modified by
-a function or returned. This is left to the users' needs and preferences.
+functional definitions are not disturbingly long (many, many thousands of
+lines). The frequency of tests being executed between model runs is something
+to consider when using `porchlight` with physical checks. For example, if I
+check `temperature` to ensure the value is always positive, that check will
+occur whenever `temperature` is modified by a function or returned. This is
+left to the users' needs and preferences.
+
+## Efficacy as an API
+
+`porchlight` aims to provide an out-of-the-box API when used for coupling or to
+wrap a single model. This can be beneficial for restricting modification of
+program-critical components by an end-user. Suppose I have a model,
 
 ## Side Effects
 

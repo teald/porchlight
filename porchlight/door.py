@@ -603,9 +603,8 @@ class Door(BaseDoor):
     def _initialize_wrapped_function(
         self, arguments, keyword_args, return_vals
     ):
-        """Initializes a function that is auto-wrapped by
-        :py:class:`~porchlight.door.Door` instead of being passed to
-        :py:class:`~porchlight.door.BaseDoor`
+        """Initializes a function that is auto-wrapped by |Door| instead of
+        being passed to |BaseDoor|.
         """
         if not self.name:
             self.name = "AutoWrappedFunctionDoor"
@@ -874,11 +873,12 @@ class DynamicDoor(Door):
 
     generator_args : `List`
         List of arguments to be passed as positional arguments to the
-        `_door_generator` function.
+        :py:attr:`DynamicDoor._door_generator` function.
 
     generator_kwards : `Dict`
         Dict of key: value pairs representing keyword arguments to be passed as
-        positional arguments to the `_door_generator` function.
+        positional arguments to the :py:attr:`DynamicDoor._door_generator`
+        function.
     """
 
     def __init__(
@@ -888,7 +888,7 @@ class DynamicDoor(Door):
         generator_kwargs: Dict = {},
     ):
         """Initializes the |DynamicDoor|. When
-        :py:meth:`porchlight.door.DynamicDoor.__call__` is invoked, the door
+        :py:meth:`DynamicDoor.__call__` is invoked, the door
         generator is called.
 
         Arguments
@@ -921,18 +921,17 @@ class DynamicDoor(Door):
 
     def __call__(self, *args, **kwargs) -> Any:
         """Executes the function stored in
-        :py:meth:`~porchlight.door.DynamicDoor._base_function` once
-        :py:meth:`~porchlight.door.DynamicDoor.update` has executed.
+        :py:attr:`DynamicDoor._base_function` once
+        :py:meth:`DynamicDoor.update` has executed.
 
         Arguments
         ---------
         *args : positional arguments
-            Arguments directly passed to
-            `~porchlight.door.DynamicDoor._base_function`.
+            Arguments directly passed to :py:attr:`DynamicDoor._base_function`.
 
         **kwargs : keyword arguments
             Keyword arguments directly passed to
-            `~porchlight.door.DynamicDoor._base_function`.
+            :py:attr:`DynamicDoor._base_function`.
         """
         self.update()
         result = super().__call__(*args, **kwargs)
@@ -941,18 +940,18 @@ class DynamicDoor(Door):
 
     def call_without_update(self, *args, **kwargs) -> Any:
         """Executes the function stored in
-        `~porchlight.door.DynamicDoor._base_function` *WITHOUT* executing
+        :py:attr:`DynamicDoor._base_function` *WITHOUT* executing
         :py:meth:`~porchlight.door.DynamicDoor.update()`
 
         Arguments
         ---------
         *args : positional arguments
             Arguments directly passed to
-            `~porchlight.door.DynamicDoor._base_function`.
+            :py:attr:`DynamicDoor._base_function`.
 
         **kwargs : keyword arguments
             Keyword arguments directly passed to
-            `~porchlight.door.DynamicDoor._base_function`.
+            :py:attr:`DynamicDoor._base_function`.
         """
         # Give a specific, useful message if self._base_function is not
         # initialized.
@@ -983,7 +982,7 @@ class DynamicDoor(Door):
         return outstr
 
     def update(self):
-        """Updates the DynamicDoor using `DynamicDoor._door_generator`
+        """Updates the DynamicDoor using :py:attr:`DynamicDoor._door_generator`
 
         This method is called when :py:meth:`DynamicDoor.__call__` is invoked.
         """

@@ -7,7 +7,15 @@ These objects all take a python callable object in some form, extract metadata
 from the object (if possible), and provide a calling interface with optional
 checks and actions (see individual descriptions).
 
-.. |Basedoor| replace:: :py:class:`~porchlight.door.BaseDoor`
+.. |BaseDoor| replace:: :py:class:`~porchlight.door.BaseDoor`
+.. |Door| replace:: :py:class:`~porchlight.door.Door`
+.. |DynamicDoor| replace:: :py:class:`~porchlight.door.DynamicDoor`
+.. |BasePorchlightAdapter| replace::
+    :py:class:`~porchlight.door.BasePorchlightAdapter`
+.. |PorchlightAdapter| replace::
+    :py:class:`~porchlight.door.PorchlightAdapter`
+.. |DynamicPorchlightAdapter| replace::
+    :py:class:`~porchlight.door.DynamicPorchlightAdapter`
 """
 import inspect
 import re
@@ -41,29 +49,29 @@ class BaseDoor:
 
     Attributes
     ----------
-    arguments : :py:obj:`dict`, :py:obj:`str`: :class:`~typing.Type`
-        Dictionary of all arguments taken as input when the `BaseDoor` object
+    arguments : :`dict`, `str`: :class:`~typing.Type`
+        Dictionary of all arguments taken as input when the |BaseDoor| object
         is called.
 
-    positional_only : :py:obj:`list` of :py:obj:`str`
+    positional_only : `list` of `str`
         List of positional-only arguments accepted by the function.
 
-    keyword_args : :py:obj:`dict`, :py:obj:`str`: :class:`~typing.Any`
-        Keyword arguments accepted by the `BaseDoor` as input when called. This
+    keyword_args : `dict`, `str`: :class:`~typing.Any`
+        Keyword arguments accepted by the |BaseDoor| as input when called. This
         includes all arguments that are not positional-only. Positional
         arguments without a default value are assigned a
         :class:~porchlight.param.Empty` value instead of their default value.
 
-    n_args : :py:obj:`int`
-        Number of arguments accepted by this `BaseDoor`
+    n_args : `int`
+        Number of arguments accepted by this |BaseDoor|
 
-    name : :py:obj:`str`
+    name : `str`
         The name of the function as visible from the base function's __name__.
 
-    return_types : :py:obj:`dict` of :py:obj:`str`, :py:obj:`Type` pairs.
+    return_types : `dict` of `str`, `Type` pairs.
         Values returned by any return statements in the base function.
 
-    return_vals : :py:obj:`list` of :py:obj:`str`
+    return_vals : `list` of `str`
         Names of parameters returned by the base function. Any return
         statements in a Door much haveidentical return parameters. I.e., the
         following would fail if used to initialize a Door.
@@ -77,19 +85,20 @@ class BaseDoor:
 
                return x
 
-    typecheck : :py:obj:`bool`
-        If True, when arguments are passed to the `BaseDoor`'s base function
-        the input types are checked against the types in `BaseDoor.arguments`.
-        If there is a mismatch, a `TypeError` will be thrown.
+    typecheck : `bool`
+        If True, when arguments are passed to the |BaseDoor|'s base function
+        the input types are checked against the types in
+        :py:attr:`BaseDoor.arguments`.  If there is a mismatch, a `TypeError`
+        will be thrown.
 
-    _base_function : :py:obj:`~typing.Callable`
-        This holds a reference to the function being managed by the `BaseDoor`
+    _base_function : `~typing.Callable`
+        This holds a reference to the function being managed by the |BaseDoor|
         instance.
 
     Notes
     -----
     +   In version 2.0, this class will be permanently renamed or refactored. It
-        is strongly suggested you use `Door` or `PorchlightAdapter` unless
+        is strongly suggested you use |Door| or |PorchlightAdapter| unless
         absolutely necessary, as those will remain forward and backward
         compatible across the 2.0 update.
     """
@@ -109,29 +118,31 @@ class BaseDoor:
         typecheck: bool = True,
         returned_def_to_door: bool = False,
     ):
-        """Initializes the BaseDoor class. It takes any callable (function,
+        """Initializes the |BaseDoor| class. It takes any callable (function,
         lambda, method...) and inspects it to get at its arguments and
         structure.
 
         if typecheck is True (default True), the type of inputs passed to
-        BaseDoor.__call__ will be checked for matches to known input Types.
+        :py:class:`BaseDoor.__call__` will be checked for matches to known
+        input Types.
 
         Parameters
         ----------
         function : :py:class:`typing.Callable`
             The callable/function to be managed by the BaseDoor class.
 
-        typecheck : :py:obj:`bool`, optional
-            If `True`, the `BaseDoor` object will assert that arguments passed
-            to `__call__` (when the `BaseDoor` itself is called like a
-            function) have the type expected by type annotations and any user
-            specifications. By default, this is `True`.
+        typecheck : `bool`, optional
+            If `True`, the |BaseDoor| object will assert that arguments passed
+            to :py:class:`BaseDoor.__call__` (when the |BaseDoor| itself is
+            called like a function) have the type expected by type annotations
+            and any user specifications. By default, this is `True`.
 
-        returned_def_to_door : :py:obj:`bool`, optional
+        returned_def_to_door : `bool`, optional
             Returns a Door generated from the output of the base function.
-            Note, this is not the same as a DynamicDoor, and internal
-            variables/updating is not handled as with a DynamicDoor. This just
-            calls Door's initializer on the output of the base function.
+            Note, this is not the same as a |DynamicDoor|, and internal
+            variables/updating is not handled as with a |DynamicDoor|. This
+            just creates a new |Door| instance using the output of the base
+            function.
         """
         self._returned_def_to_door = returned_def_to_door
         self._base_function = function
@@ -141,7 +152,7 @@ class BaseDoor:
         logging.debug(f"Door {self.name} initialized.")
 
     def __eq__(self, other) -> bool:
-        """BaseDoor equality is defined as referencing the same base
+        """|BaseDoor| equality is defined as referencing the same base
         function.
         """
         if isinstance(other, BaseDoor) and self.name is other.name:
@@ -167,7 +178,7 @@ class BaseDoor:
         """Inspect the BaseDoor's baseline callable for primary attributes.
 
         This checks for type annotations, return statements, and all
-        information accessible to :py:obj:`inspect.Signature` relevant to
+        information accessible to `inspect.Signature` relevant to
         |BaseDoor|.
         """
         # Need to find the un-wrapped function that actually takes the
@@ -298,7 +309,7 @@ class BaseDoor:
 
     @property
     def __closure__(self):
-        """Since BaseDoor is a wrapper, and we use utils.get_all_source to
+        """Since |BaseDoor| is a wrapper, and we use utils.get_all_source to
         retrieve source, this mimicks the type a function wrapper would have
         here.
         """
@@ -384,7 +395,6 @@ class BaseDoor:
         # there must exist non-\n whitespace for all lines after a funciton
         # definition.
         defmatch_str = r"^(\ )+def\s+"
-        retmatch_str = r".*\s+return\s(.*)"
         retmatch_str = r"^\s+(?:return|yield)\s(.*)"
         indentmatch_str = r"^(\s)*"
 
@@ -455,9 +465,8 @@ class BaseDoor:
 
                 for val in vals:
                     if not re.match(r"\w+$", val):
-                        # This is undefined, not an error. So assign return
-                        # value 'undefined' for this return statement and issue
-                        # a warning.
+                        # This is undefined, not an error. Issue a warning
+                        # since this may be unexpected behavior.
                         source_file = inspect.getfile(function)
 
                         msg = (
@@ -466,8 +475,8 @@ class BaseDoor:
                             f"{source_file}: {start_line+i}) "
                             f"{orig_line.strip()}\n While not crucial to "
                             f"this function, be aware that this means no "
-                            f"return value will be modified by this "
-                            f"callable."
+                            f"return parameter will be modified by this "
+                            f"callable in a Neighborhood."
                         )
 
                         logger.warning(msg)
@@ -492,7 +501,7 @@ class BaseDoor:
 
 
 class Door(BaseDoor):
-    """Inherits from and extends :class:`~porchlight.door.BaseDoor`"""
+    """Extends |BaseDoor| with Neighborhood-specific methods and handling."""
 
     def __init__(
         self,
@@ -506,18 +515,17 @@ class Door(BaseDoor):
         name: str = "",
         typecheck: bool = False,
     ):
-        """Initializes the :py:class:`~porchlight.door.Door` object using a
-        callable.
+        """Initializes the |Door| object.
 
         Arguments
         ---------
 
         function : Callable
-            A callable object to be parsed by :py:class:`~BaseDoor`.
+            A callable object to be parsed by |BaseDoor|.
 
         argument_mapping : dict, keyword-only, optional
             Maps parameters automatically by name. For example, to have a Door
-            accept "a" and "b" ans arguments instead of "x" and "y", one could
+            accept "a" and "b" and arguments instead of "x" and "y", one could
             use
 
             .. code-block:: python
@@ -532,21 +540,20 @@ class Door(BaseDoor):
             yourself.
 
         wrapped : bool, keyword-only, optional
-            If `True`, will not parse the function using
-            :py:class:`~porchlight.door.BaseDoor`. Instead, it will take user
-            arguments and generate a function wrapper using the following
-            keyword-only arguments:
+            If `True`, will not parse the function using |BaseDoor|. Instead,
+            it will take user arguments and generate a function wrapper using
+            the following keyword-only arguments:
 
                 - arguments
                 - keyword_args
                 - return_vals
 
             And this wrapper will be used to initialize the
-            :py:class:`~porchlight.door.BaseDoor` properties.
+            |BaseDoor| properties.
 
         arguments : dict, keyword-only, optional
             Arguments to be passed to the function if it is wrapped. Does not
-            override :py:class:`~porchlight.door.BaseDoor` if ``wrapped`` is
+            override |BaseDoor| if ``wrapped`` is
             ``False``.
 
         keyword_args : dict, keyword-only, optional
@@ -556,7 +563,7 @@ class Door(BaseDoor):
         name : str, keyword-only, optional
             Overrides the default name for the Door if provided.
 
-        typecheck : :py:obj:`bool`, optional
+        typecheck : `bool`, optional
             If `True`, the `Door` object will assert that arguments passed
             to `__call__` (when the `Door` itself is called like a
             function) have the type expected by type annotations and any user
@@ -611,6 +618,7 @@ class Door(BaseDoor):
         self.function_initialized = True
 
     def __call__(self, *args, **kwargs):
+        # To account for @Door behavior in one call stack,
         if not self.function_initialized:
             # Need to recieve the function.
             if len(args) != 1:
@@ -639,12 +647,9 @@ class Door(BaseDoor):
             return self
 
         if self.wrapped:
-            result = self._base_function(*args, **kwargs)
-            return result
+            return self._base_function(*args, **kwargs)
 
-        # Check argument mappings.
         if not self.argmap:
-            # Just pass arguments normally
             return super().__call__(*args, **kwargs)
 
         input_kwargs = {}
@@ -670,7 +675,9 @@ class Door(BaseDoor):
         return result
 
     def map_arguments(self):
-        """Maps arguments if self.argmap is not {}."""
+        """Maps arguments if self.argmap is not empty and the function has been
+        initialized.
+        """
         if not self.function_initialized:
             msg = "Door has not yet been initialized with a function."
             logging.error(msg)
@@ -700,11 +707,12 @@ class Door(BaseDoor):
                     logger.error(msg)
                     raise DoorError(msg)
 
+                # Replace arguments with their mapped versions in the arguments
+                # dictionaries.
                 if old_name in self.arguments:
                     self.arguments[mapped_name] = self.arguments[old_name]
                     del self.arguments[old_name]
 
-                # Change keyword arguments as well.
                 if old_name in self.keyword_args:
                     self.keyword_args[mapped_name] = self.keyword_args[old_name]
 
@@ -761,7 +769,10 @@ class Door(BaseDoor):
         return super().__repr__().replace("BaseDoor", "Door")
 
     @property
-    def original_arguments(self):
+    def original_arguments(self) -> dict[str, Type]:
+        """Returns a dict with original positional arguments required by the
+        base function.
+        """
         arguments = copy.copy(self.arguments)
 
         for i, arg in enumerate(self.arguments):
@@ -775,7 +786,10 @@ class Door(BaseDoor):
         return arguments
 
     @property
-    def original_kw_arguments(self):
+    def original_kw_arguments(self) -> dict[str, Type]:
+        """Returns a dict with original keyword arguments required by the base
+        function.
+        """
         arguments = copy.copy(self.keyword_args)
 
         for i, arg in enumerate(self.keyword_args):
@@ -789,7 +803,8 @@ class Door(BaseDoor):
         return arguments
 
     @property
-    def original_return_vals(self):
+    def original_return_vals(self) -> list[str]:
+        """Returns a list with original return values of the base function."""
         return_vals = copy.copy(self.return_vals)
 
         # Also change outputs that contain the same name.
@@ -800,7 +815,7 @@ class Door(BaseDoor):
         return return_vals
 
     @property
-    def argument_mapping(self):
+    def argument_mapping(self) -> dict[str, str]:
         return self.argmap
 
     @argument_mapping.setter
@@ -808,11 +823,16 @@ class Door(BaseDoor):
         self.arguments = self.original_arguments
         self.keyword_args = self.original_kw_arguments
         self.argmap = value
+
+        # Need to re-execute the argument mapper. By this time, the function
+        # must be initialized.
         self.map_arguments()
 
     @property
     def variables(self) -> List[str]:
-        """Returns a list of all known return values and input arguments."""
+        """Returns a list of all known return values and input arguments as
+        strs.
+        """
         all_vars = []
 
         for arg in self.arguments:
@@ -827,7 +847,7 @@ class Door(BaseDoor):
 
     @property
     def required_arguments(self) -> List[str]:
-        """Returns a list of arguments with no default values."""
+        """Returns a list of arguments with no default value."""
         required = []
 
         for x in self.arguments:
@@ -840,18 +860,17 @@ class Door(BaseDoor):
 class DynamicDoor(Door):
     """A dynamic door takes a door-generating function as its initializer.
 
-    Unlike :py:class:`~porchlight.door.BaseDoor` and
-    :py:class:`~porchlight.door.Door`, dynamic doors will only parse the
+    Unlike |BaseDoor| and |Door|, |DynamicDoor| will only parse the
     definition's source once it is generated.
 
-    These objects a function that returns a :py:class:`~porchlight.door.Door`.
-    The `DynamicDoor` then contains identical attributes to the generated door.
+    These objects a function that returns a |Door|.
+    The |DynamicDoor| then contains identical attributes to the generated door.
     Once called again, all attributes update to match the most recent call.
 
     Attributes
     ----------
     _door_generator : `Callable`
-        A function returning a `~porchlight.door.Door` as its output.
+        A function returning a |Door| as its output.
 
     generator_args : `List`
         List of arguments to be passed as positional arguments to the
@@ -868,7 +887,8 @@ class DynamicDoor(Door):
         generator_args: List = [],
         generator_kwargs: Dict = {},
     ):
-        """Initializes the Dynamic Door. When __call__ is invoked, the door
+        """Initializes the |DynamicDoor|. When
+        :py:meth:`porchlight.door.DynamicDoor.__call__` is invoked, the door
         generator is called.
 
         Arguments
@@ -901,8 +921,8 @@ class DynamicDoor(Door):
 
     def __call__(self, *args, **kwargs) -> Any:
         """Executes the function stored in
-        `~porchlight.door.DynamicDoorc._base_function` once
-        `~porchlight.door.DynamicDoor.update` has executed.
+        :py:meth:`~porchlight.door.DynamicDoor._base_function` once
+        :py:meth:`~porchlight.door.DynamicDoor.update` has executed.
 
         Arguments
         ---------
@@ -922,7 +942,7 @@ class DynamicDoor(Door):
     def call_without_update(self, *args, **kwargs) -> Any:
         """Executes the function stored in
         `~porchlight.door.DynamicDoor._base_function` *WITHOUT* executing
-        `~porchlight.door.DynamicDoor.update()`
+        :py:meth:`~porchlight.door.DynamicDoor.update()`
 
         Arguments
         ---------
@@ -965,7 +985,7 @@ class DynamicDoor(Door):
     def update(self):
         """Updates the DynamicDoor using `DynamicDoor._door_generator`
 
-        This method is called when DynamicDoor.__call__ is invoked.
+        This method is called when :py:meth:`DynamicDoor.__call__` is invoked.
         """
         self._last_door = self._cur_door
 

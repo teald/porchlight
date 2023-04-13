@@ -1,12 +1,14 @@
 .. role:: python(code)
    :language: python
 
+.. include:: ../source/substitutions.rst
+
 Quickstart
 ==========
 
-Welcome to a short guide to hitting the ground running with |porchlight|! This
-tutorial will step through the basics of installing and using |porchlight|. If
-you are looking for more advanced examples, see the examples available in
+Welcome to a short guide to working with |porchlight|! This tutorial will step
+through the basics of installing and using |porchlight|. If you are looking for
+more advanced examples, see the examples available in
 `the porchlight github repository <https://github.com/teald/porchlight/tree/main/examples>`_.
 
 Requirements
@@ -14,6 +16,9 @@ Requirements
 
 |porchlight| requires *Python version 3.9 or higher*.
 
+**Note:** If you download the repository you'll notice that requirements.txt is
+not empty; these requirements are for building these docs, and are not used by
+the main |porchlight| library.
 
 Installation
 ------------
@@ -23,7 +28,7 @@ instructions:
 
 * `Python 3.9 or above <https://www.python.org/downloads/>`_
 
-You can install |porchlight| directly using :code:`pip`:
+You can install |porchlight| using :code:`pip`:
 
 .. code-block:: console
 
@@ -37,13 +42,22 @@ environment! To get started, just import the library:
 
    import porchlight
 
+
 Type annotations and |porchlight|
 ---------------------------------
 
-Within |porchlight|, type annotation are allowed and encouraged. Generally, save
-for a few *very special cases*, you can ignore type annotations when writing
-your code. |porchlight|, via the |Door| class in particular, will note type
-annotations if they are present and otherwise will ignore them.
+Within |porchlight|, type annotation are allowed and encouraged. Generally,
+save for a few *very special cases*, [#annotationspecialcases]_ you can ignore
+type annotations when writing your code. |porchlight|, via the |Door| class in
+particular, will note type annotations if they are present and otherwise will
+ignore them.
+
+.. [#annotationspecialcases]
+
+   |DynamicDoor| generator functions require |Door| outputs to be type-hinted,
+   to discourage using generic Callables that may result in unexpected
+   behavior.
+
 
 Creating a |Neighborhood| object
 --------------------------------
@@ -52,7 +66,8 @@ The |Neighborhood| object collects various
 functions, extracts information about the function from existing metadata
 (using the `inspect <https://docs.python.org/3/library/inspect.html>`_ module
 in the CPython standard library) and the source code itself. Adding a function
-to a
+to a |Neighborhood| is as straightforward as passing the function's name,
+whether defined locally or otherwise:
 
 .. code-block:: python
 
@@ -68,7 +83,8 @@ to a
    neighborhood.add_function(my_function)
 
 At this point, |porchlight| will parse the function and store metadata about
-it. The `str` representation of Neighborhood contains most of the data:
+it. The `str` representation of Neighborhood contains most of the data in a
+very dense format:
 
 .. code-block:: python
 
@@ -80,15 +96,16 @@ it. The `str` representation of Neighborhood contains most of the data:
 
 A few things are now kept track of by the |Neighborhood| automatically:
 
-1. The function arguments, now tracked as a |param| object. The default values
-   found were saved (in our case, it found `z = 0`), and any parameters not yet
+1. The function arguments, now tracked as |Param| objects. The default values
+   found were saved (in our case, it found :python:`z = 0`), and any parameters not yet
    assigned a value have been given the :py:class:`~porchlight.param.Empty`
    value.
 2. Function return variables. We'll explore this in more detail later, but one
-   important note here: the return variable name is important!
+   important note here: *the return variable names are critically important to
+   keep consistent!*
 
-Right now, our |Neighborhood| is a
-fully-fledged, if tiny, model. Let's set our variables and run it!
+Right now, our |Neighborhood| is a fully-fledged, if tiny, model. Let's set our
+variables and run it!
 
 .. code-block:: python
 
@@ -113,7 +130,7 @@ obviously. We could manage our own :code:`x`, :code:`y`, and :code:`z` in a
 heartbeat, and all |porchlight| *really* did was what we could do with
 something as simple as :python:`y = my_function(2, 0)`. Let's add another
 function to our neighborhood and call
-:meth:`~porchlight.neighborhood.Neighborhood.run_step`
+:py:meth:`~porchlight.neighborhood.Neighborhood.run_step`
 
 .. code-block:: python
 
@@ -142,7 +159,7 @@ function to our neighborhood and call
     3) x = 2, y = 13, z = 15
     4) x = 2, y = 19, z = 24
 
-As we see, we are now running a system of two functions that share variables.
+We are now running a system of two functions that share variables.
 As we step forward, the functions are called sequentially and the parameters
 are updated directly.
 
@@ -151,6 +168,13 @@ objects and |Param| objects that hold onto metadata our |Neighborhood| can use
 to know when and what to run, check, and modify. To really leverage
 |porchlight|, we'll need to get to know these objects a bit better on their
 own.
+
+By default, the functions are called sequentially in the order they were added
+to the |Neighborhood|. To re-arrange them,
+:py:meth:`~porchlight.neighborhood.Neighborhood.order_doors` takes a list of
+the |Door| names and will modify the call order appropriately. This does
+require the list to have each |Door|  name, spelled correctly.
+
 
 |Param| objects
 ---------------
@@ -303,10 +327,4 @@ Closing Nuances
   will not include a dedicated stable branch until v1.0.0. That means that you
   need to be cautious with versions before v1.0.0, and some changes may break
   your code. You can generally assume that increments of 0.0.1 are non-breaking.
-  0.1.0 increments may be breaking.
-
-.. |porchlight| replace:: **porchlight**
-.. _Python: https://www.python.org/downloads/
-.. |Neighborhood| replace:: :py:class:`~porchlight.neighborhood.Neighborhood`
-.. |Door| replace:: :py:class:`~porchlight.door.Door`
-.. |Param| replace:: :py:class:`~porchlight.param.Param`
+  0.1.0 increments may be breaking, check the appropriate Release Notes.

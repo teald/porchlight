@@ -1,3 +1,5 @@
+.. include:: source/substitutions.rst
+
 Welcome to |porchlight|'s documentation!
 ========================================
 
@@ -26,5 +28,3 @@ Indices and tables
 
     This project is under active development. Please report any bugs you
     encounter to https://github.com/teald/porchlight/issues!
-
-.. |porchlight| replace:: **porchlight**

@@ -1,3 +1,5 @@
+.. include:: substitutions.rst
+
 `neighborhood` module
 =====================
 
@@ -9,5 +11,3 @@ class between different functions that have been re-cast as
     :members:
     :show-inheritance:
     :private-members:
-
-.. |Neighborhood| replace:: :py:class:`~porchlight.neighborhood.Neighborhood`

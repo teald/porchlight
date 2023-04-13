@@ -24,6 +24,7 @@ from .param import Param
 # Aliases for migration to generic names, >=v1.2.0.
 PorchlightAdapter = Door
 PorchlightMediator = Neighborhood
+PorchlightContainer = Param
 
 
 # Initialize logging with a NullHandler to let user decide on a handler if they

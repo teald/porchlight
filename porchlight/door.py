@@ -663,69 +663,89 @@ class Door(BaseDoor):
     def map_arguments(self):
         """Maps arguments if self.argmap is not empty and the function has been
         initialized.
+
+        This is done by modifying the door arguments directly, and using the
+        argument mapping as a converter between the two systems if the original
+        arguments are needed. This makes the |Door| mimic the same arguments
+        when accessed by a |Neighborhood| or when arguments are given to it.
+
+        Mapped arguments are *overridden*, meaning they will no longer be
+        recognized by the Door as appropriate arguments passed through
+        :py:meth:`Door.__call__`.
         """
+        # Function metadata is required for argument mapping. Check this before
+        # checking argument mapping, since this should always be the case for
+        # Doors accepting a new argument map.
         if not self.function_initialized:
             msg = "Door has not yet been initialized with a function."
             logging.error(msg)
             raise DoorError(msg)
 
-        if self.argmap:
-            Door._check_argmap(self.argmap)
+        if not self.argmap:
+            return
 
-            arg_order = tuple(self.arguments.keys())
-            kwarg_order = tuple(self.kwargs.keys())
+        # After catching any yet-forseen inconsistencies that might arise in
+        # argument mapping, preserve the structure of the original arguments
+        # (especially order) and generate a new set of argument and return
+        # values using the mapped arguments.
+        Door._check_argmap(self.argmap)
 
-            for mapped_name, old_name in self.argmap.items():
-                # Catch mappings that would conflict with an existing key.
-                if mapped_name in self.arguments:
-                    msg = (
-                        f"Conflicting map key: {mapped_name} is in arguments "
-                        f"list."
-                    )
+        arg_order = tuple(self.arguments.keys())
+        kwarg_order = tuple(self.kwargs.keys())
 
-                    logger.error(msg)
-                    raise DoorError(msg)
+        for mapped_name, old_name in self.argmap.items():
+            # Catch conflicts with existing keys.
+            if mapped_name in self.arguments:
+                msg = (
+                    f"Conflicting map key: {mapped_name} is in arguments "
+                    f"list."
+                )
 
-                if old_name not in self.arguments and not any(
-                    old_name in retvals for retvals in self.return_vals
-                ):
-                    msg = f"{old_name} is not a valid argument for {self.name}"
-                    logger.error(msg)
-                    raise DoorError(msg)
+                logger.error(msg)
+                raise DoorError(msg)
 
-                # Replace arguments with their mapped versions in the arguments
-                # dictionaries.
-                if old_name in self.arguments:
-                    self.arguments[mapped_name] = self.arguments[old_name]
-                    del self.arguments[old_name]
+            # Check that the name exists in the Door's known arguments and
+            # return values, raise an error if not.
+            if old_name not in self.arguments and not any(
+                old_name in retvals for retvals in self.return_vals
+            ):
+                msg = f"{old_name} is not a valid argument for {self.name}"
+                logger.error(msg)
+                raise DoorError(msg)
 
-                if old_name in self.keyword_args:
-                    self.keyword_args[mapped_name] = self.keyword_args[old_name]
+            # Replace arguments with their mapped versions in the arguments
+            # dictionaries.
+            if old_name in self.arguments:
+                self.arguments[mapped_name] = self.arguments[old_name]
+                del self.arguments[old_name]
 
-                    # Need to change the parameter name to reflect the mapping.
-                    self.keyword_args[mapped_name]._name = mapped_name
+            if old_name in self.keyword_args:
+                self.keyword_args[mapped_name] = self.keyword_args[old_name]
 
-                    del self.keyword_args[old_name]
+                # Need to change the Param name to reflect the mapping.
+                self.keyword_args[mapped_name]._name = mapped_name
 
-                # Also change outputs that contain the same name.
-                ret_tuple = self.return_vals
-                for i, ret_val in enumerate(ret_tuple):
-                    if old_name == ret_val:
-                        self.return_vals[i] = mapped_name
+                del self.keyword_args[old_name]
 
-            # Place back in the original order.
-            rev_argmap = {v: k for k, v in self.argmap.items()}
+            # Also change outputs that contain the same name.
+            ret_tuple = self.return_vals
+            for i, ret_val in enumerate(ret_tuple):
+                if old_name == ret_val:
+                    self.return_vals[i] = mapped_name
 
-            arg_order = (
-                k if k not in rev_argmap else rev_argmap[k] for k in arg_order
-            )
+        # Re-construct the newly mapped dictionaries, with all values in order.
+        rev_argmap = {v: k for k, v in self.argmap.items()}
 
-            kwarg_order = (
-                k if k not in rev_argmap else rev_argmap[k] for k in kwarg_order
-            )
+        arg_order = (
+            k if k not in rev_argmap else rev_argmap[k] for k in arg_order
+        )
 
-            self.arguments = {a: self.arguments[a] for a in arg_order}
-            self.keyword_args = {a: self.keyword_args[a] for a in kwarg_order}
+        kwarg_order = (
+            k if k not in rev_argmap else rev_argmap[k] for k in kwarg_order
+        )
+
+        self.arguments = {a: self.arguments[a] for a in arg_order}
+        self.keyword_args = {a: self.keyword_args[a] for a in kwarg_order}
 
     def _check_argmap(argmap):
         """Assesses if an argument mapping is valid, raises an appropriate

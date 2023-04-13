@@ -215,10 +215,6 @@ class BaseDoor:
                 f"source: {e}"
             )
 
-            if isinstance(function, Callable):
-                # This is still a function, and has otherwise worked.
-                pass
-
         # Ensure the function can be inspected. If not, raise
         # NotImplementedError
         if not self._can_inspect(function):

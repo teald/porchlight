@@ -8,3 +8,5 @@
 .. |PorchlightAdapter| replace:: :py:class:`~porchlight.door.PorchlightAdapter`
 .. |DynamicPorchlightAdapter| replace:: :py:class:`~porchlight.door.DynamicPorchlightAdapter`
 .. |Param| replace:: :py:class:`~porchlight.param.Param`
+.. |Empty| replace:: :py:class:`~porchlight.param.Empty`
+.. |ParameterError| replace:: :py:class:`~porchlight.param.ParameterError`

@@ -1,4 +1,14 @@
-"""Defines the `Neighborhood` class."""
+"""A mediator object for sequentially executing callables with a variable set
+of data values.
+
+The primary mediator object is the |Neighborhood| class. It acts as an
+interface for other parts of the |porchlight| library, meaning it will manage
+|Door| creation, |Param| assignment, and other checks. It can be further
+extended using user-defined |Door|.
+
+Also contains the definition for
+:py:class:`~porchlight.neighborhood.NeighborhoodError`.
+"""
 from . import door
 from . import param
 from .utils.typing_functions import decompose_type
@@ -15,31 +25,29 @@ class NeighborhoodError(Exception):
 
 class Neighborhood:
     """A neighborhood manages the interactions between Doors. It consists of a
-    modifiable collection of :class:`~porchlight.door.Door` (or
-    :class:`~porchlight.door.BaseDoor`) objects.
+    modifiable collection of |Door| (or |BaseDoor|) objects.
 
     Attributes
     ----------
-    _doors : :py:obj:`dict`, :py:obj:`str`: :class:`~porchlight.door.Door`
-        Contains all data for :class:`~porchlight.door.Door` objects. The keys
-        are, by default, the :meth:`~porchlight.door.Door.name`
-        property for the corresponding :class:`~porchlight.door.Door` values.
+    _doors : ``dict``, ``str``: |Door|
+        Contains all data for |Door| objects. The keys are, by default, the
+        :meth:`~porchlight.door.Door.name` property for the corresponding
+        |Door| values.
 
-    _params : :py:obj:`dict`, :py:obj:`str`: :class:`~porchlight.param.Param`
+    _params : ``dict``, ``str``: |Param|
         Contains all the parameters currently known to and managed by the
-        :class:`~porchlight.neighborhood.Neighborhood` object.
+        |Neighborhood| object.
 
-    _call_order : :py:obj:`list`, :py:obj:`str`
-        The order in which the :class:`~porchlight.door.Door` objects in
-        `_doors` are called. By default, this is the order in which
-        :class:`~porchlight.door.Door`s are added to the `Neighborhood`.
+    _call_order : ``list``, ``str``
+        The order in which the |Door| objects in `_doors` are called. By
+        default, this is the order in which |Door| are added to the
+        |Neighborhood|.
 
-    initialization : :py:obj:`list` of ``Callable``, `keyword-only`
-        These will be called once the
-        :class:`~porchlight.neighborhood.Neighborhood` object begins any
+    initialization : ``list`` of ``Callable``, `keyword-only`
+        These will be called once the |Neighborhood| object begins any
         execution (e.g., via
-        :py:meth:`~porchlight.neighborhood.Neighborhood.run_step`) will
-        run these callables. This will only execute again if
+        :py:meth:`~porchlight.neighborhood.Neighborhood.run_step`) will run
+        these callables. This will only execute again if
         ``Neighborhood.has_initialized`` is set to ``False``.
     """
 
@@ -120,18 +128,18 @@ class Neighborhood:
         Parameters
         ----------
         function : Callable
-            The function to be added. This is converted to a
-            :class:`~porchlight.door.Door` object by this method.
+            The function to be added. This is converted to a |Door| object by
+            this method.
 
         overwrite_defaults : bool, optional
             If `True`, will overwrite any parameters shared between the
             `function` and `Neighborhood._params` to be equal to the defaults
             set by `function`. If `False` (default), no parameters that exist
-            in the `Neighborhood` object already will be changed.
+            in the |Neighborhood| object already will be changed.
 
         dynamic_door : bool, optional
-            If `True` (default `False`), then the output(s) of this `Door` will
-            be converted into a `Door` or set of `Door`s in the `Neighborhood`
+            If `True` (default `False`), then the output(s) of this |Door| will
+            be converted into a |Door| or set of |Door| in the |Neighborhood|
             object.
         """
         new_door = door.Door(function)
@@ -149,11 +157,10 @@ class Neighborhood:
 
         Parameters
         ----------
-        new_door : :class:`~porchlight.door.Door`,
-            :class:`~porchlight.door.DynamicDoor`, or :py:obj:`list` of
-            :class:`~porchlight.door.Door` objects.
+        new_door : |Door|,
+            |DynamicDoor|, or ``list`` of |Door| objects.
 
-            Either a single initialized `door.Door` object or a list of them.
+            Either a single initialized |Door| object or a list of them.
             If a list is provided, this function is called for each item in the
             list.
 
@@ -161,11 +168,11 @@ class Neighborhood:
             If `True`, will overwrite any parameters shared between the
             `new_door` and `Neighborhood._params` to be equal to the defaults
             set by `new_door`. If `False` (default), no parameters that exist
-            in the `Neighborhood` object already will be changed.
+            in the |Neighborhood| object already will be changed.
 
         dynamic_door : bool, optional
-            If `True` (default `False`), then the output(s) of this `Door` will
-            be converted into a `Door` or set of `Door`s in the `Neighborhood`
+            If `True` (default `False`), then the output(s) of this |Door| will
+            be converted into a |Door| or set of |Door| in the |Neighborhood|
             object.
         """
         if isinstance(new_door, List):
@@ -243,12 +250,12 @@ class Neighborhood:
                     self.add_param(ret_val, param.Empty())
 
     def remove_door(self, name: str):
-        """Removes a :class:`~porchlight.door.Door` from :attr:`_doors`.
+        """Removes a |Door| from :attr:`_doors`.
 
         Parameters
         ----------
-        name : :py:obj:`str`
-            The name of the :class:`~porchlight.door.Door` to be removed. It
+        name : ``str``
+            The name of the |Door| to be removed. It
             must correspond to a key in `Neighborhood._doors` attribute.
 
         Raises
@@ -285,23 +292,23 @@ class Neighborhood:
 
         Parameters
         ----------
-        parameter_name : :py:obj:`str`
+        parameter_name : ``str``
             The name of the parameter to modify.
 
         new_value : `Any`
             The value to be assigned to this parameter.
 
-        constant : :py:obj:`bool`
-            Will be passed to :class:`~porchlight.param.Param` as the
+        constant : ``bool``
+            Will be passed to |Param| as the
             `constant` keyword argument.
 
-        ignore_constant : :py:obj:`bool`, optional, keyword-only
+        ignore_constant : ``bool``, optional, keyword-only
             When assigning this parameter, it will ignore the `constant`
             attribute of the current parameter.
 
         Raises
         ------
-        :class:`~porchlight.param.ParameterError`
+        |ParameterError|
             Is raised if the parameter attempting to be changed has `True` for
             its `constant` attribute. Will not be raised by this method if
             `ignore_constant` is `True`.
@@ -326,20 +333,20 @@ class Neighborhood:
         constant: bool = False,
         restrict: Union[Callable, None] = None,
     ):
-        """Adds a new parameter to the `Neighborhood` object.
+        """Adds a new parameter to the |Neighborhood| object.
 
         The parameters all correspond to arguments passed directly to the
-        :class:`~porchlight.param.Param` initializer.
+        |Param| initializer.
 
         Parameters
         ----------
-        parameter_name : :py:obj:`str`
+        parameter_name : ``str``
             Name of the parameter being created.
 
         value : `Any`
             Parameter value
 
-        constant : :py:obj:`bool`, optional
+        constant : ``bool``, optional
             If `True`, the parameter is set to constant.
 
         restrict : :py:class:`~typing.Callable` or None, optional
@@ -387,7 +394,7 @@ class Neighborhood:
         """Calls every door currently present in the neighborhood object.
 
         This order is currently dictated by the order in which
-        :class:`~porchlight.door.Door`s are added to the `Neighborhood`.
+        |Door| are added to the |Neighborhood|.
 
         The way this is currently set up, it will not handle positional
         arguments. That is, if an input cannot be passed using its variable
@@ -531,14 +538,14 @@ class Neighborhood:
         self, input_door: door.Door, defaults: Dict[str, Any] = {}
     ) -> Tuple[List, Dict]:
         """This retrieves all parameters required by a
-        :py:class:`~porchlight.door.Door`, returning them as a list (positional
+        |Door|, returning them as a list (positional
         arguments) and a dictionary (keyword arguments). If there are no
         positional-only arguments and/or no no keyword arguments, then empty
         objects are returned.
 
         Arguments
         ---------
-        input_door : :py:class:`~porchlight.door.Door`
+        input_door : |Door|
             The door to gather necessary parameters for.
 
         defaults : dict[str, Any]
@@ -557,7 +564,7 @@ class Neighborhood:
         Notes
         -----
         The return values must be unpacked before being used to call the
-        :py:class:`~porchlight.door.Door`.
+        |Door|.
         """
         # Gather the arguments needed by the door. Defaults are folded into a
         # new dictionary to keep them temporary.
@@ -582,7 +589,7 @@ class Neighborhood:
         """Runs initialization functions present in
         :py:attr:`~porchlight.neighborhood.Neighborhood.initialization` if
         ``has_initialized`` is ``False`` for this
-        :py:class:`~porchlight.neighborhood.Neighborhood`.
+        |Neighborhood|.
         """
         # Do nothing if initialization has already happened.
         if self.has_initialized or not self.initialization:
@@ -647,7 +654,7 @@ class Neighborhood:
         ``Neighborhood.finalization``. It must be invoked directly by the user.
 
         Unlike initialization, finalization will add new constant
-        :py:class:`~porchlight.param.Param`s to the ``Neighborhood`` object.
+        |Param| to the `|Neighborhood|` object.
         """
         # Ensure finalization is iterable, if not raise either a ValueError
         # (because it is not a valid object) or TypeError (because it is not a
@@ -726,13 +733,13 @@ class Neighborhood:
         """Allows the doors to be ordered when called.
 
         If this is never called, the call order will be equivalent to the order
-        in which the doors are added to the `Neighborhood`. As of right now,
+        in which the doors are added to the |Neighborhood|. As of right now,
         all doors present must be included in the `order` argument or a
         `KeyError` will be thrown.
 
         Arguments
         ---------
-        order : :py:obj:`list`, str
+        order : ``list``, str
             The order for doors to be called in. Each `str` must correspond to
             a key in `Neighborhood._doors`.
         """

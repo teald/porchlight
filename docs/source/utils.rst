@@ -1,3 +1,5 @@
+.. include:: substitutions.rst
+
 `utils` module
 ==============
 
@@ -24,6 +26,3 @@ Typing utilities
     :members:
     :show-inheritance:
     :private-members:
-
-
-.. |porchlight| replace:: **porchlight**

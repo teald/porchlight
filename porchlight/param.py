@@ -1,3 +1,9 @@
+"""A constainer class for arbitrary data, with type and state checking.
+
+|Param| is the primary class introduces in this file. |Empty| is a singleton
+class denoting an "empty" parameter. The :py:class:`ParameterError` class is
+also defined here.
+"""
 from typing import Any, Callable, Type, Union
 
 import logging
@@ -6,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class ParameterError(Exception):
-    """Error for Param-specific issues."""
+    """Error for Param-specific exceptions."""
 
     pass
 
@@ -14,7 +20,12 @@ class ParameterError(Exception):
 class Empty:
     """An empty class representing missing parameters values.
 
-    At initializtion, if an instance does not already exist it is created.
+    At initialization, if an instance does not already exist it is created. No
+    instance of Empty exists until it has been instantiated once.
+
+    It is recommended that |Empty| be used over :py:obj:`None` to denote
+    parameters that have not been initialized with any value, so that
+    :py:obj:`None` can be treated unambiguously when using |porchlight|.
     """
 
     def __new__(cls):
@@ -37,11 +48,13 @@ class Empty:
 
 
 class Param:
-    """Parameter class. while not frozen, for most purposes it should not be
-    modified outside of a porchlight object.
+    """Container class for arbitrary Python data.
 
-    `Param` uses `__slots__`, and no attributes other than those listed below
-    may be assigned to `Param` objects.
+    Although mutable, editing |Param| objects directly is strongly discouraged
+    unless absolutely necessary.
+
+    |Param| uses `__slots__`, and no attributes other than those listed below
+    may be assigned to |Param| objects.
 
     Attributes
     ----------
@@ -50,15 +63,37 @@ class Param:
 
     _value : :py:class:`~typing.Any`
         Value of the parameter. If the parameter does not contain an assigned
-        value, this should be :class:`~porchlight.param.Empty`
+        value, this should be |Empty|.
 
     _type : :py:class:`~typing.type`
-        The type corresponding to the type of `Param._value`
+        The type corresponding to the type of :py:attr:`Param._value`.
 
     constants : :py:obj:`bool`
-        True if this object should be considered a constant. If the `Param`
-        value is modified by :class:`Param.value`'s `setter`, but `constant` is
-        True, a :class:`~porchlight.param.ParameterError` will be raised.
+        True if this object should be considered a constant. If the |Param|
+        value is modified by :py:attr:`Param.value`'s `setter`, but
+        `constant` is True, a :py:class:`~porchlight.param.ParameterError` will
+        be raised.
+
+    restrict : `Callable` or `None`
+        If a callable, it will be invoked on the parameter whenever the
+        parameter is changed. If it evaluates to False, a |ParameterError| is
+        raised.
+
+        Example: "temperature" parameter should not be negative or zero in our
+        model:
+
+        .. code-block::python
+
+            temp = Param(
+                "temperature",
+                restrict=lambda x: x > 0
+            )
+
+            # The below would raise a ParameterError, the check occuring
+            # automatically.
+            temp.value = -500
+
+        See :py:attr:`Param.value` for further details.
     """
 
     # A parameter, to be updated from the API, needs to be replaced rather than
@@ -85,7 +120,7 @@ class Param:
             assigned value, this should be `~porchlight.param.Empty`
 
         constant : :py:obj:`bool`
-            True if this object should be considered a constant. If the `Param`
+            True if this object should be considered a constant. If the |Param|
             value is modified by `Param.value`'s `setter`, but `constant` is
             True, a :class:`~porchlight.param.ParameterError` will be raised.
 

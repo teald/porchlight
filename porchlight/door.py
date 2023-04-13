@@ -7,15 +7,6 @@ These objects all take a python callable object in some form, extract metadata
 from the object (if possible), and provide a calling interface with optional
 checks and actions (see individual descriptions).
 
-.. |BaseDoor| replace:: :py:class:`~porchlight.door.BaseDoor`
-.. |Door| replace:: :py:class:`~porchlight.door.Door`
-.. |DynamicDoor| replace:: :py:class:`~porchlight.door.DynamicDoor`
-.. |BasePorchlightAdapter| replace::
-    :py:class:`~porchlight.door.BasePorchlightAdapter`
-.. |PorchlightAdapter| replace::
-    :py:class:`~porchlight.door.PorchlightAdapter`
-.. |DynamicPorchlightAdapter| replace::
-    :py:class:`~porchlight.door.DynamicPorchlightAdapter`
 """
 import inspect
 import re

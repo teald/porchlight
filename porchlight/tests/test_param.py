@@ -107,5 +107,44 @@ class TestEmpty(TestCase):
         self.assertNotEqual(empty, 1)
 
 
+class TestParamListeners(TestCase):
+    def test_add_listener(self):
+        par = param.Param("test", int)
+
+        def listener(x):
+            pass
+
+        par.add_listener(listener)
+        self.assertIn(listener, par._listeners)
+
+        # Test adding duplicate listener
+        par.add_listener(listener)
+        self.assertEqual(par._listeners.count(listener), 1)
+
+    def test_remove_listener(self):
+        par = param.Param("test", int)
+
+        def listener(x):
+            pass
+
+        par.add_listener(listener)
+        par.remove_listener(listener)
+        self.assertNotIn(listener, par._listeners)
+
+    def test__notify_listeners(self):
+        class TestObject:
+            def __init__(self):
+                self.x = 0
+
+            def listener(self, par):
+                self.x = par.value
+
+        par = param.Param("test", 1)
+        obj = TestObject()
+        par.add_listener(obj.listener)
+        par.value = 2
+        self.assertEqual(obj.x, 2)
+
+
 if __name__ == "__main__":
     unittest.main()

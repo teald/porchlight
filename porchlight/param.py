@@ -4,7 +4,7 @@
 class denoting an "empty" parameter. The :py:class:`ParameterError` class is
 also defined here.
 """
-from typing import Any, Callable, Type, Union
+from typing import Any, Callable, List, Type, Union
 
 import logging
 
@@ -37,14 +37,7 @@ class Empty:
         return cls._singleton_instance
 
     def __eq__(self, other):
-        if other is self:
-            return True
-
-        else:
-            return False
-
-    def __neq__(self, other):
-        return not (self == other)
+        return other is self
 
 
 class Param:
@@ -94,12 +87,28 @@ class Param:
             temp.value = -500
 
         See :py:attr:`Param.value` for further details.
+
+    _listeners : List[:py:class:`~typing.Callable`]
+        If a list of callables is passed, whenever the value property of
+        the parameter is set, listeners will be called on the candidate
+        value.  If the result evaluates to False, a ParameterError will be
+        raised.
+
+        WARNING: This does not trigger during parameter initialization. Only
+        on subsequent changes in value.
     """
 
     # A parameter, to be updated from the API, needs to be replaced rather than
     # reassigned. That said there are a few use cases where it may be useful to
     # have easy access, so just hiding these behind properties.
-    __slots__ = ["_name", "_value", "constant", "_type", "restrict"]
+    __slots__ = [
+        "_name",
+        "_value",
+        "constant",
+        "_type",
+        "restrict",
+        "_listeners",
+    ]
 
     def __init__(
         self,
@@ -107,6 +116,7 @@ class Param:
         value: Any = Empty(),
         constant: bool = False,
         restrict: Union[Callable, None] = None,
+        listeners: List[Callable] = [],
     ):
         """Initializes the Param object.
 
@@ -124,16 +134,21 @@ class Param:
             value is modified by `Param.value`'s `setter`, but `constant` is
             True, a :class:`~porchlight.param.ParameterError` will be raised.
 
-        restrict : :py:class:`~typing.Callable` or `None`
-            If a callable is passed, whenever the value property of the
-            parameter is set, restrict will be called on the candidate value.
-            If the result evaluates to False, a ParameterError will be raised.
+        listeners : List[:py:class:`~typing.Callable`]
+            If a list of callables is passed, whenever the value property of
+            the parameter is set, listeners will be called on the candidate
+            value.  If the result evaluates to False, a ParameterError will be
+            raised.
+
+            WARNING: This does not trigger during parameter initialization. Only
+            on subsequent changes in value.
         """
         self._name = name
         self._value = value
         self.constant = constant
         self._type = type(self._value)
         self.restrict = restrict
+        self._listeners = listeners
 
     def __repr__(self):
         info = {
@@ -185,6 +200,43 @@ class Param:
         # TODO: REFACTORING this should be typecheck upon request/by default in
         # a future update.
         self._type = type(self._value)
+
+        # Notify any listeners that the parameter has been updated.
+        self._notify_listeners()
+
+    def _notify_listeners(self):
+        """Notify any listeners that the parameter has been updated."""
+        for listener in self._listeners:
+            listener(self)
+
+    def add_listener(self, listener: Callable):
+        """Add a listener to the parameter.
+
+        Parameters
+        ----------
+        listener : :py:class:`~typing.Callable`
+            A callable that takes a single argument, the value of the
+            parameter.
+        """
+        if listener in self._listeners:
+            msg = (
+                f"Listener {listener} already exists for parameter {self.name}."
+            )
+            logger.warning(msg)
+            return
+
+        self._listeners.append(listener)
+
+    def remove_listener(self, listener: Callable):
+        """Remove a listener from the parameter.
+
+        Parameters
+        ----------
+        listener : :py:class:`~typing.Callable`
+            A callable that takes a single argument, the value of the
+            parameter.
+        """
+        self._listeners.remove(listener)
 
     @property
     def type(self) -> Type:

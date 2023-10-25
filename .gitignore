@@ -140,3 +140,4 @@ git_filter.py
 
 # Misc
 _experiments/
+.build*

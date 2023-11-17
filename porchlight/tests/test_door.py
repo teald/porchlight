@@ -5,7 +5,7 @@ from unittest import TestCase
 import unittest
 
 from porchlight.door import Door, DoorError, DoorWarning
-from porchlight.param import Empty, Param, ParameterError
+from porchlight.param import Empty, ParameterError
 
 import typing
 import logging
@@ -159,7 +159,7 @@ class TestDoor(TestCase):
 
     def test___repr___(self):
         def test(x: int) -> int:
-            y = x ** 2
+            y = x**2
             return y
 
         expected_repr = (
@@ -395,7 +395,7 @@ class TestDoor(TestCase):
 
         # Test a slightly more complicated door.
         def test1(x: int, *, y=0) -> int:
-            z = x ** y
+            z = x**y
             return z
 
         kwargs = {
@@ -415,7 +415,7 @@ class TestDoor(TestCase):
 
             @Door(wrapped=True, **kwargs)
             def test2(x: int, *, y=0) -> int:
-                z = x ** y
+                z = x**y
                 return z
 
 

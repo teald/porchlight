@@ -1,7 +1,6 @@
 """Tests for the porchlight.door.DynamicDoor class."""
 import porchlight.door as door
 
-import os
 import unittest
 
 
@@ -88,12 +87,12 @@ class TestDynamicDoor(unittest.TestCase):
         def doorgen1() -> door.Door:
             @door.Door(argument_mapping={"hello": "x"})
             def my_door(x: int, y: int = 1) -> int:
-                z = x ** y
+                z = x**y
                 return z
 
             return my_door
 
-        self.assertEqual(doorgen1(2, 5), 2 ** 5)
+        self.assertEqual(doorgen1(2, 5), 2**5)
         self.assertEqual(doorgen1.arguments, {"hello": int, "y": int})
         self.assertEqual(doorgen1.return_vals, ["z"])
 
@@ -101,7 +100,7 @@ class TestDynamicDoor(unittest.TestCase):
         def doorgen2(x: int, y: int = 1) -> door.Door:
             @door.Door
             def my_func():
-                z = x ** y
+                z = x**y
                 return z
 
             return my_func
@@ -118,7 +117,7 @@ class TestDynamicDoor(unittest.TestCase):
         dynamicdoor.generator_kwargs = {"hello": 5, "y": 5}
 
         result = dynamicdoor()
-        self.assertEqual(result, 5 ** 5)
+        self.assertEqual(result, 5**5)
 
     def test_call_without_update(self):
         @door.DynamicDoor
@@ -127,7 +126,7 @@ class TestDynamicDoor(unittest.TestCase):
 
             @door.Door
             def my_door(y: int) -> int:
-                z = x ** y
+                z = x**y
                 return z
 
             return my_door

@@ -8,7 +8,6 @@ from porchlight.door import BaseDoor
 from porchlight.param import Empty, ParameterError, Param
 
 import logging
-import os
 
 from typing import Callable
 
@@ -305,7 +304,7 @@ class TestBaseDoor(TestCase):
         """Test the BaseDoor"""
 
         def test(x: int) -> int:
-            y = x ** 2
+            y = x**2
             return y
 
         expected_repr = (

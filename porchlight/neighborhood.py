@@ -11,8 +11,9 @@ Also contains the definition for
 """
 from . import door
 from . import param
-from .utils.typing_functions import decompose_type
 from typing import Any, Callable, Dict, List, Tuple, Union
+
+from collections import defaultdict
 
 import logging
 
@@ -55,6 +56,9 @@ class Neighborhood:
     _params: Dict[str, param.Param]
     _call_order: List[str]
 
+    # Listeners
+    _listeners: Dict[param.Param, List[door.Door]]
+
     def __init__(
         self,
         initial_doors: Union[List[Callable], None] = [],
@@ -65,6 +69,7 @@ class Neighborhood:
         self._doors = {}
         self._params = {}
         self._call_order = []
+        self._listeners = defaultdict(list)
         self.initialization = initialization
         self.finalization = finalization
 
@@ -698,10 +703,12 @@ class Neighborhood:
         repeatedly.
 
         It is exactly equivalent to the following code:
-        """
-        if not isinstance(number_of_steps, int):
-            number_of_steps = int(number_of_steps)
 
+        .. code-block:: python
+
+                for _ in range(number_of_steps):
+                    self.run_step()
+        """
         for _ in range(number_of_steps):
             self.run_step()
 
@@ -769,6 +776,78 @@ class Neighborhood:
         logging.debug(f"Adjusting call order: {self._call_order} -> {order}")
 
         self._call_order = order
+
+    def listener(
+        self,
+        door: Union[str, door.Door],
+        params: Union[List[str], str, param.Param, List[param.Param]],
+    ):
+        """Specifies a door as a listener, which will be notified and called
+        whenever a parameter in `params` is changed.
+
+        Parameters
+        ----------
+        door : ``str`` or |Door|
+            The door to be notified when a parameter is changed. If a string,
+            it must correspond to a key in `Neighborhood._doors`.
+
+        params : ``str``, ``list`` of ``str``, or |Param|
+            The parameter(s) to listen for changes to. If a string, it must
+            correspond to a key in `Neighborhood._params`. If a |Param|, it
+            must be present in `Neighborhood._params`.
+        """
+        if isinstance(door, str):
+            door = self._doors[door]
+
+        if isinstance(params, str) or isinstance(params, param.Param):
+            params = [params]
+
+        params = (self._params[p] if isinstance(p, str) else p for p in params)
+
+        for p in params:
+            self._add_listener(p, door)
+
+    def _add_listener(self, param: param.Param, door: door.Door):
+        """Adds a listener to a parameter."""
+        # Default dict will handle params that are not present in the dict.
+        if door not in self._listeners[param]:
+            self._listeners[param].append(door)
+
+            # This gets the parameter to call the relevant listeners.
+            param.add_listener(self._notify_listeners)
+            return
+
+        msg = f"Door {door.name} is already listening to {param.name}."
+        logger.warning(msg)
+
+    def _remove_listener(self, param: param.Param, door: door.Door):
+        """Removes a listener from a parameter.
+
+        Parameters
+        ----------
+        param : |Param|
+            The parameter to stop listening to.
+
+        door : |Door|
+            The door to stop listening to the parameter.
+
+        Raises
+        ------
+        NeighborhoodError
+            If the door is not listening to the parameter.
+        """
+        if door in self._listeners[param]:
+            param.remove_listener(door)
+            self._listeners[param].remove(door)
+            return
+
+        msg = f"Door {door.name} is not listening to {param.name}."
+        raise NeighborhoodError(msg)
+
+    def _notify_listeners(self, param: param.Param):
+        """Notifies all listeners of a parameter that it has been updated."""
+        for listener in self._listeners[param]:
+            self.call(listener)
 
     @property
     def doors(self):

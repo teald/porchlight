@@ -14,7 +14,6 @@ the |porchlight| :doc:`quickstart` guide
 
 """
 import logging
-import os
 
 from .door import Door
 from .neighborhood import Neighborhood

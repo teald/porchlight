@@ -603,6 +603,9 @@ class Door(BaseDoor):
 
         self.function_initialized = True
 
+    def __hash__(self):
+        return hash(self.name)
+
     def __call__(self, *args, **kwargs):
         # To account for @Door behavior in one call stack,
         if not self.function_initialized:
